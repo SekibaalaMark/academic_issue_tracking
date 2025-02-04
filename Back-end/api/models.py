@@ -36,7 +36,7 @@ class Department(models.Model):
         ('networks','Networks Department'),
         ('information_systems','Information Systems')
     ]
-    name = models.CharField(max_length=100,choices=DEPT_CHOICES)
+    name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
