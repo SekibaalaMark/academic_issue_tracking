@@ -20,8 +20,6 @@ def department(request):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        
     elif request.method == "PUT":
         data = request.data
         department_instance= Department.objects.get(id = data['id'])
@@ -30,6 +28,27 @@ def department(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == "DELETE":
+        data = request.data 
+        try:
+            department_instace = Department.objects.get(id=data['id'])
+        except Department.DoesNotExist:
+            return Response({'message':'User not found'},status=status.HTTP_404_NOT_FOUND)
+        department_instace.delete()
+        return Response({'message':'user deleted succesfully'},status=status.HTTP_204_NO_CONTENT)
+    elif request.method == "PATCH":
+        data = request.data
+        try:
+            department_instace = Department.objects.get(id=data['id'])
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = DepartmentSerializer(department_instance,data=data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
     
 
 
