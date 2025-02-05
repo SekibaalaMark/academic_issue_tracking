@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from .models import Issue,Department,User
 from rest_framework.response import Response
 
-#DEPARTMENT SERIALIZER
+#DEPARTMENT API VIEW
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def department(request):
     if request.method == 'GET':
@@ -33,7 +33,7 @@ def department(request):
     
 
 
-#ISSUES SERIALIZER
+#ISSUES API VIEW
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def issues(request):
     if request.method == 'GET':
@@ -74,7 +74,7 @@ def issues(request):
         try:
             issue_instace = Issue.objects.get(id=data['id'])
         except Issue.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = IssueSerializer(issue_instace,data=data,partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -84,7 +84,7 @@ def issues(request):
 
         
 
-#USER SERIALIZER
+#USER API VIEW
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def user(request):
     if request.method == 'GET':
@@ -108,6 +108,27 @@ def user(request):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == "DELETE":
+        data = request.data 
+        try:
+            user_instace = User.objects.get(id=data['id'])
+        except User.DoesNotExist:
+            return Response({'message':'User not found'},status=status.HTTP_404_NOT_FOUND)
+        user_instace.delete()
+        return Response({'message':'user deleted succesfully'},status=status.HTTP_204_NO_CONTENT)
+
+    elif request.method == "PATCH":
+        data = request.data
+        try:
+            user_instace = User.objects.get(id=data['id'])
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user_instace,data=data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
         
 
 
