@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view
 from .models import Issue,Department,User
 from rest_framework.response import Response
 
+#DEPARTMENT SERIALIZER
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def department(request):
     if request.method == 'GET':
@@ -39,6 +40,7 @@ def issues(request):
         issues = Issue.objects.all()
         serializer = IssueSerializer(issues,many=True)
         return Response(serializer.data)
+
     elif request.method == 'POST':
         data = request.data 
         serializer=IssueSerializer(data=data)
@@ -47,6 +49,7 @@ def issues(request):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
     elif request.method == 'PUT':
         data = request.data
         issue_instance = Issue.objects.get(id=data['id'])
@@ -57,6 +60,54 @@ def issues(request):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+    elif request.method == "DELETE":
+        data = request.data 
+        try:
+            issue_instace = Issue.objects.get(id=data['id'])
+        except Issue.DoesNotExist:
+            return Response({'message':'not not found'},status=status.HTTP_404_NOT_FOUND)
+        issue_instace.delete()
+        return Response({'message':'issue deleted succesfully'},status=status.HTTP_204_NO_CONTENT)
+    
+    elif request.method == "PATCH":
+        data = request.data
+        try:
+            issue_instace = Issue.objects.get(id=data['id'])
+        except Issue.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = IssueSerializer(issue_instace,data=data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+        
+
+#USER SERIALIZER
+@api_view(['GET','POST','PUT','PATCH','DELETE'])
+def user(request):
+    if request.method == 'GET':
+        users = User.objects.all()
+        serializer = UserSerializer(users,many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        data = request.data 
+        serializer=UserSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PUT':
+        data = request.data
+        user_instace = User.objects.get(id=data['id'])
+        serializer = UserSerializer(user_instace,data=data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 
