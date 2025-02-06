@@ -14,7 +14,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=100,choices=USER_CHOICES,default='student')
 
 
-    groups = models.ManyToManyField(
+    '''groups = models.ManyToManyField(
         'auth.Group',
         related_name='api_user_set',  # Custom related_name to avoid clash
         blank=True
@@ -23,7 +23,7 @@ class User(AbstractUser):
         'auth.Permission',
         related_name='api_user_permissions_set',  # Custom related_name to avoid clash
         blank=True
-    )
+    )'''
 
 
     def __str__(self):
