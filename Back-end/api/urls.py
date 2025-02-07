@@ -1,8 +1,16 @@
-from django.urls import path
-from . import views
+from django.urls import path,include
+from rest_framework.routers import DefaultRouter
+from .views import DepartmentViewSet,IssueViewSet,UserViewSet
+
+
+router = DefaultRouter()
+router.register(r'departments',DepartmentViewSet)
+router.register(r'issues',IssueViewSet)
+router.register(r'users',UserViewSet)
+
 
 urlpatterns = [
-    path('department/',views.department,name = 'department'),
-    path('issues/',views.issues,name='issues'),
-    path('users/',views.user),
-    ]
+    path('',include(router.urls))
+]
+
+

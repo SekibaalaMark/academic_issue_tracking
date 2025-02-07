@@ -1,12 +1,30 @@
 from rest_framework import status
 from .serializers import DepartmentSerializer,UserSerializer,IssueSerializer
 from django.shortcuts import render
-from rest_framework.decorators import api_view
 from .models import Issue,Department,User
 from rest_framework.response import Response
+from rest_framework import viewsets
+
 
 #DEPARTMENT API VIEW
-@api_view(['GET','POST','PUT','PATCH','DELETE'])
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+class IssueViewSet(viewsets.ModelViewSet):
+    queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset=User.objects.all()
+    serializer_class = UserSerializer
+
+
+
+
+
+'''
 def department(request):
     if request.method == 'GET':
         all_objs = Department.objects.all()
@@ -147,7 +165,4 @@ def user(request):
             serializer.save()
             return Response(serializer.data)
         else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
-
-
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)'''
