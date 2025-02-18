@@ -12,19 +12,8 @@ class User(AbstractUser):
         ('Registrar','Registrar'),
     ]
     role = models.CharField(max_length=100,choices=USER_CHOICES,default='student')
-
-
-    '''groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='api_user_set',  # Custom related_name to avoid clash
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='api_user_permissions_set',  # Custom related_name to avoid clash
-        blank=True
-    )'''
-
+    email = models.EmailField(unique=True)
+    username=models.CharField(max_length=100,unique=True)
 
     def __str__(self):
         return self.username
@@ -49,14 +38,18 @@ class Issue(models.Model):
         ('resolved','Resolved'),
         ('in_progress','In progress'),
     ]
-    title = models.CharField(max_length=100)
+    couse_name = models.CharField(max_length=150, null = True)
+    course_code = models.CharField(max_length=50,null=True)
+    #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
+    category = models.CharField(max_length=100)
     description = models.TextField()
     raised_by = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
-    assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
+    #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
+    registrar= models.ForeignKey(User,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Registrar'},null=True)
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return self.category
