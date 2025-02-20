@@ -38,10 +38,13 @@ class Issue(models.Model):
         ('resolved','Resolved'),
         ('in_progress','In progress'),
     ]
+    CATEGORY_CHOICES = [('Missing_Marks','Missing marks'),
+    ('Wrong_grading','wrong grading'),('wrong_marks','wrong marks'),('other','other')]
+
     couse_name = models.CharField(max_length=150, null = True)
     course_code = models.CharField(max_length=50,null=True)
     #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
-    category = models.CharField(max_length=100)
+    category = models.CharField(max_length=100,choices=CATEGORY_CHOICES,default='other')
     description = models.TextField()
     raised_by = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
