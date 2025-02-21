@@ -17,7 +17,7 @@ function Login() {
     e.preventDefault();
     try {
       // Replace with your API URL
-      const response = await axios.post('http://your-api-endpoint/login', { email, password });
+      const response = await axios.post("http://your-api-endpoint/login", { email, password });
 
       if (response.data.token) {
         localStorage.setItem('authToken', response.data.token); // Store token
