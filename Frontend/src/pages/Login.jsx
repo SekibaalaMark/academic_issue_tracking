@@ -1,12 +1,18 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
 import axios from 'axios';
+import styled from "styled-components"
+const Input=styled.input`
+padding:8px 12px;
+border-radius: 5px;
+border: 1px solid #ddd
 
+
+`
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -28,16 +34,17 @@ function Login() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Email</label>
-          <input
+          <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+       
           />
         </div>
         <div>
           <label>Password</label>
-          <input
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
