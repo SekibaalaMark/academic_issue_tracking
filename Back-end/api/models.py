@@ -2,10 +2,11 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
+
 # Create your models here.
 
 
-class User(AbstractUser):
+class CustomUser(AbstractUser):
     USER_CHOICES =[
         ('student','Student'),
         ('Lecturer','Lecturer'),
@@ -46,9 +47,9 @@ class Issue(models.Model):
     #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES,default='other')
     description = models.TextField()
-    raised_by = models.ForeignKey(User, related_name='issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
+    raised_by = models.ForeignKey(CustomUser, related_name='issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
-    registrar= models.ForeignKey(User,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Registrar'},null=True)
+    registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Registrar'},null=True)
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS)
     created_at = models.DateTimeField(auto_now_add=True)
