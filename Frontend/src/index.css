@@ -29,6 +29,18 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+body {
+  
+  font-family: 'Poppins',sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display:flex;
+  justify-content: center;
+  min-height: 100vh;
+  /* background:url('./components/Assets/sign image.jpg')no-repeat; */
+  background-size: cover;
+  background-position: center;
+}
 
 h1 {
   font-size: 3.2em;
