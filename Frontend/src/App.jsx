@@ -1,54 +1,48 @@
-// src/App.jsx
-import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { fetchData } from "./Services/api";  // ✅ Import API function
+import { Link } from "react-router-dom";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    fetchData().then(setData).catch(console.error);
+  }, []);
 
   return (
     <>
       {/* Vite and React logos */}
-  
+      <div>
+        <a href="https://vite.dev" target="_blank" rel="noopener noreferrer">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank" rel="noopener noreferrer">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+      </div>
+      
       {/* Main heading */}
       <h1>Vite + React</h1>
 
       {/* Counter section */}
       <div className="card">
-        <button onClick={() => setCount(count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+        <h2>Data from Django API</h2>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
       </div>
 
-      {/* Navigation Links */}
       <nav>
         <ul>
-          <li>
-            <Link to="/login">Login</Link>
-          </li>
-          <li>
-            <Link to="/dashboard">Dashboard</Link>
-          </li>
-          <li>
-            <Link to="/students">Students</Link>
-          </li>
-          <li>
-            <Link to="/lecturers">Lecturers</Link>
-          </li>
-          <li>
-            <Link to="/academic-registrar">Academic Registrar</Link>
-          </li>
+          <li><Link to="/login">Login</Link></li>
+          <li><Link to="/dashboard">Dashboard</Link></li>
+          <li><Link to="/students">Students</Link></li>
+          <li><Link to="/lecturers">Lecturers</Link></li>
+          <li><Link to="/academic-registrar">Academic Registrar</Link></li>
         </ul>
       </nav>
 
-      {/* Additional instructions or text */}
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+        Click on the links above to navigate.
       </p>
     </>
   );
