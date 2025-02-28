@@ -57,3 +57,8 @@ class Issue(models.Model):
 
     def __str__(self):
         return self.category
+    class Meta:
+        permissions=[
+            ("report_issue","can report an issue"),
+            ("assign_issue","can assign issue"),
+        ]
