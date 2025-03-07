@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
 import AcademicRegistrar from './pages/AcademicRegistrar';
+import RegisterForm from './pages/Registerform';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -18,6 +19,7 @@ root.render(
     <Routes>
       <Route path="/" element={<App />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<RegisterForm />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/home" element={<Home />} />
       <Route path="/students" element={<Students />} />
