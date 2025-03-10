@@ -23,7 +23,6 @@ function App() {
       </div>
       
       {/* Main heading */}
-      <h1>Vite + React</h1>
 
       {/* Counter section */}
       <div className="card">
