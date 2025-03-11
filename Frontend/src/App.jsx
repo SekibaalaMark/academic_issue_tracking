@@ -1,9 +1,24 @@
 import "./App.css";
 import { Link } from "react-router-dom";
 
+import "./ui/StudentDashboard/StudentDashboard.css";
+
+
+
+import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
+
+
+
+
+
+
+
 function App() {
-  return (
+  return(
     <>
+    <div>
+    <StudentDashboard />
+    </div>
       <nav>
         <ul>
           <li>
