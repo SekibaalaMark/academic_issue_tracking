@@ -58,16 +58,18 @@ class Issue(models.Model):
     ('Wrong_grading','wrong grading'),('wrong_marks','wrong marks'),('other','other')]
 
     #programme = models.ForeignKey('Programme',related_name='programme',on_delete=models.CASCADE)
-    couse_name = models.CharField(max_length=150, null = True)
-    course_code = models.CharField(max_length=50,null=True)
+    couse_name = models.CharField(max_length=150,null=True,help_text="course name")
+    course_code = models.CharField(max_length=50,null=True,help_text="course code",)
     #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES)
     description = models.TextField()
+    attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
     raised_by = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS)
+
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
