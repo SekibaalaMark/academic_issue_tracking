@@ -28,6 +28,7 @@ root.render(
       <Route path="/students" element={<Students />} />
       <Route path="/lecturers" element={<Lecturers />} />
       <Route path="/academic-registrar" element={<AcademicRegistrar />} />
+      
     </Routes>
   </Router>
 );

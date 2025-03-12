@@ -1,13 +1,16 @@
+import Button from "../ui/Button";
 import Form from "../ui/Form";
 import FormRow from "../ui/FormRow";
 import Input from "../ui/Input";
 import Option from "../ui/Option";
 import Select from "../ui/Select";
 import { H2 } from "./Login";
+import styles from "./register.module.css";
 
 function RegisterForm() {
   return (
-    <Form>
+    <div className={styles.registerForm}>
+    <Form >
       <H2>REGISTER FORM</H2>
       <FormRow label="Name">
         <Input placeholder="Enter name" required />
@@ -21,8 +24,11 @@ function RegisterForm() {
       <FormRow label="College">
         <Input placeholder="Enter college" required />
       </FormRow>
-      <FormRow label="Name">
-        <Input placeholder="Enter name" required />
+      <FormRow label="Department">
+        <Input placeholder="Department" required />
+      </FormRow>
+      <FormRow label="Academic year">
+        <Input placeholder="Academic Year" required />
       </FormRow>
       <FormRow label="Select College">
         <Select>
@@ -32,7 +38,9 @@ function RegisterForm() {
           <Option>COBAMS</Option>
         </Select>
       </FormRow>
+      <Button>Login</Button>
     </Form>
+    </div>
   );
 }
 
