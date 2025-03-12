@@ -9,6 +9,9 @@ from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
+
 
 
 #DEPARTMENT API VIEW
@@ -29,6 +32,24 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
+class Registration(APIView):
+    def post(self,request):
+        data = request.data 
+        serializer = RegisterSerializer(data=data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            password = validated_data.pop('password')
+            
+            user = CustomUser(**validated_data)
+            user.set_password(password)
+            user.save()
+            return Response({
+                "message":"User Created Successfully",
+                "data":validated_data
+            }, status= status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+'''
 # Login View
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow anyone to access this view
@@ -50,22 +71,23 @@ def login(request):
     else:
         return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    
 
-
-class Registration(APIView):
-    def post(self,request):
-        data = request.data 
-        serializer = RegisterSerializer(data=data)
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            password = validated_data.pop('password')
+#Log out view
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Only authenticated users can access this view
+def logout(request):
+    try:
+        # Get the refresh token from the request
+        refresh_token = request.data.get('refresh')
+        
+        # Blacklist the refresh token
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # This will add the token to the blacklist
             
-            user = CustomUser(**validated_data)
-            user.set_password(password)
-            user.save()
-            return Response({
-                "message":"User Created Successfully",
-                "data":validated_data
-            }, status= status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response({'success': True, 'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)\'
+'''
+
+
