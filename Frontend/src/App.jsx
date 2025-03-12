@@ -1,13 +1,12 @@
 import "./App.css";
-import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
-
 import "./ui/StudentDashboard/StudentDashboard.css";
 import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx"; // Import StudentComplaints
+import { Link } from "react-router-dom";
 
 function App() {
   return (
-    <Router>
+    <div>
       <div>
         <StudentDashboard />
       </div>
@@ -34,12 +33,8 @@ function App() {
           </li>
         </ul>
       </nav>
-      <Switch>
-        {/* Add routes for different components */}
-        <Route path="/student-complaints" component={StudentComplaints} />
-        {/* Add other routes here */}
-      </Switch>
-    </Router>
+      {/* <StudentComplaints /> */}
+    </div>
   );
 }
 
