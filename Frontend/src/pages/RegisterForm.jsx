@@ -4,14 +4,13 @@ import FormRow from "../ui/FormRow";
 import Input from "../ui/Input";
 import Option from "../ui/Option";
 import Select from "../ui/Select";
-import { H2 } from "./Login";
 import styles from "./register.module.css";
 
 function RegisterForm() {
   return (
-    <div className={styles.registerForm}>
+    <div className={styles.formCenter}>
     <Form >
-      <H2>REGISTER FORM</H2>
+      <h2>REGISTER FORM</h2>
       <FormRow label="Name">
         <Input placeholder="Enter name" required />
       </FormRow>
