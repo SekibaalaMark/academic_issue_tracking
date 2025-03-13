@@ -57,14 +57,18 @@ class Registration(APIView):
             user = CustomUser(**validated_data)
             user.set_password(password)
             user.save()
-
-            
-
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
 
             return Response({
-                "message":"User Created Successfully",
-                "data":validated_data
-            }, status= status.HTTP_201_CREATED)
+                "message": "User  Created Successfully",
+                "data": validated_data,
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": access_token
+                }
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 

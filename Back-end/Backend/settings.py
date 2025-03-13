@@ -1,7 +1,16 @@
 from pathlib import Path
 
 import os
+from datetime import timedelta
 
+
+SIMPLE_JWT = {
+
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token expiry time
+
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
+
+}
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -128,4 +137,10 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),  # Set access token expiry time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
+}
 
