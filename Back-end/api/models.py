@@ -13,11 +13,18 @@ class Course_unit(models.Model):
         return self.course_name
 
 class Programme(models.Model):
-    programme_name = models.CharField(max_length=110)
+    PROGRAMME_CHOICES = [
+        ('computer_science','Bachelor of Science in Computer Science'),
+        ('software_engineering','Bachelor of Science in Software Engineering'),
+        ('BIST','Bachelor Information Systems and Technology'),
+        ('BLIS','Bachelor of Library and Information Sciences')
+    ]
+    programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES,null=False,blank=False)
     course_unit=models.ManyToManyField(Course_unit,related_name="course_units")
 
     def __str__(self):
         return self.programme_name
+
 
 
 class CustomUser(AbstractUser):
@@ -29,7 +36,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=100,choices=USER_CHOICES,default='student')
     email = models.EmailField(unique=True)
     username=models.CharField(max_length=100,unique=True)
-    programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
+    #programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
 
     def __str__(self):
         return self.username
@@ -57,9 +64,18 @@ class Issue(models.Model):
     CATEGORY_CHOICES = [('Missing_Marks','Missing marks'),
     ('Wrong_grading','wrong grading'),('wrong_marks','wrong marks'),('other','other')]
 
-    #programme = models.ForeignKey('Programme',related_name='programme',on_delete=models.CASCADE)
+    YEAR_CHOICES = [
+        ('year_1','Year 1'),
+        ('year_2','Year 2'),
+        ('year_3','Year 3'),
+        ('year_4','Year 4'),
+        ('year_5','Year 5')
+    ]
+
+    programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE)
     couse_name = models.CharField(max_length=150,null=True,help_text="course name")
-    course_code = models.CharField(max_length=50,null=True,help_text="course code",)
+    course_code = models.CharField(max_length=50,null=True,help_text="course code")
+    year_of_study = models.CharField(max_length=50,help_text="your year of study")
     #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES)
     description = models.TextField()
@@ -75,9 +91,4 @@ class Issue(models.Model):
 
     def __str__(self):
         return self.category
-    class Meta:
-        permissions=[
-            ("report_issue","can report an issue"),
-            ("assign_issue","can assign issue"),
-        ]
 

@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from django.contrib.auth.models import Group
+
 
 
 
@@ -32,6 +34,18 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
+@api_view(['GET'])
+def filter_issues(request):
+    status = request.GET.get('status', None)
+    issues_qs = Issue.objects.all()
+    
+    if status:
+        issues_qs = issues_qs.filter(status=status)
+    
+    serializer = IssueSerializer(issues_qs, many=True)
+    return Response(serializer.data)
+
+
 class Registration(APIView):
     def post(self,request):
         data = request.data 
@@ -43,11 +57,39 @@ class Registration(APIView):
             user = CustomUser(**validated_data)
             user.set_password(password)
             user.save()
+
+            
+
+
             return Response({
                 "message":"User Created Successfully",
                 "data":validated_data
             }, status= status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+    '''
+    def assign_user_group(self, user):
+        """Assign user to a group based on their role."""
+    role_to_group = {
+        "student": "Students",
+        "lecturer": "Lecturers",
+        "academic_registrar": "Registrars"
+    }
+    
+    group_name = role_to_group.get(user.role)  # Get the group name based on role
+    if group_name:
+        group, created = Group.objects.get_or_create(name=group_name)  # Ensure group exists
+        user.groups.add(group)
+        '''
+    
+
+
+
+
+
+
+
 
 '''
 # Login View

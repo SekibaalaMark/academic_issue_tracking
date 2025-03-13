@@ -37,4 +37,5 @@ class RegisterSerializer(ModelSerializer):
         if email:
             if CustomUser.objects.filter(email=email).exists():
                 raise serializers.ValidationError("email already exists")
-            return data
+        return data
+
