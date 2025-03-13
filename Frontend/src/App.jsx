@@ -6,33 +6,44 @@ import { Link } from "react-router-dom";
 
 function App() {
   return (
-    <div>
-      <div>
-        <StudentDashboard />
-      </div>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/login">Login</Link>
+    <div className="app-container">
+      <nav className="navbar">
+        <ul className="nav-list">
+          <li className="nav-item">
+            <Link to="/login" className="nav-link">
+              Login
+            </Link>
           </li>
-          <li>
-            <Link to="/dashboard">Dashboard</Link>
+          <li className="nav-item">
+            <Link to="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
           </li>
-          <li>
-            <Link to="/students">Students</Link>
+          <li className="nav-item">
+            <Link to="/students" className="nav-link">
+              Students
+            </Link>
           </li>
-          <li>
-            <Link to="/lecturers">Lecturers</Link>
+          <li className="nav-item">
+            <Link to="/lecturers" className="nav-link">
+              Lecturers
+            </Link>
           </li>
-          <li>
-            <Link to="/academic-registrar">Academic Registrar</Link>
+          <li className="nav-item">
+            <Link to="/academic-registrar" className="nav-link">
+              Academic Registrar
+            </Link>
           </li>
-          <li>
-            <Link to="/student-complaints">Student Complaints</Link>{" "}
-            {/* Add link to Student Complaints */}
+          <li className="nav-item">
+            <Link to="/student-complaints" className="nav-link">
+              Student Complaints
+            </Link>
           </li>
         </ul>
       </nav>
+      <div className="content">
+        <StudentDashboard />
+      </div>
     </div>
   );
 }

@@ -1,66 +1,84 @@
 .complaint-container {
-          width: 50%;
-          margin: auto;
-          padding: 20px;
-          border-radius: 10px;
-          background: #fff;
-          box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-          font-family: 'Poppins', sans-serif;
-        }
-        
-        h2, footer {
-          text-align: center;
-          color: #444;
-        }
-        
-        form {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        
-        label {
-          font-weight: 500;
-        }
-        
-        select, input, textarea {
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          transition: 0.3s;
-        }
-        
-        select:hover, input:hover, textarea:hover {
-          border-color: #4CAF50;
-        }
-        
-        .buttons {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 10px;
-        }
-        
-        button {
-          flex: 1;
-          padding: 10px;
-          border: none;
-          cursor: pointer;
-          border-radius: 5px;
-          color: white;
-          font-weight: 500;
-          transition: 0.3s;
-        }
-        
-        button:first-child {
-          background: #4CAF50;
-          margin-right: 5px;
-        }
-        
-        button:last-child {
-          background: #f44336;
-        }
-        
-        button:hover {
-          opacity: 0.8;
-        }
-        
+  width: 50%;
+  margin: auto;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  font-family: "Poppins", sans-serif;
+  max-width: 100%;
+}
+
+h2,
+footer {
+  text-align: center;
+  color: #444;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  font-weight: 500;
+}
+
+select,
+input,
+textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+select:hover,
+input:hover,
+textarea:hover {
+  border-color: #4caf50;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  color: white;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+button:first-child {
+  background: #4caf50;
+  margin-right: 5px;
+}
+
+button:last-child {
+  background: #f44336;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+.small-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  margin: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .small-button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+}

@@ -1,11 +1,19 @@
-import React from 'react';
-import './FormField.css';
+import React from "react";
+import "./FormField.css";
 
-const FormField = ({ label, type, value, onChange, placeholder, required, options }) => {
+const FormField = ({
+  label,
+  type,
+  value,
+  onChange,
+  placeholder,
+  required,
+  options,
+}) => {
   return (
     <div className="form-field">
       <label>{label}</label>
-      {type === 'select' ? (
+      {type === "select" ? (
         <select value={value} onChange={onChange} required={required}>
           {options.map((option, index) => (
             <option key={index} value={option}>
@@ -13,6 +21,8 @@ const FormField = ({ label, type, value, onChange, placeholder, required, option
             </option>
           ))}
         </select>
+      ) : type === "file" ? (
+        <input type="file" onChange={onChange} required={required} />
       ) : (
         <input
           type={type}
