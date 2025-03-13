@@ -1,21 +1,19 @@
 // src/main.jsx
-import React from 'react';
-
-
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './index.css';
-import App from './App';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Home from './pages/Home';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "./index.css";
+import App from "./App";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Students from "./ui/Students";
+import Lecturers from "./pages/Lecturers";
+import AcademicRegistrar from "./pages/AcademicRegistrar";
+import RegisterForm from "./pages/RegisterForm";
+import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx"; // Import StudentComplaints
 
-import Lecturers from './pages/Lecturers';
-import AcademicRegistrar from './pages/AcademicRegistrar';
-import RegisterForm from './pages/Registerform';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <Router>
@@ -28,6 +26,7 @@ root.render(
       <Route path="/students" element={<Students />} />
       <Route path="/lecturers" element={<Lecturers />} />
       <Route path="/academic-registrar" element={<AcademicRegistrar />} />
+      <Route path="/student-complaints" element={<StudentComplaints />} />{" "}
       
     </Routes>
   </Router>

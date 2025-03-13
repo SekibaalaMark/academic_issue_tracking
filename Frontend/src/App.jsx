@@ -33,7 +33,6 @@ function App() {
           </li>
         </ul>
       </nav>
-      {/* <StudentComplaints /> */}
     </div>
   );
 }
