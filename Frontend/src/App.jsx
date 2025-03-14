@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Login from "./ui/Login/Login.jsx";
 import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
-import AcademicRegistrar from "./ui/AcademicRegistrar/AcademicRegistrar.jsx";
+import AcademicRegistrar from "./pages/AcademicRegistrar";
 import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
@@ -62,6 +62,7 @@ function App() {
             </ul>
           </nav>
           <div className="content">
+            <AcademicRegistrar />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Login />} /> {/* Default route */}

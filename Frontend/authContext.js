@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Check if token is stored in localStorage
+    // Check if token and user data are stored in localStorage
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     if (storedToken && storedUser) {
@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Function to handle user login
   const login = async (credentials) => {
     try {
       const response = await axios.post(
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to handle user logout
   const logout = async () => {
     try {
       await axios.post(
@@ -55,6 +57,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Function to refresh the authentication token
   const refreshToken = async () => {
     try {
       const response = await axios.post(
@@ -75,6 +78,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Set up an interval to refresh the token every 15 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       if (token) {
