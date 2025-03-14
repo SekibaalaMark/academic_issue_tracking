@@ -1,5 +1,5 @@
 from rest_framework import status
-from .serializers import DepartmentSerializer,UserSerializer,IssueSerializer,RegisterSerializer
+from .serializers import DepartmentSerializer,UserSerializer,IssueSerializer,RegisterSerializer,LoginSerializer
 from django.shortcuts import render
 from .models import Issue,Department,CustomUser
 from rest_framework.response import Response
@@ -73,6 +73,45 @@ class Registration(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Allow anyone to access this view
+def login(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'success': True,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#Log out view
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Only authenticated users can access this view
+def logout(request):
+    try:
+        # Get the refresh token from the request
+        refresh_token = request.data.get('refresh')
+        
+        # Blacklist the refresh token
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # This will add the token to the blacklist
+            
+        return Response({'success': True, 'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -93,7 +132,7 @@ class Registration(APIView):
         '''
     
 
-
+'''
 # Login View
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow anyone to access this view
@@ -114,24 +153,6 @@ def login(request):
         }, status=status.HTTP_200_OK)
     else:
         return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-'''
-#Log out view
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Only authenticated users can access this view
-def logout(request):
-    try:
-        # Get the refresh token from the request
-        refresh_token = request.data.get('refresh')
-        
-        # Blacklist the refresh token
-        if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()  # This will add the token to the blacklist
-            
-        return Response({'success': True, 'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
-    except Exception as e:
-        return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)\'
-'''
+        '''
 
 

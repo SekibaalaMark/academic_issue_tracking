@@ -49,3 +49,6 @@ class RegisterSerializer(ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         return data
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
