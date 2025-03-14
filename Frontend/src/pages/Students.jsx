@@ -1,6 +1,11 @@
 import React,{useState,useEffect} from "react";
 import axios from 'axios';
 import styled from "styled-components"
+const Input=styled.input`
+padding:8px 12px;
+border-radius: 5px;
+border: 1px solid #ddd
+`
 
 function Students() {
   const [issues, setIssues] = useState([]);
