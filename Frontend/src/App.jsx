@@ -8,6 +8,7 @@ import Login from "./ui/Login/Login.jsx";
 import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "./ui/AcademicRegistrar/AcademicRegistrar.jsx";
+import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
 
 function App() {
   return (
@@ -50,6 +51,11 @@ function App() {
                 File Attachment
               </Link>
             </li>
+            <li className="nav-item">
+              <Link to="/student-file-upload" className="nav-link">
+                Student File Upload
+              </Link>
+            </li>
           </ul>
         </nav>
         <div className="content">
@@ -61,6 +67,7 @@ function App() {
             <Route path="/academic-registrar" component={AcademicRegistrar} />
             <Route path="/student-complaints" component={StudentComplaints} />
             <Route path="/file-attachment" component={FileAttachment} />
+            <Route path="/student-file-upload" component={StudentFileUpload} />
             <Route path="/" exact component={Login} /> {/* Default route */}
           </Switch>
         </div>

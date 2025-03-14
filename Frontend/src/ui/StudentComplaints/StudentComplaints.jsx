@@ -7,6 +7,7 @@ const StudentComplaints = () => {
   const [issue, setIssue] = useState("");
   const [file, setFile] = useState(null);
   const [comment, setComment] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -14,7 +15,10 @@ const StudentComplaints = () => {
       alert("Please select an issue.");
       return;
     }
+    setShowModal(true);
+  };
 
+  const confirmSubmit = () => {
     const formData = new FormData();
     formData.append("issue", issue);
     formData.append("file", file);
@@ -25,6 +29,7 @@ const StudentComplaints = () => {
     }
 
     alert("Complaint Submitted Successfully!");
+    setShowModal(false);
   };
 
   return (
@@ -82,6 +87,20 @@ const StudentComplaints = () => {
           @2025 Makerere University (AITS) All rights reserved
         </footer>
       </div>
+      {showModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>Confirm Submission</h3>
+            <p>Are you sure you want to submit this complaint?</p>
+            <button onClick={confirmSubmit} className="confirm-btn">
+              Yes
+            </button>
+            <button onClick={() => setShowModal(false)} className="cancel-btn">
+              No
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

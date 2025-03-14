@@ -13,8 +13,10 @@ const StudentDashboard = () => {
   const [category, setCategory] = useState("");
   const [details, setDetails] = useState("");
 
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
-    console.log({
+    const fields = [
       fullName,
       registrationNumber,
       school,
@@ -22,9 +24,9 @@ const StudentDashboard = () => {
       year,
       courseUnit,
       semester,
-      category,
-      details,
-    });
+    ];
+    const filledFields = fields.filter((field) => field !== "").length;
+    setProgress((filledFields / fields.length) * 100);
   }, [
     fullName,
     registrationNumber,
@@ -33,8 +35,6 @@ const StudentDashboard = () => {
     year,
     courseUnit,
     semester,
-    category,
-    details,
   ]);
 
   const handleSubmit = (e) => {
@@ -47,6 +47,9 @@ const StudentDashboard = () => {
       <h2>Student Dashboard</h2>
       <div className="dashboard">
         <h1 className="dashboard-heading">Student Dashboard</h1>
+        <div className="progress-bar">
+          <div className="progress" style={{ width: `${progress}%` }}></div>
+        </div>
         <div className="form-container">
           <form onSubmit={handleSubmit}>
             <FormField

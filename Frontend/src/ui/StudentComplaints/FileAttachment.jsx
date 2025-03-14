@@ -2,11 +2,13 @@ import React, { useState } from "react";
 
 const FileAttachment = ({ onChange }) => {
   const [fileName, setFileName] = useState("");
+  const [filePreview, setFilePreview] = useState(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name);
+      setFilePreview(URL.createObjectURL(file));
       onChange(e);
     }
   };
@@ -27,6 +29,11 @@ const FileAttachment = ({ onChange }) => {
           <p className="mt-2 text-sm text-gray-600">
             Selected file: {fileName}
           </p>
+        )}
+        {filePreview && (
+          <div className="file-preview">
+            <img src={filePreview} alt="File Preview" className="preview-img" />
+          </div>
         )}
       </div>
     </div>
