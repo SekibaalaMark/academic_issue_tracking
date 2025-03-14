@@ -102,7 +102,7 @@ const Students = () => {
       </ul>
     </div>
   );
-};
+}
 
 
 
