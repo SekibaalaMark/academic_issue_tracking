@@ -1,19 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import "./Login.css";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === "" || password === "") {
+    if (email === "" || password === "") {
       setError("Both fields are required.");
       return;
     }
     setError("");
-    alert("Login successful!");
+    try {
+      await login({ email, password });
+      navigate("/dashboard"); // Redirect after login
+    } catch (error) {
+      setError("Login failed. Please check your credentials and try again.");
+    }
   };
 
   return (
@@ -21,21 +30,25 @@ const Login = () => {
       <h2>Login</h2>
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-group">
-          <label>Username:</label>
+          <label>Email:</label>
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            placeholder="Enter email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="form-input"
+            required
           />
         </div>
         <div className="form-group">
           <label>Password:</label>
           <input
             type="password"
+            placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-input"
+            required
           />
         </div>
         {error && <p className="error-message">{error}</p>}

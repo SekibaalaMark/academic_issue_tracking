@@ -6,6 +6,7 @@ import FormRow from "../ui/FormRow";
 import Input from "../ui/Input";
 import styles from "./register.module.css";
 import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa"; // Import icons
+import { useAuth } from "../../authContext"; // Import useAuth hook
 
 const StyledForm = styled(Form)`
   max-width: 400px;
@@ -39,20 +40,44 @@ const StyledInput = styled(Input)`
 `;
 
 function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (username === "" || password === "") {
+      setError("Both fields are required.");
+      return;
+    }
+    setError("");
+    try {
+      await login({ username, password });
+      alert("Login successful!");
+    } catch (error) {
+      setError("Login failed. Please check your credentials and try again.");
+    }
+  };
+
   return (
     <div className={styles.formCenter}>
-      <StyledForm>
+      <StyledForm onSubmit={handleSubmit}>
         <h2>welcome to AITS</h2>
         <h2>Login</h2>
         <FormRow label="username">
           <div style={{ position: "relative", width: "100%" }}>
-            <StyledInput type="text" placeholder="Enter username" />
+            <StyledInput
+              type="text"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
             <span
               style={{
                 position: "absolute",
@@ -71,6 +96,8 @@ function Login() {
             <StyledInput
               type={passwordVisible ? "text" : "password"}
               placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <span
               onClick={togglePasswordVisibility}
@@ -86,6 +113,7 @@ function Login() {
             </span>
           </div>
         </FormRow>
+        {error && <p className="error-message">{error}</p>}
         <div
           className="remember-forget"
           style={{
@@ -99,7 +127,7 @@ function Login() {
           </label>
           <a href="#">Forgot Password?</a>
         </div>
-        <Button>Login</Button>
+        <Button type="submit">Login</Button>
       </StyledForm>
     </div>
   );
