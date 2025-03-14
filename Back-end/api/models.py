@@ -36,6 +36,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=100,choices=USER_CHOICES,default='student')
     email = models.EmailField(unique=True)
     username=models.CharField(max_length=100,unique=True)
+    password_confirmation = models.CharField(max_length=100)
     #programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
 
     def __str__(self):

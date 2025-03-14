@@ -27,15 +27,24 @@ class UserSerializer(ModelSerializer):
 class RegisterSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id','first_name','last_name',"email",'username','password']
+        fields = ['id','first_name','last_name',"email",'username','password','password_confirmation']
+
+        extra_kwargs = {'password':{'write_only':True},'password_confirmation':{'write_only':True}}
     def validate(self,data):
         username = data['username']
         email = data['email']
+        password = data['password']
+        password_confirmation = data['password_confirmation']
+
         if username:
             if CustomUser.objects.filter(username=username).exists():
                 raise serializers.ValidationError('username already exists')
         if email:
             if CustomUser.objects.filter(email=email).exists():
                 raise serializers.ValidationError("email already exists")
+        
+        # Check if password and password confirmation match
+        if password != password_confirmation:
+            raise serializers.ValidationError("Passwords do not match")
         return data
 

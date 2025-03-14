@@ -72,6 +72,10 @@ class Registration(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
 
+
+
+
+    
     '''
     def assign_user_group(self, user):
         """Assign user to a group based on their role."""
@@ -87,13 +91,6 @@ class Registration(APIView):
         user.groups.add(group)
         '''
     
-
-
-
-
-
-
-
 
 '''
 # Login View
