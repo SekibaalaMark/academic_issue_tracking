@@ -53,6 +53,7 @@ class Registration(APIView):
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
+            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
             
             user = CustomUser(**validated_data)
             user.set_password(password)
@@ -63,7 +64,7 @@ class Registration(APIView):
 
             return Response({
                 "message": "User  Created Successfully",
-                "data": validated_data,
+                'data': validated_data,
                 "tokens": {
                     "refresh": str(refresh),
                     "access": access_token
@@ -92,7 +93,7 @@ class Registration(APIView):
         '''
     
 
-'''
+
 # Login View
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow anyone to access this view
@@ -114,7 +115,7 @@ def login(request):
     else:
         return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-
+'''
 #Log out view
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  # Only authenticated users can access this view
