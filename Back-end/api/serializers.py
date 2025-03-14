@@ -6,6 +6,7 @@ class IssueSerializer(ModelSerializer):
     class Meta:
         model= Issue
         fields = '__all__'
+        extra_kwargs ={"password":{"write_only":True}}
 
 class DepartmentSerializer(ModelSerializer):
     class Meta:
