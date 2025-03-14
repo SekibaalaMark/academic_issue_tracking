@@ -2,7 +2,7 @@ import React,{useState,useEffect} from "react";
 import axios from 'axios';
 import styled from "styled-components"
 
-const Students = () => {
+function Students() {
   const [issues, setIssues] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [formData, setFormData] = useState({
