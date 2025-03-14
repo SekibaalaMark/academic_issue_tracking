@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import os
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,6 +44,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # ✅ Add your React app URL
 ]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWS_CREDENTIALS = True
 
 # 🔹 Allow All Headers & Methods for Development (Optional)
 CORS_ALLOW_HEADERS = [
@@ -76,7 +80,7 @@ WSGI_APPLICATION = 'Backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE':'django.db.backends.postgresql',
-        'NAME':'mark_majje',
+        'NAME':'mark_majje1',
         'USER':'mark_majje',
         'PASSWORD':'mark',
     }
@@ -121,4 +125,6 @@ REST_FRAMEWORK = {
     )
 }
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
