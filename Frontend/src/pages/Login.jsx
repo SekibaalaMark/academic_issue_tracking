@@ -86,6 +86,19 @@ function Login() {
             </span>
           </div>
         </FormRow>
+        <div
+          className="remember-forget"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <label>
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#">Forgot Password?</a>
+        </div>
         <Button>Login</Button>
       </StyledForm>
     </div>
