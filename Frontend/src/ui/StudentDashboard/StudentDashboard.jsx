@@ -44,9 +44,8 @@ const StudentDashboard = () => {
 
   return (
     <div className="dashboard">
-      <h1>Student Dashboard</h1>
+      <h1 className="dashboard-heading">Student Dashboard</h1>
       <div className="form-container">
-        <h2>Student Complaint Form</h2>
         <form onSubmit={handleSubmit}>
           <FormField
             label="Full Name"
@@ -104,7 +103,6 @@ const StudentDashboard = () => {
             placeholder="Enter your semester"
             required
           />
-
           <button type="submit" className="submit-btn">
             Submit
           </button>
