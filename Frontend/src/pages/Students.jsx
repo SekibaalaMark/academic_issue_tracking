@@ -11,7 +11,18 @@ const Students = () => {
     description:"",
   })
   const [alertMessage, setAlertMessage] = useState("");
-  
+
+  // Fetch issues and notifications on mount
+  useEffect(() => {
+    axios
+      .get("/api/issues?role=student")
+      .then((res) => setIssues(res.data))
+      .catch((err) => console.error(err));
+    axios
+      .get("/api/notifications")
+      .then((res) => setNotifications(res.data))
+      .catch((err) => console.error(err));
+  }, []);
 
 
 function Students() {
