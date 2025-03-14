@@ -15,6 +15,7 @@ router.register(r'users',UserViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path('register/',Registration.as_view(),name = "register"),
+    path("api-auth/",include ("rest_framework.urls")),
 ]
 
 
