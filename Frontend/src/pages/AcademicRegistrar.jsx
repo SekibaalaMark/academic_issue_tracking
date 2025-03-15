@@ -112,6 +112,36 @@ function AcademicRegistrar() {
 
 return (
   <><div style={{ padding: "1rem" }} /><h1>Academic Registrar</h1></>
+   {/* Filtering Controls */}
+   <FilterContainer>
+   <label>
+     Filter by Issue Type:&nbsp;
+     <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+       <option value="">All</option>
+       <option value="missing marks">Missing Marks</option>
+       <option value="appeals">Appeals</option>
+       <option value="corrections">Corrections</option>
+     </select>
+   </label>
+   <label style={{ marginLeft: "1rem" }}>
+     Filter by Status:&nbsp;
+     <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+       <option value="">All</option>
+       <option value="pending">Pending</option>
+       <option value="in progress">In Progress</option>
+       <option value="resolved">Resolved</option>
+     </select>
+   </label>
+   <label style={{ marginLeft: "1rem" }}>
+     Filter by Assigned Lecturer:&nbsp;
+     <input
+       type="text"
+       value={filterLecturer}
+       onChange={(e) => setFilterLecturer(e.target.value)}
+       placeholder="Lecturer's name"
+     />
+   </label>
+ </FilterContainer>
 )
     
 
