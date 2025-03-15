@@ -30,7 +30,10 @@ function Students() {
       .catch((err) => {
         console.error("Error fetching issues:", err);
         setIssues([]);
-    axios.get("/api/issues?role=student")
+      });
+
+      //Fetch notifications with axios
+    axios.get("/api/notifications")
       .then((res) => {
         setIssues(Array.isArray(res.data) ? res.data : []);
       })
