@@ -81,8 +81,13 @@ function Students() {
   return (
     <div style={{ padding: "1rem" }}>
       <h1>Student Issue Tracking</h1>
-      {alertMessage && <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>}
 
+      {/* Display overdue alert if any */}
+      {alertMessage && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>
+      )}
+
+      {/* Issue Submission Form */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
         <div>
           <label>Course Code: </label>
@@ -96,7 +101,11 @@ function Students() {
         </div>
         <div>
           <label>Issue Type: </label>
-          <select name="issueType" value={formData.issueType} onChange={handleChange}>
+          <select
+            name="issueType"
+            value={formData.issueType}
+            onChange={handleChange}
+          >
             <option value="missing marks">Missing Marks</option>
             <option value="appeals">Appeals</option>
             <option value="corrections">Corrections</option>
@@ -114,12 +123,14 @@ function Students() {
         <button type="submit">Submit Issue</button>
       </form>
 
+      {/* Display Issues */}
       <h2>Your Issues</h2>
       {issues.length > 0 ? (
         <ul>
           {issues.map((issue) => (
-            <li key={issue.id}>
-              <strong>{issue.courseCode}</strong> - {issue.issueType} - {issue.status}
+            <li key={issue.id} style={{ marginBottom: "1rem" }}>
+              <strong>{issue.courseCode}</strong> - {issue.issueType} -{" "}
+              {issue.status}
               <p>{issue.description}</p>
             </li>
           ))}
@@ -130,6 +141,7 @@ function Students() {
 
       <hr />
 
+      {/* Display Notifications */}
       <h2>Notifications</h2>
       {notifications.length > 0 ? (
         <ul>
