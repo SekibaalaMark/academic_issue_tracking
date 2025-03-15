@@ -33,6 +33,10 @@ const Button = styled.button`
   border: none;
   border-radius: 3px;
   cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 function AcademicRegistrar() {
