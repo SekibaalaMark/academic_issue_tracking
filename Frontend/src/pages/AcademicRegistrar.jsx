@@ -11,6 +11,9 @@ const Table = styled.table`
 
 const Th = styled.th`
   border: 1px solid #ddd;
+  padding: 8px;
+  background-color: #f2f2f2;
+`;
 
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
