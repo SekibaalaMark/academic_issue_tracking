@@ -63,7 +63,9 @@ function AcademicRegistrar() {
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
     ? issue.assignedLecturer &&
-      issue.assignedLecturer
+      issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()) : true;
+    return matchType && matchStatus && matchLecturer;
+  });    
     if(filterType && issue.type !== filterType) {
       return false;
     }
