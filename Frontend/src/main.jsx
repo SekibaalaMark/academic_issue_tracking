@@ -24,7 +24,7 @@ root.render(
       <Route path="/home" element={<Home />} />
       <Route path="/students" element={<Students />} />
       <Route path="/lecturers" element={<Lecturers />} />
-      <Route path="/academic-registrar" element={<AcademicRegistrar />} />
+      <Route path="/academicregistrar" element={<AcademicRegistrar />} />
     </Routes>
   </Router>
 );
