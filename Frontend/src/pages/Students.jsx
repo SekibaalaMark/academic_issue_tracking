@@ -20,6 +20,9 @@ function Students() {
 
   // ✅ Fetch issues (with fetch) and notifications (with axios) on mount
   useEffect(() => {
+    //Fetch issues from /api/issues/mine
+    fetch("/api/issues/mine")
+      .then((res) => res.json())
     axios.get("/api/issues?role=student")
       .then((res) => {
         setIssues(Array.isArray(res.data) ? res.data : []);
