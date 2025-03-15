@@ -9,6 +9,9 @@ const Table = styled.table`
   margin-top: 1rem;
 `;
 
+const Th = styled.th`
+  border: 1px solid #ddd;
+
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
