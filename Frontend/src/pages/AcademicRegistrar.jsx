@@ -46,6 +46,12 @@ function AcademicRegistrar() {
   const[filterLecturer, setFilterLecturer] = useState("");
 
   //Fetch all issues on component mount
+  useEffect(() => {
+    axios.get("http://localhost:5000/issues")
+      .then(res => {
+         setIssues(res.data))
+      .catch(err => console.log(err));
+  }, []);
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
 
