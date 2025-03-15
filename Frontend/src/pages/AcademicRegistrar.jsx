@@ -112,6 +112,7 @@ function AcademicRegistrar() {
 
 return (
   <div style={{ padding: "1rem"}}
+   <h1>Academic Registrar</h1>
 )
     
 
