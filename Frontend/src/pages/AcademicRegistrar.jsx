@@ -52,7 +52,9 @@ function AcademicRegistrar() {
          setIssues(Array.isArray(res.data) ? res.data : []);
       })
       .catch((err => {
-        console.log(err));
+        console.error("Error fetching issues:", err);
+        setIssues([]);
+      });
   }, []);
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
