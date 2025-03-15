@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
 
-//Styled components for the table and controls
+// Styled components for the table and controls
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -40,34 +40,36 @@ const Button = styled.button`
 `;
 
 function AcademicRegistrar() {
-  const[issues, setIssues] = useState([]);
-  const[filterType, setFilterType] = useState("");
-  const[filterStatus, setFilterStatus] = useState("");
-  const[filterLecturer, setFilterLecturer] = useState("");
+  const [issues, setIssues] = useState([]);
+  const [filterType, setFilterType] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterLecturer, setFilterLecturer] = useState("");
 
-  //Fetch all issues on component mount
+  // Fetch all issues on component mount
   useEffect(() => {
-    axios.get("http://localhost:5000/issues")
-      .then((res => {
-         setIssues(Array.isArray(res.data) ? res.data : []);
+    axios
+      .get("http://localhost:5000/issues")
+      .then((res) => {
+        setIssues(Array.isArray(res.data) ? res.data : []);
       })
-      .catch((err => {
+      .catch((err) => {
         console.error("Error fetching issues:", err);
-        setIssues([]);    
+        setIssues([]);
       });
   }, []);
 
-  //compute filtered issues based on selected filters
-  const filteredIssues = issues.filter(issue => {
-    const matchType = filterType ? issue.type === filterType : true;
+  // Compute filtered issues based on selected filters
+  const filteredIssues = issues.filter((issue) => {
+    const matchType = filterType ? issue.issueType === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
-    ? issue.assignedLecturer &&
-      issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()) : true;
+      ? issue.assignedLecturer &&
+        issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase())
+      : true;
     return matchType && matchStatus && matchLecturer;
-  });  
+  });
 
-  // Handle assigning an issue to a lecturer (or reassigning)
+  // Handle assigning (or reassigning) an issue to a lecturer
   const handleAssign = (issueId) => {
     const lecturer = prompt("Enter lecturer's name to assign:");
     if (lecturer) {
@@ -110,83 +112,81 @@ function AcademicRegistrar() {
     }
   };
 
-return (
-  <><div style={{ padding: "1rem" }} /><h1>Academic Registrar</h1></>
-   {/* Filtering Controls */}
-   <FilterContainer>
-   <label>
-     Filter by Issue Type:&nbsp;
-     <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-       <option value="">All</option>
-       <option value="missing marks">Missing Marks</option>
-       <option value="appeals">Appeals</option>
-       <option value="corrections">Corrections</option>
-     </select>
-   </label>
-   <label style={{ marginLeft: "1rem" }}>
-     Filter by Status:&nbsp;
-     <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-       <option value="">All</option>
-       <option value="pending">Pending</option>
-       <option value="in progress">In Progress</option>
-       <option value="resolved">Resolved</option>
-     </select>
-   </label>
-   <label style={{ marginLeft: "1rem" }}>
-     Filter by Assigned Lecturer:&nbsp;
-     <input
-       type="text"
-       value={filterLecturer}
-       onChange={(e) => setFilterLecturer(e.target.value)}
-       placeholder="Lecturer's name"
-     />
-   </label>
- </FilterContainer>
-  {/* Issues Table */}
-  <Table>
-  <thead>
-    <tr>
-      <Th>ID</Th>
-      <Th>Course Code</Th>
-      <Th>Issue Type</Th>
-      <Th>Description</Th>
-      <Th>Status</Th>
-      <Th>Assigned Lecturer</Th>
-      <Th>Actions</Th>
-    </tr>
-  </thead>
-  <tbody>
-    {filteredIssues.length > 0 ? (
-      filteredIssues.map((issue) => (
-        <tr key={issue.id}>
-          <Td>{issue.id}</Td>
-          <Td>{issue.courseCode}</Td>
-          <Td>{issue.issueType}</Td>
-          <Td>{issue.description}</Td>
-          <Td>{issue.status}</Td>
-          <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
-          <Td>
-            <Button onClick={() => handleAssign(issue.id)}>Assign</Button>
-            {issue.status !== "resolved" && (
-              <Button onClick={() => handleResolve(issue.id)}>
-                Resolve Issue
-              </Button>
-            )}
-          </Td>
-        </tr>
-      ))
-    ) : (
-      <tr>
-        <Td colSpan="7">No issues found.</Td>
-      </tr>
-    )}
-  </tbody>
-</Table>
-</div>
-);
+  return (
+    <div style={{ padding: "1rem" }}>
+      <h1>Academic Registrar Dashboard</h1>
+
+      {/* Filtering Controls */}
+      <FilterContainer>
+        <label>
+          Filter by Issue Type:&nbsp;
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+            <option value="">All</option>
+            <option value="missing marks">Missing Marks</option>
+            <option value="appeals">Appeals</option>
+            <option value="corrections">Corrections</option>
+          </select>
+        </label>
+        <label style={{ marginLeft: "1rem" }}>
+          Filter by Status:&nbsp;
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="in progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </label>
+        <label style={{ marginLeft: "1rem" }}>
+          Filter by Assigned Lecturer:&nbsp;
+          <input
+            type="text"
+            value={filterLecturer}
+            onChange={(e) => setFilterLecturer(e.target.value)}
+            placeholder="Lecturer's name"
+          />
+        </label>
+      </FilterContainer>
+
+      {/* Issues Table */}
+      <Table>
+        <thead>
+          <tr>
+            <Th>ID</Th>
+            <Th>Course Code</Th>
+            <Th>Issue Type</Th>
+            <Th>Description</Th>
+            <Th>Status</Th>
+            <Th>Assigned Lecturer</Th>
+            <Th>Actions</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredIssues.length > 0 ? (
+            filteredIssues.map((issue) => (
+              <tr key={issue.id}>
+                <Td>{issue.id}</Td>
+                <Td>{issue.courseCode}</Td>
+                <Td>{issue.issueType}</Td>
+                <Td>{issue.description}</Td>
+                <Td>{issue.status}</Td>
+                <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+                <Td>
+                  <Button onClick={() => handleAssign(issue.id)}>Assign</Button>
+                  {issue.status !== "resolved" && (
+                    <Button onClick={() => handleResolve(issue.id)}>Resolve Issue</Button>
+                  )}
+                </Td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <Td colSpan="7">No issues found.</Td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
+    </div>
+  );
 }
 
-    
-
-   
 export default AcademicRegistrar;
