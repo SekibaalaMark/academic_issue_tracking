@@ -35,11 +35,12 @@ function Students() {
       //Fetch notifications with axios
     axios.get("/api/notifications")
       .then((res) => {
-        setIssues(Array.isArray(res.data) ? res.data : []);
+        setNotifications(Array.isArray(res.data) ? res.data : []);
       })
+        
       .catch((err) => {
-        console.error("Error fetching issues:", err);
-        setIssues([]);
+        console.error("Error fetching notifications:", err);
+        setNotifications([]);
       });
 
     axios.get("/api/notifications")
