@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
 import AcademicRegistrar from './pages/AcademicRegistrar';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
