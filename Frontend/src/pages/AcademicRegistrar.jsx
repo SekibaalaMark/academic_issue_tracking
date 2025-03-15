@@ -51,7 +51,8 @@ function AcademicRegistrar() {
       .then((res => {
          setIssues(Array.isArray(res.data) ? res.data : []);
       })
-      .catch(err => console.log(err));
+      .catch((err => {
+        console.log(err));
   }, []);
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
