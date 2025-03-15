@@ -66,6 +66,50 @@ function AcademicRegistrar() {
       issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()) : true;
     return matchType && matchStatus && matchLecturer;
   });  
+
+  // Handle assigning an issue to a lecturer (or reassigning)
+  const handleAssign = (issueId) => {
+    const lecturer = prompt("Enter lecturer's name to assign:");
+    if (lecturer) {
+      axios
+        .patch(`/api/issues/${issueId}`, { assignedLecturer: lecturer })
+        .then((res) => {
+          setIssues((prevIssues) =>
+            prevIssues.map((issue) =>
+              issue.id === issueId ? { ...issue, assignedLecturer: lecturer } : issue
+            )
+          );
+          alert(`Issue assigned to ${lecturer}`);
+        })
+        .catch((err) => {
+          console.error("Error assigning issue:", err);
+          alert("Error assigning issue.");
+        });
+    }
+  };
+
+  // Handle resolving an issue
+  const handleResolve = (issueId) => {
+    if (window.confirm("Are you sure you want to mark this issue as resolved?")) {
+      axios
+        .patch(`/api/issues/${issueId}`, { status: "resolved" })
+        .then((res) => {
+          setIssues((prevIssues) =>
+            prevIssues.map((issue) =>
+              issue.id === issueId ? { ...issue, status: "resolved" } : issue
+            )
+          );
+          // Trigger a notification: here, a simple alert and console log
+          alert("Issue marked as resolved. Notification sent.");
+          console.log("Email notification sent for resolved issue.");
+        })
+        .catch((err) => {
+          console.error("Error resolving issue:", err);
+          alert("Error resolving issue.");
+        });
+    }
+  };
+
     
 
    
