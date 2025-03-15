@@ -110,7 +110,9 @@ function AcademicRegistrar() {
     }
   };
 
-return 
+return (
+  <div style={{ padding: "1rem"}}
+)
     
 
    
