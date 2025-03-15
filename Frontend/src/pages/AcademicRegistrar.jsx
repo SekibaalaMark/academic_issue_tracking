@@ -61,6 +61,7 @@ function AcademicRegistrar() {
   const filteredIssues = issues.filter(issue => {
     const matchType = filterType ? issue.type === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
+    const matchLecturer = filterLecturer
     if(filterType && issue.type !== filterType) {
       return false;
     }
