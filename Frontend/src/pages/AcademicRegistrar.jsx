@@ -65,10 +65,8 @@ function AcademicRegistrar() {
     ? issue.assignedLecturer &&
       issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()) : true;
     return matchType && matchStatus && matchLecturer;
-  });    
-    if(filterType && issue.type !== filterType) {
-      return false;
-    }
+  });  
+    
 
     if(filterStatus && issue.status !== filterStatus) {
       return false;
