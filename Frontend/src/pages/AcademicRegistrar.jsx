@@ -40,6 +40,12 @@ const Button = styled.button`
 `;
 
 function AcademicRegistrar() {
+  const[issues, setIssues] = useState([]);
+  const[filterType, setFilterType] = useState("");
+  const[filterStatus, setFilterStatus] = useState("");
+  const[filterLecturer, setFilterLecturer] = useState("");
+
+  //Fetch all issues on component mount
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
 
