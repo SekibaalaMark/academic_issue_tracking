@@ -42,18 +42,11 @@ function Students() {
         console.error("Error fetching notifications:", err);
         setNotifications([]);
       });
-
-    axios.get("/api/notifications")
-      .then((res) => {
-        setNotifications(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch((err) => {
-        console.error("Error fetching notifications:", err);
-        setNotifications([]);
-      });
   }, []);
 
-  // ✅ Check for overdue issues
+    
+
+  // ✅ Check for overdue issues(over 7 days and not resolved)
   useEffect(() => {
     const now = new Date();
     const overdue = issues.filter(
