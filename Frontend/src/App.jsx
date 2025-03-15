@@ -36,7 +36,7 @@ function App() {
           <li><Link to="/dashboard">Dashboard</Link></li>
           <li><Link to="/students">Students</Link></li>
           <li><Link to="/lecturers">Lecturers</Link></li>
-          <li><Link to="/academic-registrar">Academic Registrar</Link></li>
+          <li><Link to="/academic-registrar">AcademicRegistrar</Link></li>
         </ul>
       </nav>
 
