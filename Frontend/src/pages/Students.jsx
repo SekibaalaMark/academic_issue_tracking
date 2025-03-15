@@ -84,7 +84,7 @@ function Students() {
         <div>
           <label>Issue Type: </label>
           <select name="issueType" value={formData.issueType} onChange={handleChange}>
-            <option value="marks">Marks</option>
+            <option value="missing marks">Missing Marks</option>
             <option value="appeals">Appeals</option>
             <option value="corrections">Corrections</option>
           </select>
