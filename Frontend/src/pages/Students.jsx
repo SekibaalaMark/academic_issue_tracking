@@ -18,7 +18,7 @@ function Students() {
   });
   const [alertMessage, setAlertMessage] = useState("");
 
-  // ✅ Fetch issues and notifications on mount
+  // ✅ Fetch issues (with fetch) and notifications (with axios) on mount
   useEffect(() => {
     axios.get("/api/issues?role=student")
       .then((res) => {
