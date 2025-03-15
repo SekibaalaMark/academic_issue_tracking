@@ -9,7 +9,7 @@ import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "./pages/AcademicRegistrar";
 import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
-import { AuthProvider } from "../authContext"; // Updated import path
+import { AuthProvider } from "./context/AuthContext"; // Updated import path
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -62,7 +62,6 @@ function App() {
             </ul>
           </nav>
           <div className="content">
-            <AcademicRegistrar />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Login />} /> {/* Default route */}

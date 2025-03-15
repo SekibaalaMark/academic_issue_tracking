@@ -1,0 +1,21 @@
+.lecturers-container {
+          padding: 20px;
+          background-color: #f9f9f9;
+        }
+        
+        h1 {
+          color: #333;
+        }
+        
+        ul {
+          list-style-type: none;
+          padding: 0;
+        }
+        
+        li {
+          margin: 10px 0;
+          padding: 10px;
+          background-color: #fff;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        }
