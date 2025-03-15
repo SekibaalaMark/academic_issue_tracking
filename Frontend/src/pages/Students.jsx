@@ -63,13 +63,17 @@ function Students() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   
-
+  //submit new issue with axios
   const handleSubmit = (e) => {
     e.preventDefault();
     axios.post("/api/issues", formData)
       .then((res) => {
         setIssues([...issues, res.data]);
-        setFormData({ courseCode: "", issueType: "missing marks", description: "" });
+        setFormData({ 
+          courseCode: "", 
+          issueType: "missing marks",
+           description: ""
+           });
       })
       .catch((err) => console.error(err));
   };
