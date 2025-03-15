@@ -23,6 +23,11 @@ function Students() {
     //Fetch issues from /api/issues/mine
     fetch("/api/issues/mine")
       .then((res) => res.json())
+      .then((data) => {
+        //Ensure data is an array to prevent .map() errors
+        setIssues(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
     axios.get("/api/issues?role=student")
       .then((res) => {
         setIssues(Array.isArray(res.data) ? res.data : []);
