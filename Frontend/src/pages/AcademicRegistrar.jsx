@@ -58,6 +58,21 @@ function AcademicRegistrar() {
   }, []);
 
   //compute filtered issues based on selected filters
+  const filteredIssues = issues.filter(issue => {
+    if(filterType && issue.type !== filterType) {
+      return false;
+    }
+
+    if(filterStatus && issue.status !== filterStatus) {
+      return false;
+    }
+
+    if(filterLecturer && issue.lecturer !== filterLecturer) {
+      return false;
+    }
+
+    return true;
+  }
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
 
