@@ -60,6 +60,7 @@ function AcademicRegistrar() {
   //compute filtered issues based on selected filters
   const filteredIssues = issues.filter(issue => {
     const matchType = filterType ? issue.type === filterType : true;
+    const matchStatus = filterStatus ? issue.status === filterStatus : true;
     if(filterType && issue.type !== filterType) {
       return false;
     }
