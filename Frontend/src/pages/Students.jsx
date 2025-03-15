@@ -28,6 +28,8 @@ function Students() {
         setIssues(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
+        console.error("Error fetching issues:", err);
+        setIssues([]);
     axios.get("/api/issues?role=student")
       .then((res) => {
         setIssues(Array.isArray(res.data) ? res.data : []);
