@@ -25,7 +25,14 @@ const FilterContainer = styled.div`
   margin-top: 1rem;
 `;
 
-const Button =
+const Button = styled.button`
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+`;
 
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
