@@ -53,7 +53,7 @@ function AcademicRegistrar() {
       })
       .catch((err => {
         console.error("Error fetching issues:", err);
-        setIssues([]);
+        setIssues([]);    
       });
   }, []);
   return <h1>Welcome to the Academic Tracking System</h1>;
