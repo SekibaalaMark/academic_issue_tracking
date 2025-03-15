@@ -56,6 +56,8 @@ function AcademicRegistrar() {
         setIssues([]);    
       });
   }, []);
+
+  //compute filtered issues based on selected filters
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
 
