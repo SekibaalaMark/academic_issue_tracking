@@ -15,6 +15,12 @@ const Th = styled.th`
   background-color: #f2f2f2;
 `;
 
+const Td = styled.td`
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+`;
+
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
