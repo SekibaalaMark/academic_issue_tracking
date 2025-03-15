@@ -48,8 +48,9 @@ function AcademicRegistrar() {
   //Fetch all issues on component mount
   useEffect(() => {
     axios.get("http://localhost:5000/issues")
-      .then(res => {
-         setIssues(res.data))
+      .then((res => {
+         setIssues(Array.isArray(res.data) ? res.data : []);
+      })
       .catch(err => console.log(err));
   }, []);
   return <h1>Welcome to the Academic Tracking System</h1>;
