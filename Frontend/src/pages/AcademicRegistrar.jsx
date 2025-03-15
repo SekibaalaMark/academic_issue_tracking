@@ -25,7 +25,7 @@ const FilterContainer = styled.div`
   margin-top: 1rem;
 `;
 
-
+const Button =
 
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
