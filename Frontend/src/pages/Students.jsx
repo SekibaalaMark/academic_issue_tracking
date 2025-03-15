@@ -18,28 +18,35 @@ function Students() {
   });
   const [alertMessage, setAlertMessage] = useState("");
 
-  // ✅ Fetch issues and notifications on mount
+  // ✅ Fetch issues (with fetch) and notifications (with axios) on mount
   useEffect(() => {
-    axios.get("/api/issues?role=student")
-      .then((res) => {
-        setIssues(Array.isArray(res.data) ? res.data : []);
+    //Fetch issues from /api/issues/mine
+    fetch("/api/issues/mine")
+      .then((res) => res.json())
+      .then((data) => {
+        //Ensure data is an array to prevent .map() errors
+        setIssues(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
         console.error("Error fetching issues:", err);
         setIssues([]);
       });
 
+      //Fetch notifications with axios
     axios.get("/api/notifications")
       .then((res) => {
         setNotifications(Array.isArray(res.data) ? res.data : []);
       })
+        
       .catch((err) => {
         console.error("Error fetching notifications:", err);
         setNotifications([]);
       });
   }, []);
 
-  // ✅ Check for overdue issues
+    
+
+  // ✅ Check for overdue issues(over 7 days and not resolved)
   useEffect(() => {
     const now = new Date();
     const overdue = issues.filter(
@@ -52,15 +59,21 @@ function Students() {
     );
   }, [issues]);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-
+  };
+  
+  //submit new issue with axios
   const handleSubmit = (e) => {
     e.preventDefault();
     axios.post("/api/issues", formData)
       .then((res) => {
         setIssues([...issues, res.data]);
-        setFormData({ courseCode: "", issueType: "missing marks", description: "" });
+        setFormData({ 
+          courseCode: "", 
+          issueType: "missing marks",
+           description: ""
+           });
       })
       .catch((err) => console.error(err));
   };
@@ -68,8 +81,13 @@ function Students() {
   return (
     <div style={{ padding: "1rem" }}>
       <h1>Student Issue Tracking</h1>
-      {alertMessage && <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>}
 
+      {/* Display overdue alert if any */}
+      {alertMessage && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>
+      )}
+
+      {/* Issue Submission Form */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
         <div>
           <label>Course Code: </label>
@@ -83,7 +101,11 @@ function Students() {
         </div>
         <div>
           <label>Issue Type: </label>
-          <select name="issueType" value={formData.issueType} onChange={handleChange}>
+          <select
+            name="issueType"
+            value={formData.issueType}
+            onChange={handleChange}
+          >
             <option value="missing marks">Missing Marks</option>
             <option value="appeals">Appeals</option>
             <option value="corrections">Corrections</option>
@@ -101,12 +123,14 @@ function Students() {
         <button type="submit">Submit Issue</button>
       </form>
 
+      {/* Display Issues */}
       <h2>Your Issues</h2>
       {issues.length > 0 ? (
         <ul>
           {issues.map((issue) => (
-            <li key={issue.id}>
-              <strong>{issue.courseCode}</strong> - {issue.issueType} - {issue.status}
+            <li key={issue.id} style={{ marginBottom: "1rem" }}>
+              <strong>{issue.courseCode}</strong> - {issue.issueType} -{" "}
+              {issue.status}
               <p>{issue.description}</p>
             </li>
           ))}
@@ -117,6 +141,7 @@ function Students() {
 
       <hr />
 
+      {/* Display Notifications */}
       <h2>Notifications</h2>
       {notifications.length > 0 ? (
         <ul>
