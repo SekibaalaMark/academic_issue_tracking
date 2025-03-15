@@ -21,6 +21,12 @@ const Td = styled.td`
   text-align: center;
 `;
 
+const FilterContainer = styled.div`
+  margin-top: 1rem;
+`;
+
+
+
 function AcademicRegistrar() {
   return <h1>Welcome to the Academic Tracking System</h1>;
 }
