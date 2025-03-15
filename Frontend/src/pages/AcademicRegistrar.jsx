@@ -26,11 +26,12 @@ const FilterContainer = styled.div`
 `;
 
 const Button = styled.button`
-  padding: 8px 12px;
+  margin: 0 0.5px;
+  padding: 5px 10px;
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 3px;
   cursor: pointer;
 `;
 
