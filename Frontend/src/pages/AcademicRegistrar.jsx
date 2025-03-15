@@ -142,7 +142,50 @@ return (
      />
    </label>
  </FilterContainer>
-)
+  {/* Issues Table */}
+  <Table>
+  <thead>
+    <tr>
+      <Th>ID</Th>
+      <Th>Course Code</Th>
+      <Th>Issue Type</Th>
+      <Th>Description</Th>
+      <Th>Status</Th>
+      <Th>Assigned Lecturer</Th>
+      <Th>Actions</Th>
+    </tr>
+  </thead>
+  <tbody>
+    {filteredIssues.length > 0 ? (
+      filteredIssues.map((issue) => (
+        <tr key={issue.id}>
+          <Td>{issue.id}</Td>
+          <Td>{issue.courseCode}</Td>
+          <Td>{issue.issueType}</Td>
+          <Td>{issue.description}</Td>
+          <Td>{issue.status}</Td>
+          <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+          <Td>
+            <Button onClick={() => handleAssign(issue.id)}>Assign</Button>
+            {issue.status !== "resolved" && (
+              <Button onClick={() => handleResolve(issue.id)}>
+                Resolve Issue
+              </Button>
+            )}
+          </Td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <Td colSpan="7">No issues found.</Td>
+      </tr>
+    )}
+  </tbody>
+</Table>
+</div>
+);
+}
+
     
 
    
