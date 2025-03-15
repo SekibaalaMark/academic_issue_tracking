@@ -1,11 +1,15 @@
 import React from "react";
+import { useAuth } from "../../../authContext"; // Updated import path
 
 const StudentFileUpload = () => {
+  const { user } = useAuth();
+
   return (
     <div className="file-upload-container max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
       <h2 className="text-2xl font-bold mb-4 text-center">
         Upload Student File
       </h2>
+      <h1>File Upload for {user ? user.name : "Guest"}</h1>
       <form className="space-y-4">
         <label className="block text-gray-700 font-semibold">
           Select File:

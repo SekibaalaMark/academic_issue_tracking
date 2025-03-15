@@ -11,11 +11,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if token and user data are stored in localStorage
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        console.log("Token and user loaded from localStorage");
+      }
+    } catch (error) {
+      console.error("Failed to load token and user from localStorage:", error);
     }
   }, []);
 
@@ -31,6 +36,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(userData));
+      console.log("Login successful:", userData);
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -52,6 +58,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      console.log("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -72,6 +79,7 @@ export const AuthProvider = ({ children }) => {
       const { token: newToken } = response.data;
       setToken(newToken);
       localStorage.setItem("token", newToken);
+      console.log("Token refreshed:", newToken);
     } catch (error) {
       console.error("Token refresh failed:", error);
       logout();

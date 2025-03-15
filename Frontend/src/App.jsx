@@ -9,7 +9,7 @@ import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "./pages/AcademicRegistrar";
 import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "../authContext"; // Updated import path
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
