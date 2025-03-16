@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
+import { useHistory } from "react-router-dom"; // Importing useHistory for redirection
 
 const Input = styled.input`
   padding: 8px 12px;
@@ -16,7 +17,7 @@ const Button = styled.button`
   color: white;
   border: none;
   border-radius: 5px;
-  
+
   &:hover {
     background-color: #0056b3;
   }
@@ -27,7 +28,8 @@ const Table = styled.table`
   border-collapse: collapse;
   margin-top: 2rem;
 
-  th, td {
+  th,
+  td {
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
@@ -54,7 +56,7 @@ const Navigation = styled.nav`
     margin-right: 10px;
     border-radius: 5px;
     background-color: #444;
-    
+
     &:hover {
       background-color: #555;
     }
@@ -69,57 +71,41 @@ function Students() {
     issueType: "missing marks",
     description: "",
   });
-  const [alertMessage, setAlertMessage] = useState("");
+  const history = useHistory(); // Initialize history for redirection
 
+  // Fetch issues and notifications
   useEffect(() => {
-    // Fetch issues from /api/issues/mine
     fetch("/api/issues/mine")
       .then((res) => res.json())
-      .then((data) => {
-        setIssues(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        console.error("Error fetching issues:", err);
-        setIssues([]);
-      });
+      .then((data) => setIssues(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Error fetching issues:", err));
 
-    // Fetch notifications with axios
     axios
       .get("/api/notifications")
-      .then((res) => {
-        setNotifications(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch((err) => {
-        console.error("Error fetching notifications:", err);
-        setNotifications([]);
-      });
+      .then((res) => setNotifications(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error fetching notifications:", err));
   }, []);
 
-  useEffect(() => {
-    const now = new Date();
-    const overdue = issues.filter(
-      (issue) =>
-        new Date(issue.created_at) < now - 7 * 24 * 60 * 60 * 1000 &&
-        issue.status !== "resolved"
-    );
-    setAlertMessage(
-      overdue.length > 0 ? "Some issues are overdue or unresolved." : ""
-    );
-  }, [issues]);
-
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Submit issue
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
       .post("/api/issues", formData)
       .then((res) => {
         setIssues([...issues, res.data]);
-        setFormData({ courseCode: "", issueType: "missing marks", description: "" });
+        setFormData({
+          courseCode: "",
+          issueType: "missing marks",
+          description: "",
+        });
+        history.push("/"); // Redirect to home after submission
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Error submitting issue:", err));
   };
 
   // Helper function for determining status color
@@ -136,21 +122,31 @@ function Students() {
     }
   };
 
+  // Redirect to the issue details page
+  const handleViewDetails = (issueId) => {
+    history.push(`/issue-details/${issueId}`);
+  };
+
+  // Redirect to the submit issue page
+  const handleSubmitIssue = () => {
+    history.push("/submit-issue");
+  };
+
+  // Redirect to the notification details page
+  const handleNotificationClick = (notificationId) => {
+    history.push(`/notification-details/${notificationId}`);
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
       <Navigation>
         <a href="/">Home</a>
-        <a href="/submit-issue">Submit Issue</a>
+        <a onClick={handleSubmitIssue}>Submit Issue</a>
         <a href="/notifications">Notifications</a>
         <a href="/profile">Profile</a>
       </Navigation>
 
       <h1>Student Issue Tracking</h1>
-
-      {/* Display overdue alert if any */}
-      {alertMessage && (
-        <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>
-      )}
 
       {/* Issue Submission Form */}
       <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
@@ -185,7 +181,7 @@ function Students() {
             required
           />
         </div>
-        <button type="submit">Submit Issue</button>
+        <Button type="submit">Submit Issue</Button>
       </form>
 
       {/* Issue List */}
@@ -209,7 +205,9 @@ function Students() {
                   {issue.status}
                 </td>
                 <td>
-                  <Button>View Details</Button>
+                  <Button onClick={() => handleViewDetails(issue.id)}>
+                    View Details
+                  </Button>
                   <Button>Edit Issue</Button>
                   <Button>Delete Issue</Button>
                 </td>
@@ -223,13 +221,16 @@ function Students() {
 
       <hr />
 
-      {/* Display Notifications */}
+      {/* Notifications */}
       <h2>Notifications</h2>
       {notifications.length > 0 ? (
         <ul>
           {notifications.map((note, idx) => (
             <li key={idx}>
-              {note.message} (Status: {note.statusChange}) <br />
+              <a onClick={() => handleNotificationClick(note.id)}>
+                {note.message} (Status: {note.statusChange})
+              </a>
+              <br />
               <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
             </li>
           ))}
