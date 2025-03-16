@@ -143,19 +143,18 @@ function Students() {
 
       {/* Display Notifications */}
       <h2>Notifications</h2>
-      {notifications.length > 0 ? (
-        <ul>
-          {notifications.map((note, idx) => (
-            <li key={idx}>
-              {note.message} (Status: {note.statusChange})
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No notifications found.</p>
-      )}
-    </div>
-  );
-}
+{notifications.length > 0 ? (
+  <ul>
+    {notifications.map((note, idx) => (
+      <li key={idx}>
+        {note.message} (Status: {note.statusChange}) <br />
+        <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>No notifications found.</p>
+)}
+
 
 export default Students;
