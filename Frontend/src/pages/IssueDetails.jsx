@@ -1,7 +1,7 @@
 // src/pages/IssueDetails.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Use `useNavigate` instead of `useHistory`
 import axios from 'axios';
 import styled from 'styled-components';
 
@@ -48,7 +48,7 @@ const Heading = styled.h2`
 const IssueDetails = () => {
   const { issueId } = useParams(); // Use URL params to get the issueId
   const [issue, setIssue] = useState(null);
-  const history = useHistory();
+  const navigate = useNavigate(); // Use `useNavigate` from `react-router-dom`
 
   // Fetch issue data when the component is mounted
   useEffect(() => {
@@ -64,7 +64,7 @@ const IssueDetails = () => {
 
   // Handle editing the issue (navigate to edit page)
   const handleEdit = () => {
-    history.push(`/edit-issue/${issueId}`);
+    navigate(`/edit-issue/${issueId}`); // Navigate to the edit page
   };
 
   // Handle deleting the issue
@@ -73,7 +73,7 @@ const IssueDetails = () => {
       .delete(`/api/issues/${issueId}`)
       .then(() => {
         alert('Issue deleted successfully');
-        history.push('/'); // Redirect to the home page or issue list
+        navigate('/'); // Redirect to the home page or issue list
       })
       .catch((err) => {
         console.error('Error deleting the issue:', err);
