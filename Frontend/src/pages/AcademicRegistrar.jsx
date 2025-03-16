@@ -41,11 +41,12 @@ const Button = styled.button`
 
 function AcademicRegistrar() {
   const [issues, setIssues] = useState([]);
+  const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
 
-  // Fetch all issues on component mount
+  // Fetch all issues
   useEffect(() => {
     axios
       .get("http://localhost:5000/issues")
@@ -56,9 +57,20 @@ function AcademicRegistrar() {
         console.error("Error fetching issues:", err);
         setIssues([]);
       });
+
+    // Fetch lecturers
+    axios
+      .get("http://localhost:5000/lecturers")
+      .then((res) => {
+        setLecturers(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => {
+        console.error("Error fetching lecturers:", err);
+        setLecturers([]);
+      });
   }, []);
 
-  // Compute filtered issues based on selected filters
+  // Compute filtered issues
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueType === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
@@ -69,41 +81,38 @@ function AcademicRegistrar() {
     return matchType && matchStatus && matchLecturer;
   });
 
-  // Handle assigning (or reassigning) an issue to a lecturer
-  const handleAssign = (issueId) => {
-    const lecturer = prompt("Enter lecturer's name to assign:");
-    if (lecturer) {
-      axios
-        .patch(`/api/issues/${issueId}`, { assignedLecturer: lecturer })
-        .then((res) => {
-          setIssues((prevIssues) =>
-            prevIssues.map((issue) =>
-              issue.id === issueId ? { ...issue, assignedLecturer: lecturer } : issue
-            )
-          );
-          alert(`Issue assigned to ${lecturer}`);
-        })
-        .catch((err) => {
-          console.error("Error assigning issue:", err);
-          alert("Error assigning issue.");
-        });
-    }
+  // Handle assigning an issue to a lecturer
+  const handleAssign = (issueId, lecturerId) => {
+    axios
+      .patch(`/api/issues/${issueId}/assign`, { assigned_to: lecturerId })
+      .then((res) => {
+        setIssues((prevIssues) =>
+          prevIssues.map((issue) =>
+            issue.id === issueId
+              ? { ...issue, assignedLecturer: lecturers.find((l) => l.id === lecturerId)?.name }
+              : issue
+          )
+        );
+        alert("Issue assigned successfully!");
+      })
+      .catch((err) => {
+        console.error("Error assigning issue:", err);
+        alert("Error assigning issue.");
+      });
   };
 
   // Handle resolving an issue
   const handleResolve = (issueId) => {
     if (window.confirm("Are you sure you want to mark this issue as resolved?")) {
       axios
-        .patch(`/api/issues/${issueId}`, { status: "resolved" })
+        .patch(`/api/issues/${issueId}/resolve`, { status: "resolved" })
         .then((res) => {
           setIssues((prevIssues) =>
             prevIssues.map((issue) =>
               issue.id === issueId ? { ...issue, status: "resolved" } : issue
             )
           );
-          // Trigger a notification: here, a simple alert and console log
-          alert("Issue marked as resolved. Notification sent.");
-          console.log("Email notification sent for resolved issue.");
+          alert("Issue marked as resolved.");
         })
         .catch((err) => {
           console.error("Error resolving issue:", err);
@@ -171,9 +180,16 @@ function AcademicRegistrar() {
                 <Td>{issue.status}</Td>
                 <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
                 <Td>
-                  <Button onClick={() => handleAssign(issue.id)}>Assign</Button>
+                  <select onChange={(e) => handleAssign(issue.id, e.target.value)}>
+                    <option value="">Select Lecturer</option>
+                    {lecturers.map((lecturer) => (
+                      <option key={lecturer.id} value={lecturer.id}>
+                        {lecturer.name}
+                      </option>
+                    ))}
+                  </select>
                   {issue.status !== "resolved" && (
-                    <Button onClick={() => handleResolve(issue.id)}>Resolve Issue</Button>
+                    <Button onClick={() => handleResolve(issue.id)}>Resolve</Button>
                   )}
                 </Td>
               </tr>

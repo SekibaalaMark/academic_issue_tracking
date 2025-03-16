@@ -8,6 +8,59 @@ const Input = styled.input`
   border: 1px solid #ddd;
 `;
 
+const Button = styled.button`
+  padding: 8px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  tr:hover {
+    background-color: #f1f1f1;
+  }
+`;
+
+const Navigation = styled.nav`
+  margin-bottom: 2rem;
+  background-color: #333;
+  padding: 1rem;
+
+  a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    margin-right: 10px;
+    border-radius: 5px;
+    background-color: #444;
+    
+    &:hover {
+      background-color: #555;
+    }
+  }
+`;
+
 function Students() {
   const [issues, setIssues] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -18,13 +71,11 @@ function Students() {
   });
   const [alertMessage, setAlertMessage] = useState("");
 
-  // ✅ Fetch issues (with fetch) and notifications (with axios) on mount
   useEffect(() => {
-    //Fetch issues from /api/issues/mine
+    // Fetch issues from /api/issues/mine
     fetch("/api/issues/mine")
       .then((res) => res.json())
       .then((data) => {
-        //Ensure data is an array to prevent .map() errors
         setIssues(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
@@ -32,21 +83,18 @@ function Students() {
         setIssues([]);
       });
 
-      //Fetch notifications with axios
-    axios.get("/api/notifications")
+    // Fetch notifications with axios
+    axios
+      .get("/api/notifications")
       .then((res) => {
         setNotifications(Array.isArray(res.data) ? res.data : []);
       })
-        
       .catch((err) => {
         console.error("Error fetching notifications:", err);
         setNotifications([]);
       });
   }, []);
 
-    
-
-  // ✅ Check for overdue issues(over 7 days and not resolved)
   useEffect(() => {
     const now = new Date();
     const overdue = issues.filter(
@@ -62,24 +110,41 @@ function Students() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  
-  //submit new issue with axios
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    axios.post("/api/issues", formData)
+    axios
+      .post("/api/issues", formData)
       .then((res) => {
         setIssues([...issues, res.data]);
-        setFormData({ 
-          courseCode: "", 
-          issueType: "missing marks",
-           description: ""
-           });
+        setFormData({ courseCode: "", issueType: "missing marks", description: "" });
       })
       .catch((err) => console.error(err));
   };
 
+  // Helper function for determining status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending":
+        return "orange";
+      case "resolved":
+        return "green";
+      case "overdue":
+        return "red";
+      default:
+        return "gray";
+    }
+  };
+
   return (
     <div style={{ padding: "1rem" }}>
+      <Navigation>
+        <a href="/">Home</a>
+        <a href="/submit-issue">Submit Issue</a>
+        <a href="/notifications">Notifications</a>
+        <a href="/profile">Profile</a>
+      </Navigation>
+
       <h1>Student Issue Tracking</h1>
 
       {/* Display overdue alert if any */}
@@ -123,18 +188,35 @@ function Students() {
         <button type="submit">Submit Issue</button>
       </form>
 
-      {/* Display Issues */}
+      {/* Issue List */}
       <h2>Your Issues</h2>
       {issues.length > 0 ? (
-        <ul>
-          {issues.map((issue) => (
-            <li key={issue.id} style={{ marginBottom: "1rem" }}>
-              <strong>{issue.courseCode}</strong> - {issue.issueType} -{" "}
-              {issue.status}
-              <p>{issue.description}</p>
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Issue Type</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {issues.map((issue) => (
+              <tr key={issue.id}>
+                <td>{issue.courseCode}</td>
+                <td>{issue.issueType}</td>
+                <td style={{ color: getStatusColor(issue.status) }}>
+                  {issue.status}
+                </td>
+                <td>
+                  <Button>View Details</Button>
+                  <Button>Edit Issue</Button>
+                  <Button>Delete Issue</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
       ) : (
         <p>No issues found.</p>
       )}
@@ -147,7 +229,8 @@ function Students() {
         <ul>
           {notifications.map((note, idx) => (
             <li key={idx}>
-              {note.message} (Status: {note.statusChange})
+              {note.message} (Status: {note.statusChange}) <br />
+              <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
             </li>
           ))}
         </ul>
