@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+toast.configure();
+
+const handleStatusChange = (newStatus) => {
+  axios.patch(`/api/issues/${issueId}/`, { status: newStatus })
+    .then(() => {
+      toast.success("Notification Sent");
+    })
+    .catch(() => {
+      toast.error("Error sending notification");
+    });
+};
+
 
 const Input = styled.input`
   padding: 8px 12px;
