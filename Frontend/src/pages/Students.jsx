@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
-import { useHistory } from "react-router-dom"; // Importing useHistory for redirection
+import { useNavigate } from "react-router-dom"; // Use useNavigate instead of useHistory
 
 const Input = styled.input`
   padding: 8px 12px;
@@ -71,7 +71,7 @@ function Students() {
     issueType: "missing marks",
     description: "",
   });
-  const history = useHistory(); // Initialize history for redirection
+  const navigate = useNavigate(); // Initialize navigate for redirection
 
   // Fetch issues and notifications
   useEffect(() => {
@@ -103,7 +103,7 @@ function Students() {
           issueType: "missing marks",
           description: "",
         });
-        history.push("/"); // Redirect to home after submission
+        navigate("/"); // Redirect to home after submission
       })
       .catch((err) => console.error("Error submitting issue:", err));
   };
@@ -124,17 +124,17 @@ function Students() {
 
   // Redirect to the issue details page
   const handleViewDetails = (issueId) => {
-    history.push(`/issue-details/${issueId}`);
+    navigate(`/issue-details/${issueId}`);
   };
 
   // Redirect to the submit issue page
   const handleSubmitIssue = () => {
-    history.push("/submit-issue");
+    navigate("/submit-issue");
   };
 
   // Redirect to the notification details page
   const handleNotificationClick = (notificationId) => {
-    history.push(`/notification-details/${notificationId}`);
+    navigate(`/notification-details/${notificationId}`);
   };
 
   return (
