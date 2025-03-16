@@ -5,6 +5,8 @@ import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
 import AcademicRegistrar from './pages/AcademicRegistrar';
 import Dashboard from './pages/Dashboard';
+import IssueSubmissionForm from './pages/IssueSubmissionForm';
+import IssueDetails from './pages/IssueDetails';
 
 function App() {
   return (
