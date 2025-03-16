@@ -1,23 +1,14 @@
-// Import dependencies
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
-// Configure toast notifications
-toast.configure();
-
-// Styled Components
 const Input = styled.input`
   padding: 8px 12px;
   border-radius: 5px;
   border: 1px solid #ddd;
 `;
 
-// Main Component
 function Students() {
-  // State Management
   const [issues, setIssues] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [formData, setFormData] = useState({
@@ -27,12 +18,13 @@ function Students() {
   });
   const [alertMessage, setAlertMessage] = useState("");
 
-  // Fetch Issues and Notifications on Mount
+  // ✅ Fetch issues (with fetch) and notifications (with axios) on mount
   useEffect(() => {
-    // Fetch issues using fetch
+    //Fetch issues from /api/issues/mine
     fetch("/api/issues/mine")
       .then((res) => res.json())
       .then((data) => {
+        //Ensure data is an array to prevent .map() errors
         setIssues(Array.isArray(data) ? data : []);
       })
       .catch((err) => {
@@ -40,23 +32,26 @@ function Students() {
         setIssues([]);
       });
 
-    // Fetch notifications using axios
+      //Fetch notifications with axios
     axios.get("/api/notifications")
       .then((res) => {
         setNotifications(Array.isArray(res.data) ? res.data : []);
       })
+        
       .catch((err) => {
         console.error("Error fetching notifications:", err);
         setNotifications([]);
       });
   }, []);
 
-  // Check for overdue issues
+    
+
+  // ✅ Check for overdue issues(over 7 days and not resolved)
   useEffect(() => {
-    const now = Date.now();
+    const now = new Date();
     const overdue = issues.filter(
       (issue) =>
-        new Date(issue.created_at).getTime() < now - 7 * 24 * 60 * 60 * 1000 &&
+        new Date(issue.created_at) < now - 7 * 24 * 60 * 60 * 1000 &&
         issue.status !== "resolved"
     );
     setAlertMessage(
@@ -64,42 +59,30 @@ function Students() {
     );
   }, [issues]);
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  // Submit new issue
+  
+  //submit new issue with axios
   const handleSubmit = (e) => {
     e.preventDefault();
     axios.post("/api/issues", formData)
       .then((res) => {
         setIssues([...issues, res.data]);
-        setFormData({
-          courseCode: "",
+        setFormData({ 
+          courseCode: "", 
           issueType: "missing marks",
-          description: ""
-        });
+           description: ""
+           });
       })
       .catch((err) => console.error(err));
-  };
-
-  // Handle status change for an issue
-  const handleStatusChange = (issueId, newStatus) => {
-    axios.patch(`/api/issues/${issueId}/`, { status: newStatus })
-      .then(() => {
-        toast.success("Notification Sent");
-      })
-      .catch(() => {
-        toast.error("Error sending notification");
-      });
   };
 
   return (
     <div style={{ padding: "1rem" }}>
       <h1>Student Issue Tracking</h1>
 
-      {/* Display overdue alert */}
+      {/* Display overdue alert if any */}
       {alertMessage && (
         <div style={{ color: "red", marginBottom: "1rem" }}>{alertMessage}</div>
       )}
@@ -146,7 +129,8 @@ function Students() {
         <ul>
           {issues.map((issue) => (
             <li key={issue.id} style={{ marginBottom: "1rem" }}>
-              <strong>{issue.courseCode}</strong> - {issue.issueType} - {issue.status}
+              <strong>{issue.courseCode}</strong> - {issue.issueType} -{" "}
+              {issue.status}
               <p>{issue.description}</p>
             </li>
           ))}
@@ -159,20 +143,22 @@ function Students() {
 
       {/* Display Notifications */}
       <h2>Notifications</h2>
-      {notifications.length > 0 ? (
-        <ul>
-          {notifications.map((note, idx) => (
-            <li key={idx}>
-              {note.message} (Status: {note.statusChange}) <br />
-              <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No notifications found.</p>
-      )}
+{notifications.length > 0 ? (
+  <ul>
+    {notifications.map((note, idx) => (
+      <li key={idx}>
+        {note.message} (Status: {note.statusChange}) <br />
+        <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>No notifications found.</p>
+)}
     </div>
   );
 }
+
+
 
 export default Students;
