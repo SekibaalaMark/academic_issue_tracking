@@ -1,8 +1,8 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import axios from "axios";
 
 // Create a context for authentication
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 // Create a provider component
 export const AuthProvider = ({ children }) => {
@@ -106,5 +106,9 @@ export const AuthProvider = ({ children }) => {
 
 // Create a custom hook to use the AuthContext
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

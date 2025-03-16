@@ -44,7 +44,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  // const { login } = useAuth();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -122,9 +122,14 @@ function Login() {
             width: "100%",
           }}
         >
-          <label>
-            <input type="checkbox" /> Remember me
-          </label>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+            }}
+          >
+            <input type="checkbox" /> <span>Remember me</span>
+          </div>
           <a href="#">Forgot Password?</a>
         </div>
         <Button type="submit">Login</Button>

@@ -4,13 +4,12 @@ import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
 import FileAttachment from "./ui/StudentComplaints/FileAttachment.jsx";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import Login from "./ui/Login/Login.jsx";
+import Login from "./pages/Login.jsx";
 import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "./pages/AcademicRegistrar";
 import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
-import { AuthProvider } from "./context/AuthContext"; // Updated import path
-import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./context/authContext"; // Updated import path
 
 function App() {
   return (
@@ -66,61 +65,21 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Login />} /> {/* Default route */}
               {/* Protected Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <StudentDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/students"
-                element={
-                  <PrivateRoute>
-                    <Students />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/lecturers"
-                element={
-                  <PrivateRoute>
-                    <Lecturers />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="/dashboard" element={<StudentDashboard />} />
+              <Route path="/students" element={<Students />} />
+              <Route path="/lecturers" element={<Lecturers />} />
               <Route
                 path="/academic-registrar"
-                element={
-                  <PrivateRoute>
-                    <AcademicRegistrar />
-                  </PrivateRoute>
-                }
+                element={<AcademicRegistrar />}
               />
               <Route
                 path="/student-complaints"
-                element={
-                  <PrivateRoute>
-                    <StudentComplaints />
-                  </PrivateRoute>
-                }
+                element={<StudentComplaints />}
               />
-              <Route
-                path="/file-attachment"
-                element={
-                  <PrivateRoute>
-                    <FileAttachment />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="/file-attachment" element={<FileAttachment />} />
               <Route
                 path="/student-file-upload"
-                element={
-                  <PrivateRoute>
-                    <StudentFileUpload />
-                  </PrivateRoute>
-                }
+                element={<StudentFileUpload />}
               />
             </Routes>
           </div>
