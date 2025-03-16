@@ -155,6 +155,10 @@ function Students() {
 ) : (
   <p>No notifications found.</p>
 )}
+    </div>
+  );
+}
+
 
 
 export default Students;
