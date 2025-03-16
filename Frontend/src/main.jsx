@@ -11,6 +11,8 @@ import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
 import AcademicRegistrar from './pages/AcademicRegistrar';
 import LoginForm from './components/LoginForm/LoginForm';
+import IssueSubmissionForm from './pages/IssueSubmissionForm';
+import IssueDetails from './pages/IssueDetails';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -25,6 +27,8 @@ root.render(
       <Route path="/students" element={<Students />} />
       <Route path="/lecturers" element={<Lecturers />} />
       <Route path="/academicregistrar" element={<AcademicRegistrar />} />
+      <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
+      <Route path="/issuedetails" element={<IssueDetails />} />
     </Routes>
   </Router>
 );
