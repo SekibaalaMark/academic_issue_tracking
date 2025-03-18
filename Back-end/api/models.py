@@ -19,7 +19,7 @@ class Programme(models.Model):
         ('BIST','Bachelor Information Systems and Technology'),
         ('BLIS','Bachelor of Library and Information Sciences')
     ]
-    programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES,null=False,blank=False)
+    programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES)
     course_unit=models.ManyToManyField(Course_unit,related_name="course_units")
 
     def __str__(self):
@@ -75,10 +75,10 @@ class Issue(models.Model):
         ('year_5','Year 5')
     ]
 
-    programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE)
+    programme = models.ForeignKey(Programme,related_name='program_issues',on_delete=models.CASCADE)
     couse_name = models.CharField(max_length=150,null=True,help_text="course name")
     course_code = models.CharField(max_length=50,null=True,help_text="course code")
-    year_of_study = models.CharField(max_length=50,help_text="your year of study")
+    year_of_study = models.CharField(max_length=50,choices=YEAR_CHOICES,help_text="your year of study")
     #name_of_lecturer = models.ForeignKey(User,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"Lecturer"})
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES)
     description = models.TextField()
