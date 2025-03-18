@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 
@@ -25,44 +26,40 @@ class Programme(models.Model):
     def __str__(self):
         return self.programme_name
 
-
-
 class CustomUser(AbstractUser):
-    USER_CHOICES =[
-        ('student','Student'),
-        ('Lecturer','Lecturer'),
-        ('Registrar','Registrar'),
+    USER_CHOICES = [
+        ('student', 'Student'),
+        ('lecturer', 'Lecturer'),
+        ('registrar', 'Registrar'),
+        ('administrator', 'Administrator'),
     ]
-    role = models.CharField(max_length=100,choices=USER_CHOICES,default='student')
-    first_name = models.CharField(max_length=100)
-    last_name= models.CharField(max_length=100)
+    role = models.CharField(max_length=20, choices=USER_CHOICES, default='student')
     email = models.EmailField(unique=True)
     username=models.CharField(max_length=100,unique=True)
-    #password_confirmation = models.CharField(max_length=100)
-    #programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
+    programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
 
     def __str__(self):
         return self.username
 
-
+# Department model
 class Department(models.Model):
     DEPT_CHOICES = [
-        ('computer_science','Computer Science Department'),
-        ('networks','Networks Department'),
-        ('information_systems','Information Systems'),
-        ('information_technology','Information Technology'),
+        ('computer_science', 'Computer Science Department'),
+        ('networks', 'Networks Department'),
+        ('information_systems', 'Information Systems'),
+        ('information_technology', 'Information Technology'),
     ]
-    name = models.CharField(max_length=100,choices=DEPT_CHOICES)
+    name = models.CharField(max_length=50, choices=DEPT_CHOICES, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.get_name_display()
 
-
+# Issue model
 class Issue(models.Model):
-    STATUS=[
-        ('pending','Pending'),
-        ('resolved','Resolved'),
-        ('in_progress','In progress'),
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
     ]
     CATEGORY_CHOICES = [('Missing_Marks','Missing marks'),
     ('Wrong_grading','wrong grading'),('wrong_marks','wrong marks'),('other','other')]
