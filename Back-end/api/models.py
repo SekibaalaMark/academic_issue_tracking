@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+import shortuuid
 
 
 
@@ -31,7 +32,6 @@ class CustomUser(AbstractUser):
         ('student', 'Student'),
         ('lecturer', 'Lecturer'),
         ('registrar', 'Registrar'),
-        ('administrator', 'Administrator'),
     ]
     role = models.CharField(max_length=20, choices=USER_CHOICES, default='student')
     email = models.EmailField(unique=True)
@@ -52,7 +52,7 @@ class Department(models.Model):
     name = models.CharField(max_length=50, choices=DEPT_CHOICES, unique=True)
 
     def __str__(self):
-        return self.get_name_display()
+        return self.name
 
 # Issue model
 class Issue(models.Model):
@@ -72,7 +72,7 @@ class Issue(models.Model):
         ('year_5','Year 5')
     ]
 
-    programme = models.ForeignKey(Programme,related_name='program_issues',on_delete=models.CASCADE)
+    programme = models.ForeignKey(Programme,related_name='programmes',on_delete=models.CASCADE,null=True,blank=True)
     couse_name = models.CharField(max_length=150,null=True,help_text="course name")
     course_code = models.CharField(max_length=50,null=True,help_text="course code")
     year_of_study = models.CharField(max_length=50,choices=YEAR_CHOICES,help_text="your year of study")
@@ -82,13 +82,22 @@ class Issue(models.Model):
     attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
     raised_by = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
-    registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Registrar'})
+    registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
-    status = models.CharField(max_length=100,choices=STATUS)
-
+    status = models.CharField(max_length=100,choices=STATUS_CHOICES)
+    token = models.CharField(max_length=70)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.category
 
+
+class RegistrationToken(models.Model):
+    USER_CHOICES = [
+    ('lecturer', 'Lecturer'),
+        ('registrar', 'Registrar'),
+    ]
+    role = models.CharField(max_length=20, choices = USER_CHOICES)
+    email = models.EmailField(unique=True)
+    token = models.CharField(default=shortuuid.uuid,max_length=100)

@@ -1,7 +1,7 @@
 from rest_framework import status
-from .serializers import DepartmentSerializer,UserSerializer,IssueSerializer,RegisterSerializer,LoginSerializer
+from .serializers import *
 from django.shortcuts import render
-from .models import Issue,Department,CustomUser
+from .models import *
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.decorators import APIView
@@ -33,6 +33,11 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+    
+class ProgrammeViewSet(viewsets.ModelViewSet):
+    queryset= Programme.objects.all()
+    serializer_class= ProgrammeSerializer
+    permission_classes= [IsAuthenticated]
 
 @api_view(['GET'])
 def filter_issues(request):
