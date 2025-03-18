@@ -1,15 +1,13 @@
 import "./App.css";
-import "./ui/StudentDashboard/StudentDashboard.css";
-import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
-import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
-import FileAttachment from "./ui/StudentComplaints/FileAttachment.jsx";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import Login from "./pages/Login.jsx";
+import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
 import Students from "./ui/Students/Students.jsx";
 import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "./pages/AcademicRegistrar";
-import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx";
-import { AuthProvider } from "./context/authContext"; // Updated import path
+import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
+import StudentFileUpload from "./ui/StudentFileUpload/StudentFileUpload.jsx"; // Import StudentFileUpload
+import { AuthProvider } from "./context/authContext";
 
 function App() {
   return (
@@ -28,9 +26,20 @@ function App() {
                   Dashboard
                 </Link>
               </li>
+              {/* Grouping student-related links */}
               <li className="nav-item">
                 <Link to="/students" className="nav-link">
                   Students
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/student-complaints" className="nav-link">
+                  Student Complaints
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/student-file-upload" className="nav-link">
+                  File Upload
                 </Link>
               </li>
               <li className="nav-item">
@@ -43,28 +52,12 @@ function App() {
                   Academic Registrar
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link to="/student-complaints" className="nav-link">
-                  Student Complaints
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/file-attachment" className="nav-link">
-                  File Attachment
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link to="/student-file-upload" className="nav-link">
-                  Student File Upload
-                </Link>
-              </li>
             </ul>
           </nav>
           <div className="content">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Login />} /> {/* Default route */}
-              {/* Protected Routes */}
               <Route path="/dashboard" element={<StudentDashboard />} />
               <Route path="/students" element={<Students />} />
               <Route path="/lecturers" element={<Lecturers />} />
@@ -76,7 +69,6 @@ function App() {
                 path="/student-complaints"
                 element={<StudentComplaints />}
               />
-              <Route path="/file-attachment" element={<FileAttachment />} />
               <Route
                 path="/student-file-upload"
                 element={<StudentFileUpload />}

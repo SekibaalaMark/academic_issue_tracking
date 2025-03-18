@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import FormField from "../StudentDashboard/FormField/FormField.jsx";
-import FileAttachment from "./FileAttachment.jsx";
 import "../StudentComplaints/StudentComplaints.css";
 
 const StudentComplaints = () => {
   const [issue, setIssue] = useState("");
-  const [file, setFile] = useState(null);
   const [comment, setComment] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -19,15 +17,6 @@ const StudentComplaints = () => {
   };
 
   const confirmSubmit = () => {
-    const formData = new FormData();
-    formData.append("issue", issue);
-    formData.append("file", file);
-    formData.append("comment", comment);
-
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-
     alert("Complaint Submitted Successfully!");
     setShowModal(false);
   };
@@ -55,10 +44,6 @@ const StudentComplaints = () => {
               "others",
             ]}
           />
-
-          {issue && issue !== "others" && (
-            <FileAttachment onChange={(e) => setFile(e.target.files[0])} />
-          )}
 
           <FormField
             label="Add Comment (optional):"

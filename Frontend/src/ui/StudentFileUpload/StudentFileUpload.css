@@ -1,0 +1,34 @@
+.file-upload-container {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.file-upload-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.file-upload-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.file-upload-container button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.file-upload-container button:hover {
+  background-color: #0056b3;
+}
