@@ -7,7 +7,22 @@ const StudentFileUpload = () => {
   const [fileContent, setFileContent] = useState(""); // State to store file content
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) {
+      alert("No file selected.");
+      return;
+    }
+
+    // Validate file type
+    if (
+      !selectedFile.type.startsWith("text") &&
+      !selectedFile.name.endsWith(".txt")
+    ) {
+      alert("Only text files are allowed.");
+      return;
+    }
+
+    setFile(selectedFile);
     setFileContent(""); // Reset file content when a new file is selected
   };
 
@@ -32,10 +47,15 @@ const StudentFileUpload = () => {
         alert(`File "${file.name}" uploaded successfully!`);
         console.log("Server response:", result);
 
-        // Read and display the file content
+        // Ensure the file is text-based before reading
         const reader = new FileReader();
         reader.onload = () => {
+          console.log("File content:", reader.result); // Debugging
           setFileContent(reader.result);
+        };
+        reader.onerror = () => {
+          console.error("Error reading file:", reader.error);
+          alert("An error occurred while reading the file.");
         };
         reader.readAsText(file);
       } else {
