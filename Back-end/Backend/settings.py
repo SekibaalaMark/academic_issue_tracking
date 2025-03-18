@@ -1,7 +1,16 @@
 from pathlib import Path
 
 import os
+from datetime import timedelta
 
+
+SIMPLE_JWT = {
+
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token expiry time
+
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
+
+}
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,7 +20,7 @@ SECRET_KEY = 'django-insecure-*1s=z@o#n0-e^4nq58+f*i@)(!km4b4jgpjj%1-ys!hc3#rdeh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # 🔹 Add 'corsheaders' to INSTALLED_APPS
 INSTALLED_APPS = [
@@ -25,7 +34,8 @@ INSTALLED_APPS = [
 
     'api',
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist'
 
 ]
 
@@ -127,4 +137,10 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),  # Set access token expiry time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
+}
 
