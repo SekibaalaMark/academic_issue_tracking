@@ -1,10 +1,11 @@
 .login-container {
   max-width: 400px;
-  margin: auto;
-  padding: 2rem;
-  border-radius: 10px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,11 +13,13 @@
 }
 
 .login-form {
+  display: flex;
+  flex-direction: column;
   width: 100%;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 15px;
   width: 100%;
 }
 
@@ -28,23 +31,24 @@
 
 .form-input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 10px;
   font-size: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
 }
 
 .error-message {
   color: red;
-  margin-bottom: 1rem;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 .login-btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 10px;
   font-size: 1rem;
-  color: #fff;
+  color: white;
   background-color: #007bff;
   border: none;
   border-radius: 4px;
@@ -54,6 +58,21 @@
 
 .login-btn:hover {
   background-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .login-container {
+    padding: 15px;
+  }
+
+  .form-input {
+    font-size: 14px;
+  }
+
+  .login-btn {
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 480px) {
