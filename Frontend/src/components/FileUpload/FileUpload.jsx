@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "../../../authContext"; // Updated import path
+import { useAuth } from "../../auth/authContext"; // Updated import path
 
-const StudentFileUpload = () => {
+const FileUpload = () => {
   const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [fileContent, setFileContent] = useState(""); // State to store file content
@@ -109,4 +109,4 @@ const StudentFileUpload = () => {
   );
 };
 
-export default StudentFileUpload;
+export default FileUpload;
