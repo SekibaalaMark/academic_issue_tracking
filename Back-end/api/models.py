@@ -85,14 +85,14 @@ class Issue(models.Model):
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS_CHOICES)
-    token = models.CharField(max_length=70)
+    #token = models.CharField(max_length=70)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.category
 
-
+'''
 class RegistrationToken(models.Model):
     USER_CHOICES = [
     ('lecturer', 'Lecturer'),
@@ -100,4 +100,5 @@ class RegistrationToken(models.Model):
     ]
     role = models.CharField(max_length=20, choices = USER_CHOICES)
     email = models.EmailField(unique=True)
-    token = models.CharField(default=shortuuid.uuid,max_length=100)
+    token = models.CharField(default=shortuuid.uuid,max_length=100)'
+    '''
