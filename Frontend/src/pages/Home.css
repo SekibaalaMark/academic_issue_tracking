@@ -1,0 +1,75 @@
+/* Overall container */
+.Home-container {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Top nav */
+  .Home-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+  }
+  
+  .Home-header ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  
+  .Home-header li {
+    margin-left: 1rem;
+  }
+  
+  .Home-header a {
+    text-decoration: none;
+    color: #000;
+    font-weight: bold;
+    transition: color 0.2s ease;
+  }
+  
+  .Home-header a:hover {
+    color: green;
+  }
+  
+  /* Main content */
+  .Home-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  
+  /* Logo */
+  .Home-logo {
+    width: 120px; /* Adjust as needed */
+    height: auto;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Title (FAMS) */
+  .Home-title {
+    font-size: 3rem;
+    color: green;
+    margin-bottom: 2rem;
+  }
+  
+  /* Campus links */
+  .campus-links {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .campus-links a {
+    text-decoration: none;
+    color: #000;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+  }
+  
+  .campus-links a:hover {
+    color: green;
+  }
+  

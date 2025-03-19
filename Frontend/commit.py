@@ -8,6 +8,6 @@ def commit():
         os.system("git add .")
         os.system("git commit -m 'updates'")
         os.system("git push origin segie")
-        time.sleep(3600)  
+        time.sleep(300)  
 
 commit()
