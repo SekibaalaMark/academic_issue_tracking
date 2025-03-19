@@ -27,6 +27,29 @@ class IssueViewSet(viewsets.ModelViewSet):
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated]
+    def perform_create(self, serializer):
+        # Ensure that only students can create issues
+        if self.request.user.role != 'student':
+            return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
+        serializer.save(raised_by=self.request.user)
+
+
+class IssueAssignViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request, pk=None):
+        issue = Issue.objects.get(pk=pk)
+
+        # Ensure that only registrars can assign issues
+        if request.user.role != 'registrar':
+            return Response({"detail": "Only registrars can assign issues."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset=CustomUser.objects.all()

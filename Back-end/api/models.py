@@ -81,7 +81,7 @@ class Issue(models.Model):
     description = models.TextField()
     attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
     raised_by = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
-    #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
+    assigned_to = models.ForeignKey(CustomUser,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'},null=True,blank=True)
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS_CHOICES)

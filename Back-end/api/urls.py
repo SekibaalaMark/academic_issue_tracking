@@ -1,6 +1,6 @@
 from django.urls import path,include
 from rest_framework.routers import DefaultRouter
-from .views import DepartmentViewSet,IssueViewSet,UserViewSet,Registration,filter_issues,login,logout
+from .views import *
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 
 
@@ -8,6 +8,7 @@ router = DefaultRouter()
 router.register(r'departments',DepartmentViewSet)
 router.register(r'issues',IssueViewSet)
 router.register(r'users',UserViewSet)
+router.register(r'assignissues',IssueAssignViewSet)
 
 #urls
 
