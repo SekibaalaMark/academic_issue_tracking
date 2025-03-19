@@ -1,73 +1,71 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import navigation
-import axios from 'axios';
-import styled from "styled-components";
-
-const Input = styled.input`
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-`;
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./Login.css"; // Import the external CSS file
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate(); // Hook for navigation
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://your-api-endpoint/login', { email, password });
+      const response = await axios.post("http://your-api-endpoint/login", {
+        email,
+        password,
+      });
 
       if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token); // Store token
-        localStorage.setItem('userRole', response.data.role); // Store user role
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("userRole", response.data.role);
 
-        // Redirect based on role
         switch (response.data.role) {
-          case 'student':
-            navigate('/students');
+          case "student":
+            navigate("/students");
             break;
-          case 'lecturer':
-            navigate('/lecturers');
+          case "lecturer":
+            navigate("/lecturers");
             break;
-          case 'registrar':
-            navigate('/academic-registrar');
+          case "registrar":
+            navigate("/academic-registrar");
             break;
           default:
-            navigate('/dashboard'); // Default fallback
+            navigate("/dashboard");
         }
       }
     } catch (err) {
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     }
   };
 
   return (
-    <div>
+    <div className="login-container"> {/* Ensure className is used instead of classname */}
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="input-group"> {/* Corrected className */}
           <label>Email</label>
-          <Input
+          <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div>
+        <div className="input-group"> {/* Corrected className */}
           <label>Password</label>
-          <Input
+          <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
-        <button type="submit">Login</button>
+        {error && <div className="error-message">{error}</div>}
+        <button type="submit" className="login-btn">
+          Login
+        </button>
       </form>
     </div>
   );
