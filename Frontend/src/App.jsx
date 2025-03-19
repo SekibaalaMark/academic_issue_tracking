@@ -7,31 +7,27 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import StudentDashboard from ".src/ui/StudentDashboard";
-
-import Lecturers from "./ui/Lecturers";
-import AcademicRegistrar from "./pages/AcademicRegistrar";
-import StudentComplaints from "./ui/StudentComplaints";
-import Login from "./ui/Login";
+import StudentDashboard from "./pages/StudentDashboard/StudentDashboard.jsx"; // Updated path
+import AcademicRegistrar from "./pages/AcademicRegistrar/AcademicRegistrar.jsx"; // Updated path
+import StudentComplaints from "./pages/StudentComplaints/StudentComplaints.jsx"; // Updated path
 import { AuthProvider, useAuth } from "./context/authContext";
-import SignIn from "./features/authentication/SignIn";
-import ForgotPassword from "./features/authentication/ForgotPassword";
-import MyComponent from "../components/MyComponent.jsx";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.jsx"; // Updated path
+import Lecturers from "./pages/Lecturers/Lecturers.jsx"; // Updated path
+import Login from "./pages/Login/Login.jsx"; // Updated path
+import RegisterForm from "./pages/RegisterForm.jsx"; // Added path for RegisterForm
 
-// Create a protected route layout component
+// Protected route layout component
 const ProtectedLayout = () => {
   const { authState } = useAuth();
 
   if (authState === null) {
-    return <div>Loading...</div>; // Fallback UI while checking authentication
+    return <div>Loading...</div>;
   }
 
-  // Redirect to signin if not authenticated
   if (!authState) {
-    return <Navigate to="/signin" replace />;
+    return <Navigate to="/login" replace />; // Updated path
   }
 
-  // Render the children routes if authenticated
   return <Outlet />;
 };
 
@@ -39,35 +35,22 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app-container">
-          <MyComponent />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-
-            {/* Redirect root path to sign-in page */}
-            <Route path="/" element={<Navigate to="/signin" replace />} />
-
-            {/* Protected routes */}
-            <Route element={<ProtectedLayout />}>
-              <Route path="/dashboard" element={<StudentDashboard />} />
-              
-              <Route path="/lecturers" element={<Lecturers />} />
-              <Route
-                path="/academic-registrar"
-                element={<AcademicRegistrar />}
-              />
-              <Route
-                path="/student-complaints"
-                element={<StudentComplaints />}
-              />
-            </Route>
-
-            {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/signin" replace />} />
-          </Routes>
-        </div>
+        <Routes>
+          <Route path="/login" element={<Login />} /> {/* Updated path */}
+          <Route path="/register" element={<RegisterForm />} />{" "}
+          {/* Added path for RegisterForm */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />{" "}
+          {/* Updated path */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<StudentDashboard />} />
+            <Route path="/lecturers" element={<Lecturers />} />
+            <Route path="/academic-registrar" element={<AcademicRegistrar />} />
+            <Route path="/student-complaints" element={<StudentComplaints />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />{" "}
+          {/* Updated path */}
+        </Routes>
       </Router>
     </AuthProvider>
   );

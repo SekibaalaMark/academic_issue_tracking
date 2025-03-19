@@ -1,50 +1,17 @@
 import React, { useState } from "react";
-import styled from "styled-components";
-import Button from "../ui/Button";
-import Form from "../ui/Form";
-import FormRow from "../ui/FormRow";
-import Input from "../ui/Input";
-import styles from "./register.module.css";
-import { FaEye, FaEyeSlash, FaUser } from "react-icons/fa"; // Import icons
-import { useAuth } from "../../authContext"; // Import useAuth hook
+import { Link } from "react-router-dom"; // Import Link for navigation
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
+import { FaUserCircle, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"; // Added necessary icons
+import "./Login.css";
 
-const StyledForm = styled(Form)`
-  max-width: 400px;
-  margin: auto;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  background: #fff;
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-
-  /* Center vertically */
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  width: clamp(300px, 80%, 400px);
-  margin: 0 auto;
-  padding: 2rem;
-  @media (max-width: 480px) {
-    max-width: 90%;
-    padding: 1.5rem;
-  }
-`;
-
-const StyledInput = styled(Input)`
-  width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 0.75rem; /* Adjust padding for icons */
-  font-size: 1rem;
-`;
-
-function Login() {
-  const [username, setUsername] = useState("");
+const Login = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
-  // const { login } = useAuth();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
@@ -52,52 +19,62 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === "" || password === "") {
+    if (email === "" || password === "") {
       setError("Both fields are required.");
       return;
     }
     setError("");
     try {
-      await login({ username, password });
-      alert("Login successful!");
+      const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
+      }
+
+      const data = await response.json();
+      login(data); // Call login from authContext
+      localStorage.setItem("authToken", data.token); // Store token
+      navigate("/dashboard"); // Redirect after login
     } catch (error) {
       setError("Login failed. Please check your credentials and try again.");
     }
   };
 
   return (
-    <div className={styles.formCenter}>
-      <StyledForm onSubmit={handleSubmit}>
-        <h2>welcome to AITS</h2>
-        <h2>Login</h2>
-        <FormRow label="username">
+    <div className="login-container">
+      <h2>Welcome to AITS</h2>
+      <form onSubmit={handleSubmit} className="login-form">
+        <div className="form-group">
+          <label htmlFor="email">
+            <FaUserCircle className="icon" /> Email:
+          </label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-input"
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">
+            <FaLock className="icon" /> Password:
+          </label>
           <div style={{ position: "relative", width: "100%" }}>
-            <StyledInput
-              type="text"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <span
-              style={{
-                position: "absolute",
-                right: "0.5rem",
-                top: "50%",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-              }}
-            >
-              <FaUser />
-            </span>
-          </div>
-        </FormRow>
-        <FormRow label="password">
-          <div style={{ position: "relative", width: "100%" }}>
-            <StyledInput
+            <input
               type={passwordVisible ? "text" : "password"}
+              id="password"
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="form-input"
+              required
             />
             <span
               onClick={togglePasswordVisibility}
@@ -112,30 +89,26 @@ function Login() {
               {passwordVisible ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
-        </FormRow>
-        {error && <p className="error-message">{error}</p>}
-        <div
-          className="remember-forget"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-            }}
-          >
-            <input type="checkbox" /> <span>Remember me</span>
-          </div>
-          <a href="#">Forgot Password?</a>
         </div>
-        <Button type="submit">Login</Button>
-      </StyledForm>
+        {error && <p className="error-message">{error}</p>}
+        <div className="remember-forget">
+          <div style={{ display: "flex", gap: "10px" }}>
+            <input type="checkbox" id="remember-me" />
+            <label htmlFor="remember-me">Remember me</label>
+          </div>
+          <a href="#" className="forgot-password">
+            Forgot Password?
+          </a>
+        </div>
+        <button type="submit" className="login-btn">
+          Login
+        </button>
+        <p className="redirect-text">
+          Don't have an account? <Link to="/register">Register here</Link>
+        </p>
+      </form>
     </div>
   );
-}
+};
 
 export default Login;
