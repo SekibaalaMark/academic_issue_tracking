@@ -3,6 +3,8 @@ from . models import *
 from rest_framework import serializers
 
 
+
+
 class DepartmentSerializer(ModelSerializer):
     class Meta:
         model = Department
@@ -39,21 +41,20 @@ class IssueSerializer(ModelSerializer):
                   'description','category','year_of_study','course_code','couse_name','programme']
 
     
-from rest_framework import serializers
-from .models import CustomUser 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser 
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role']
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},  # Password is required and write-only
             'email': {'required': True},  # Email is required
             'username': {'required': True},  # Username is required
             'first_name': {'required': True},  # First name is required
             'last_name': {'required': True},  # Last name is required
+            'role':{'required':True},#Role is required on registration
         }
 
     def validate(self, data):
@@ -61,11 +62,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         email = data.get('email')
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
+        role = data.get('role')
 
         # Check if username already exists
         if username and CustomUser .objects.filter(username=username).exists():
             raise serializers.ValidationError('Username already exists')
-
+        
+        if '@' not in email or email.split('@')[1] != 'gmail.com':
+            raise serializers.ValidationError('Only Gmail accounts are allowed...')
+        
         # Check if email already exists
         if email and CustomUser .objects.filter(email=email).exists():
             raise serializers.ValidationError("Email already exists")
@@ -73,6 +78,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
+        
+        # Check if role is valid
+        if role not in dict(CustomUser .USER_CHOICES):
+            raise serializers.ValidationError("Invalid role selected")
+
 
         return data
 
@@ -89,7 +99,7 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, write_only=True)
 
 
-
+'''
 class StudentRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -133,9 +143,9 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(password)  # Hash the password
         user.save()  # Save user with hashed password
         return user
+'''
 
-
-
+'''
 class LecturerRegistrarRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -183,8 +193,8 @@ class LecturerRegistrarRegistrationSerializer(serializers.ModelSerializer):
 
         user.save()
         return user
-
-
+'''
+'''
 class RegistrationTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegistrationToken
@@ -197,7 +207,8 @@ class RegistrationTokenSerializer(serializers.ModelSerializer):
         
         if CustomUser.objects.filter(email = data.get('email')).exists():
             raise serializers.ValidationError(f'The email {data.get('email')} is already taken')
-        return data
+        return data 
+        '''
 
 
 '''
