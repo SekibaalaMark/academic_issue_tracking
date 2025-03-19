@@ -15,13 +15,7 @@ const Home = () => {
       </header>
 
       {/* Main content */}
-      <main className="home-main">
-        {/* Replace the src with the path to your Makerere University logo */}
-        <img
-          className="-logo"
-          src="/images/makerere_logo.png"
-          alt="Makerere University Logo"
-        />
+      <main className="home-main">       
         <h1 className="landing-title">ACADEMIC ISSUE TRACKING</h1>
       </main>
     </div>
