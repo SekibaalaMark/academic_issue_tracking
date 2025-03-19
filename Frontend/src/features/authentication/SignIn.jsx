@@ -1,45 +1,49 @@
 import React, { useState } from "react";
-import { login } from "./authService";
+import { useAuth } from "../../context/authContext.jsx";
+import { useNavigate } from "react-router-dom";
 
-function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const SignIn = () => {
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const token = await login(email, password);
-      console.log("Login successful, token:", token);
-      // Save token to localStorage or context
-    } catch (error) {
-      console.error(error.message);
+    const success = await login(credentials);
+    if (success) {
+      navigate("/dashboard");
+    } else {
+      alert("Invalid credentials");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Sign In</h2>
-      <label>
-        Email:
+    <div>
+      <h1>Sign In</h1>
+      <form onSubmit={handleSubmit}>
         <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          type="text"
+          placeholder="Username"
+          value={credentials.username}
+          onChange={(e) =>
+            setCredentials({ ...credentials, username: e.target.value })
+          }
         />
-      </label>
-      <label>
-        Password:
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          placeholder="Password"
+          value={credentials.password}
+          onChange={(e) =>
+            setCredentials({ ...credentials, password: e.target.value })
+          }
         />
-      </label>
-      <button type="submit">Sign In</button>
-    </form>
+        <button type="submit">Login</button>
+      </form>
+    </div>
   );
-}
+};
 
 export default SignIn;

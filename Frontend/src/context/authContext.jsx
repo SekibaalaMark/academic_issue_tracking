@@ -1,13 +1,17 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 
-// Create a context for authentication
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState(null);
 
-  const login = (userData) => {
-    setAuthState(userData);
+  const login = async (credentials) => {
+    // Replace with actual authentication logic
+    if (credentials.username === "admin" && credentials.password === "admin") {
+      setAuthState({ username: credentials.username });
+      return true;
+    }
+    return false;
   };
 
   const logout = () => {
@@ -22,5 +26,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;
