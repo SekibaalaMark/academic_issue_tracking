@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Login.css"; 
+import "./Login.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -45,16 +45,11 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      <div className="top-right-links">
-        <a href="#">Login</a>
-        <a href="#">Register</a>
-      </div>
+      <h2 className="site-title">FAMS</h2>
 
-      <h2>FAMS</h2>
-
-      <div className="container">
-        <div className="header">Login</div>
-        <div className="form-container">
+      <div className="login-container">
+        <div className="login-header">Login</div>
+        <div className="login-form">
           <form onSubmit={handleSubmit}>
             <label htmlFor="email">E-Mail Address</label>
             <input
@@ -76,7 +71,7 @@ const Login = () => {
               required
             />
 
-            <div className="checkbox-container">
+            <div className="remember-me">
               <input type="checkbox" id="remember" />
               <label htmlFor="remember">Remember Me</label>
             </div>
@@ -86,16 +81,18 @@ const Login = () => {
             <button type="submit" className="login-btn">Login</button>
           </form>
 
-          <div className="links">
+          <div className="login-links">
             <a href="#">Forgot Your Password?</a>
             <a href="#">Trouble Login?</a>
           </div>
         </div>
+      </div>
+
+      <div className="auth-links">
+        <a href="#">Login</a> | <a href="#">Register</a>
       </div>
     </div>
   );
 };
 
 export default Login;
-  
-  
