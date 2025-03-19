@@ -1,46 +1,33 @@
 import React, { useState } from "react";
-import { useAuth } from "../../context/authContext.jsx";
-import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSignIn = (e) => {
     e.preventDefault();
-    const success = await login(credentials);
-    if (success) {
-      navigate("/dashboard");
-    } else {
-      alert("Invalid credentials");
-    }
+    alert(`Signing in with Email: ${email}`);
   };
 
   return (
     <div>
       <h1>Sign In</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSignIn}>
         <input
-          type="text"
-          placeholder="Username"
-          value={credentials.username}
-          onChange={(e) =>
-            setCredentials({ ...credentials, username: e.target.value })
-          }
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
           placeholder="Password"
-          value={credentials.password}
-          onChange={(e) =>
-            setCredentials({ ...credentials, password: e.target.value })
-          }
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <button type="submit">Login</button>
+        <button type="submit">Sign In</button>
       </form>
     </div>
   );

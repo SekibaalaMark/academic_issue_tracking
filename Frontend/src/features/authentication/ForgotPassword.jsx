@@ -1,34 +1,28 @@
 import React, { useState } from "react";
-import { resetPassword } from "./authService";
 
-function ForgotPassword() {
+const ForgotPassword = () => {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleForgotPassword = (e) => {
     e.preventDefault();
-    try {
-      const message = await resetPassword(email);
-      console.log(message);
-    } catch (error) {
-      console.error(error.message);
-    }
+    alert(`Password recovery link sent to: ${email}`);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Forgot Password</h2>
-      <label>
-        Email:
+    <div>
+      <h1>Forgot Password</h1>
+      <form onSubmit={handleForgotPassword}>
         <input
           type="email"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-      </label>
-      <button type="submit">Reset Password</button>
-    </form>
+        <button type="submit">Send Recovery Link</button>
+      </form>
+    </div>
   );
-}
+};
 
 export default ForgotPassword;

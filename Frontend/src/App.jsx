@@ -7,13 +7,13 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
-import Students from "./ui/Students/Students.jsx";
-import Lecturers from "./ui/Lecturers/Lecturers.jsx";
+import StudentDashboard from ".src/ui/StudentDashboard";
+
+import Lecturers from "./ui/Lecturers";
 import AcademicRegistrar from "./pages/AcademicRegistrar";
-import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
-import Login from "./ui/Login/Login.jsx";
-import { AuthProvider, useAuth } from "./context/authContext.jsx";
+import StudentComplaints from "./ui/StudentComplaints";
+import Login from "./ui/Login";
+import { AuthProvider, useAuth } from "./context/authContext";
 import SignIn from "./features/authentication/SignIn";
 import ForgotPassword from "./features/authentication/ForgotPassword";
 import MyComponent from "../components/MyComponent.jsx";
@@ -21,6 +21,10 @@ import MyComponent from "../components/MyComponent.jsx";
 // Create a protected route layout component
 const ProtectedLayout = () => {
   const { authState } = useAuth();
+
+  if (authState === null) {
+    return <div>Loading...</div>; // Fallback UI while checking authentication
+  }
 
   // Redirect to signin if not authenticated
   if (!authState) {
@@ -42,11 +46,13 @@ function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
+            {/* Redirect root path to sign-in page */}
+            <Route path="/" element={<Navigate to="/signin" replace />} />
+
             {/* Protected routes */}
             <Route element={<ProtectedLayout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<StudentDashboard />} />
-              <Route path="/students" element={<Students />} />
+              
               <Route path="/lecturers" element={<Lecturers />} />
               <Route
                 path="/academic-registrar"

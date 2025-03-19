@@ -39,6 +39,18 @@ const StudentDashboard = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (
+      !fullName ||
+      !registrationNumber ||
+      !school ||
+      !department ||
+      !year ||
+      !courseUnit ||
+      !semester
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
     alert("Complaint submitted successfully!");
   };
 
