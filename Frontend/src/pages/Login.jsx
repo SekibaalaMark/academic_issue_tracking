@@ -1,9 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Login.css"; // Import the external CSS file
+import "./Login.css"; // Import CSS file
 
-function Login() {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,6 +11,8 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+
     try {
       const response = await axios.post("http://your-api-endpoint/login", {
         email,
@@ -21,6 +23,7 @@ function Login() {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("userRole", response.data.role);
 
+        // Navigate based on role
         switch (response.data.role) {
           case "student":
             navigate("/students");
@@ -32,7 +35,7 @@ function Login() {
             navigate("/academic-registrar");
             break;
           default:
-            navigate("/dashboard");
+            navigate("/dashboard"); // Default fallback
         }
       }
     } catch (err) {
@@ -41,34 +44,56 @@ function Login() {
   };
 
   return (
-    <div className="login-container"> {/* Ensure className is used instead of classname */}
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="input-group"> {/* Corrected className */}
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="login-page">
+      <div className="top-right-links">
+        <a href="#">Login</a>
+        <a href="#">Register</a>
+      </div>
+
+      <h2>FAMS</h2>
+
+      <div className="container">
+        <div className="header">Login</div>
+        <div className="form-container">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="email">E-Mail Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <div className="checkbox-container">
+              <input type="checkbox" id="remember" />
+              <label htmlFor="remember">Remember Me</label>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button type="submit" className="login-btn">Login</button>
+          </form>
+
+          <div className="links">
+            <a href="#">Forgot Your Password?</a>
+            <a href="#">Trouble Login?</a>
+          </div>
         </div>
-        <div className="input-group"> {/* Corrected className */}
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error && <div className="error-message">{error}</div>}
-        <button type="submit" className="login-btn">
-          Login
-        </button>
-      </form>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;
