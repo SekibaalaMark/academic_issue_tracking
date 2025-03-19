@@ -8,7 +8,7 @@ router = DefaultRouter()
 router.register(r'departments',DepartmentViewSet)
 router.register(r'issues',IssueViewSet)
 router.register(r'users',UserViewSet)
-router.register(r'assignissues',IssueAssignViewSet)
+router.register(r'assignissues',IssueAssignViewSet,basename='assign-issues')
 
 #urls
 

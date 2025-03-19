@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.contrib.auth.models import Group
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 
@@ -35,6 +36,7 @@ class IssueViewSet(viewsets.ModelViewSet):
 
 
 class IssueAssignViewSet(viewsets.ViewSet):
+    queryset = Issue.objects.all()
     permission_classes = [IsAuthenticated]
 
     def update(self, request, pk=None):
@@ -131,13 +133,21 @@ def logout(request):
     try:
         # Get the refresh token from the request
         refresh_token = request.data.get('refresh')
+        access_token = request.data.get('access')
         
         # Blacklist the refresh token
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()  # This will add the token to the blacklist
-            
+        
+        if access_token:
+            token = AccessToken(access_token)
+            token.blacklist() #This will add the token to blacklist too
+
+
         return Response({'success': True, 'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+    except TokenError as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
