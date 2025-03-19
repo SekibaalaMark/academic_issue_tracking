@@ -14,7 +14,7 @@ const Login = () => {
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await axios.post("http://127.0.0.1:8000/admin", {
         email,
         password,
       });
