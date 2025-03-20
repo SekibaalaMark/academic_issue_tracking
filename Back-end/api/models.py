@@ -40,7 +40,17 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def save(self, *args, **kwargs):
+        # If the user already exists, prevent changes to the role field
+        if self.pk is not None:  # Check if the user is being updated
+            original_user = CustomUser .objects.get(pk=self.pk)
+            if original_user.role != self.role:
+                self.role = original_user.role  # Revert to the original role
+        super().save(*args, **kwargs)
 
+
+        
 # Department model
 class Department(models.Model):
     DEPT_CHOICES = [
