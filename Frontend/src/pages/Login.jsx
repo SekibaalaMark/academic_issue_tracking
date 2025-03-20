@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom"; // Import Link for navigation
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "./context/authContext"; // Import useAuth from authContext
 import { FaUserCircle, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"; // Added necessary icons
-import "./Login.css";
+import "../styles/Login.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");

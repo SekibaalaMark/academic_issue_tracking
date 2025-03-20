@@ -7,15 +7,14 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import StudentDashboard from "./pages/StudentDashboard/StudentDashboard.jsx"; // Updated path
-import AcademicRegistrar from "./pages/AcademicRegistrar/AcademicRegistrar.jsx"; // Updated path
-import StudentComplaints from "./pages/StudentComplaints/StudentComplaints.jsx"; // Updated path
+import AcademicRegistrar from "./pages/AcademicRegistrar.jsx"; // Updated path
 import { AuthProvider, useAuth } from "./context/authContext";
-import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.jsx"; // Updated path
-import Lecturers from "./pages/Lecturers/Lecturers.jsx"; // Updated path
-import Login from "./pages/Login/Login.jsx"; // Updated path
+import ForgotPassword from "./features/authentication/ForgotPassword.jsx"; // Updated path
+import Lecturers from "./ui/Lecturers/Lecturers.jsx"; // Updated path
+import Login from "./pages/Login.jsx"; // Updated path
 import RegisterForm from "./pages/RegisterForm.jsx"; // Added path for RegisterForm
-
+import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
+import StudentComplaints from "./ui/StudentComplaints";
 // Protected route layout component
 const ProtectedLayout = () => {
   const { authState } = useAuth();
