@@ -1,0 +1,57 @@
+/* src/pages/IssueDetails.css */
+.issue-container {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 2rem auto;
+    max-width: 800px;
+  }
+  
+  .issue-heading {
+    font-size: 24px;
+    margin-bottom: 1rem;
+  }
+  
+  .issue-title {
+    font-size: 20px;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .issue-info {
+    margin-bottom: 1rem;
+  }
+  
+  .info-section {
+    margin-bottom: 0.5rem;
+  }
+  
+  .info-label {
+    font-weight: bold;
+    margin-right: 5px;
+  }
+  
+  .info-value {
+    color: #555;
+  }
+  
+  .button-group, .nav-group {
+    margin-top: 1rem;
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    margin-right: 10px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn:hover {
+    background-color: #0056b3;
+  }
+  
