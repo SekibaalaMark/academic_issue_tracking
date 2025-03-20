@@ -1,30 +1,26 @@
 import React from "react";
-import "./App.css";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-  Outlet,
-} from "react-router-dom";
+import "./App.css"; // Import global styles
+import { Route, Routes, Navigate, Outlet } from "react-router-dom";
 
-import AcademicRegistrar from "@/pages/AcademicRegistrar";
-import { AuthProvider, useAuth } from "@/context/authContext";
-import ForgotPassword from "@/features/authentication/ForgotPassword.jsx";
-import Lecturers from "@/ui/Lecturers/Lecturers.jsx";
-import Login from "@/pages/Login.jsx";
-import RegisterForm from "@/pages/RegisterForm.jsx";
-import StudentDashboard from "@/ui/StudentDashboard/StudentDashboard.jsx";
-import StudentComplaints from "@/ui/StudentComplaints";
+import AcademicRegistrar from "@/pages/AcademicRegistrar"; // Academic Registrar Dashboard
+import { AuthProvider, useAuth } from "@/context/authContext"; // Auth Context
+import ForgotPassword from "@/features/authentication/ForgotPassword.jsx"; // Forgot Password Page
+import Lecturers from "@/ui/Lecturers/Lecturers.jsx"; // Lecturer Dashboard
+import Login from "@/pages/Login.jsx"; // Login Page
+import RegisterForm from "@/pages/RegisterForm.jsx"; // Registration Page
+import StudentDashboard from "@/ui/StudentDashboard/StudentDashboard.jsx"; // Student Dashboard
+import StudentComplaints from "@/ui/StudentComplaints"; // Student Complaints Page
+import Navbar from "./components/Navbar"; // Navbar Component
+import Home from "@/pages/Home"; // Home Page
 
 const ProtectedLayout = () => {
-  const { authState } = useAuth();
+  const { user } = useAuth();
 
-  if (authState === null) {
+  if (user === null) {
     return <div>Loading...</div>;
   }
 
-  if (!authState) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -34,21 +30,24 @@ const ProtectedLayout = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route element={<ProtectedLayout />}>
-            <Route path="/dashboard" element={<StudentDashboard />} />
-            <Route path="/lecturers" element={<Lecturers />} />
-            <Route path="/academic-registrar" element={<AcademicRegistrar />} />
-            <Route path="/student-complaints" element={<StudentComplaints />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+      <Navbar />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/dashboard/student" element={<StudentDashboard />} />
+          <Route path="/dashboard/lecturer" element={<Lecturers />} />
+          <Route
+            path="/dashboard/academic-registrar"
+            element={<AcademicRegistrar />}
+          />
+          <Route path="/student-complaints" element={<StudentComplaints />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </AuthProvider>
   );
 }

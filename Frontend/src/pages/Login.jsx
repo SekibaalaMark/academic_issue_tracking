@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { FaUserCircle, FaLock } from "react-icons/fa"; // Import icons
+import { Link, useNavigate } from "react-router-dom";
+import { FaUserCircle, FaLock } from "react-icons/fa";
 import "../styles/Login.css";
+import { useAuth } from "@/context/authContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +30,9 @@ const Login = () => {
       }
 
       const data = await response.json();
+      login(data); // Update user context
       localStorage.setItem("authToken", data.token); // Store token
+      navigate("/home"); // Redirect to Home page
     } catch (error) {
       setError("Login failed. Please check your credentials and try again.");
     }
