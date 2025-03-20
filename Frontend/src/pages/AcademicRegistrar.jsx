@@ -1,5 +1,6 @@
 import React from "react";
-import { useAuth } from "../context/authContext"; // Updated import path
+
+import { useAuth } from "../contexts/authContext"; // Updated import path
 import Header from "../components/Header";
 import Description from "../components/Description";
 

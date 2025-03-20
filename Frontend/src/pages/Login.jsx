@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom"; // Import Link for navigation
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/authContext"; // Corrected path for authContext
+import { useAuth } from "../context/authContext"; // Updated path for advanced authContext
 import { FaUserCircle, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"; // Added necessary icons
 import "../styles/Login.css"; // Updated path for Login.css
 
