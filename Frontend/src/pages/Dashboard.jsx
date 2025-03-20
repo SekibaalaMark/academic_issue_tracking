@@ -1,35 +1,77 @@
-// src/pages/Dashboard.jsx
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "../styles/Dashboard.css";
 
-function Dashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+const Dashboard = () => {
+  const [isUserLoggedIn, setUserLoggedIn] = useState(false);
+  const [issuesData, setIssuesData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorText, setErrorText] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      window.location.href = '/login'; // Redirect to login if not authenticated
-    }
-  }, []);
+    // const token = localStorage.getItem("authToken");
+    // if (token) {
+    //   setUserLoggedIn(true);
+    //   getIssues(token);
+    // } else {
+    //   navigate("/dashboard");
+    // }
+  }, [navigate]);
 
-  if (!isLoggedIn) return <div>Loading...</div>;
+  const getIssues = async (token) => {
+    try {
+      const response = await fetch("https://api.example.com/issues", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setIssuesData(data);
+      } else {
+        setErrorText("Failed to fetch issues. Please try again later.");
+      }
+    } catch (error) {
+      setErrorText("Error fetching issues. Please check your connection.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // if (!isUserLoggedIn) return null;
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome to the protected dashboard!</p>
-      <nav>
-        <ul>
-          <li><Link to="/home">Home</Link></li>
-          <li><Link to="/students">Students</Link></li>
-          <li><Link to="/lecturers">Lecturers</Link></li>
-          <li><Link to="/academic-registrar">Academic Registrar</Link></li>
-        </ul>
-      </nav>
+    <div className="dashboard-container">
+      <h1>Welcome to the Dashboard</h1>
+      <ul>
+        <li>
+          <Link to="/dashboard/student">Student Dashboard</Link>
+        </li>
+        <li>
+          <Link to="/dashboard/lecturer">Lecturer Dashboard</Link>
+        </li>
+        <li>
+          <Link to="/dashboard/academic-registrar">Academic Registrar Dashboard</Link>
+        </li>
+      </ul>
+      <div className="issues-section">
+        <h2>Issues Tracker</h2>
+        {isLoading ? (
+          <p>Loading issues...</p>
+        ) : errorText ? (
+          <p>{errorText}</p>
+        ) : (
+          <ul>
+            {issuesData.map((issue) => (
+              <li key={issue.id}>{issue.title}</li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
-}
+};
 
 export default Dashboard;
+

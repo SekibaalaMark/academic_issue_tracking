@@ -40,11 +40,16 @@ nav ul li {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+nav ul li a {
+  display: inline-block;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   padding: 5px 10px;
+  transition: transform 0.2s ease, background-color 0.3s ease;
   border-radius: 5px;
 }
-
 nav ul li:hover {
   transform: scale(1.1);
   background-color: rgba(255, 255, 255, 0.2);
