@@ -1,76 +1,97 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import navigation
-import axios from 'axios';
-import styled from "styled-components";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "./Login.css";
 
-const Input = styled.input`
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-`;
-
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate(); // Hook for navigation
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+
     try {
-      const response = await axios.post('http://your-api-endpoint/login', { email, password });
+      const response = await axios.post("http://127.0.0.1:8000/admin", {
+        email,
+        password,
+      });
 
       if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token); // Store token
-        localStorage.setItem('userRole', response.data.role); // Store user role
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("userRole", response.data.role);
 
-        // Redirect based on role
+        // Navigate based on role
         switch (response.data.role) {
-          case 'student':
-            navigate('/students');
+          case "student":
+            navigate("/students");
             break;
-          case 'lecturer':
-            navigate('/lecturers');
+          case "lecturer":
+            navigate("/lecturers");
             break;
-          case 'registrar':
-            navigate('/academic-registrar');
+          case "registrar":
+            navigate("/academic-registrar");
             break;
           default:
-            navigate('/dashboard'); // Default fallback
+            navigate("/dashboard"); // Default fallback
         }
       }
     } catch (err) {
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="login-page">
+      <h2 className="site-title">ACADEMIC ISSUE TRACKING</h2>
+
+      <div className="login-container">
+        <div className="login-header">Login</div>
+        <div className="login-form">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="email">E-Mail Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <div className="remember-me">
+              <input type="checkbox" id="remember" />
+              <label htmlFor="remember">Remember Me</label>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <button type="submit" className="login-btn">Login</button>
+          </form>
+
+          <div className="login-links">
+            <a href="#">Forgot Your Password?</a>
+          </div>
         </div>
-        <div>
-          <label>Password</label>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error && <div style={{ color: 'red' }}>{error}</div>}
-        <button type="submit">Login</button>
-      </form>
+      </div>
+
+      <div className="auth-links">
+        <a href="#">Login</a> | <a href="#">Register</a>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;

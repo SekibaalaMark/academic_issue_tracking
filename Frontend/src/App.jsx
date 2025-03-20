@@ -7,6 +7,9 @@ import AcademicRegistrar from './pages/AcademicRegistrar';
 import Dashboard from './pages/Dashboard';
 import IssueSubmissionForm from './pages/IssueSubmissionForm';
 import IssueDetails from './pages/IssueDetails';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import UpdateProfile from './pages/UpdateProfile';
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
         <Route path="/issuedetails" element={<IssueDetails />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/updateprofile" element={<UpdateProfile />} />
       </Routes>
     </Router>
   );
