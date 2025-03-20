@@ -5,6 +5,13 @@ nav {
   justify-content: space-between;
   align-items: center;
   color: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+nav .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
 }
 
 nav ul {
@@ -20,11 +27,14 @@ nav ul li {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  padding: 5px 10px;
+  border-radius: 5px;
 }
 
 nav ul li:hover {
   transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 nav ul li img {
@@ -38,9 +48,32 @@ nav ul li a {
   font-weight: bold;
 }
 
+.nav-toggle {
+  display: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   nav ul {
+    display: none;
     flex-direction: column;
     gap: 10px;
+    background-color: #007bff;
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  nav ul.active {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: block;
+    color: white;
   }
 }
