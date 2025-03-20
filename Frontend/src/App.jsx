@@ -7,8 +7,8 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import AcademicRegistrar from "./pages/AcademicRegistrar.jsx"; // Updated path
-import { AuthProvider, useAuth } from "./context/authContext";
+import AcademicRegistrar from "./ui/AcademicRegistrar.jsx"; // Updated path
+import { AuthProvider, useAuth } from "../context/authContext";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx"; // Updated path
 import Lecturers from "./ui/Lecturers/Lecturers.jsx"; // Updated path
 import Login from "./pages/Login.jsx"; // Updated path
