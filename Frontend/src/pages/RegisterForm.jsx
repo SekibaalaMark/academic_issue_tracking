@@ -13,10 +13,25 @@ function RegisterForm() {
     <div className={styles.formCenter}>
       <Form>
         <h2>REGISTER FORM</h2>
-        <FormRow label="Name">
-          <Input placeholder="Enter name" required />
+        <FormRow label="First Name">
+          <Input placeholder="Enter First name" required />
         </FormRow>
-        <FormRow label="Registration number">
+        <FormRow label="Last Name">
+          <Input placeholder="Enter Last name" required />
+        </FormRow>
+        <FormRow label="Username">
+          <Input placeholder="Enter Username" required />
+        </FormRow>
+        <FormRow label="password">
+          <Input placeholder="Enter password" required />
+        </FormRow>
+        <FormRow label="Confirm password">
+          <Input placeholder="Confirm password" required />
+        </FormRow>
+        <FormRow label="Email">
+          <Input placeholder="Enter email" required />
+        </FormRow>
+        {/* <FormRow label="Registration number">
           <Input placeholder="Enter registration number" required />
         </FormRow>
         <FormRow label="Student number">
@@ -38,7 +53,7 @@ function RegisterForm() {
             <Option>CAES</Option>
             <Option>COBAMS</Option>
           </Select>
-        </FormRow>
+        </FormRow> */}
         <Button>Register</Button>
         <p className={styles.redirectText}>
           Already have an account? <Link to="/login">Login here</Link>
