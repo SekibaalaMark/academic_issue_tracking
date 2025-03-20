@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "../styles/Login.css";
@@ -8,8 +8,15 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to home if user is already authenticated
+    if (user) {
+      navigate("/home");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +38,6 @@ const Login = () => {
 
       const data = await response.json();
       login(data); // Update user context
-      localStorage.setItem("authToken", data.token); // Store token
       navigate("/home"); // Redirect to Home page
     } catch (error) {
       setError("Login failed. Please check your credentials and try again.");
