@@ -45,7 +45,7 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      <h2 className="site-title">FAMS</h2>
+      <h2 className="site-title">ACADEMIC ISSUE TRACKING</h2>
 
       <div className="login-container">
         <div className="login-header">Login</div>
@@ -83,7 +83,6 @@ const Login = () => {
 
           <div className="login-links">
             <a href="#">Forgot Your Password?</a>
-            <a href="#">Trouble Login?</a>
           </div>
         </div>
       </div>

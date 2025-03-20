@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f3f8f3;
-    text-align: center;
+    background-color: white;
+    text-align: left;
     margin: 0;
     padding: 0;
 }
@@ -11,19 +11,19 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: left;
+    justify-content: left;
 }
 
 .site-title {
     font-size: 24px;
-    font-weight: bold;
+    font-weight: lighter;
     margin-bottom: 20px;
 }
 
 .login-container {
     width: 400px;
-    background: white;
+    background: black;
     border-radius: 5px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -31,7 +31,7 @@ body {
 
 .login-header {
     background-color: green;
-    color: white;
+    color: green;
     padding: 15px;
     font-size: 18px;
     text-align: left;
@@ -54,7 +54,7 @@ label {
 input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid black;
     border-radius: 5px;
     font-size: 14px;
     outline: none;

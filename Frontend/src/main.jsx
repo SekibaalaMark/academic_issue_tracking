@@ -14,6 +14,7 @@ import LoginForm from './components/LoginForm/LoginForm';
 import IssueSubmissionForm from './pages/IssueSubmissionForm';
 import IssueDetails from './pages/IssueDetails';
 import Register from './pages/Register';
+import UpdateProfile from './pages/UpdateProfile';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -31,7 +32,7 @@ root.render(
       <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
       <Route path="/issuedetails" element={<IssueDetails />} />
       <Route path="/register" element={<Register />} />
-
+      <Route path="/updateprofile" element={<UpdateProfile />} />
     </Routes>
   </Router>
 );
