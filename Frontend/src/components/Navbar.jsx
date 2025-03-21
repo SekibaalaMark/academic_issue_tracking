@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link, Links, useNavigate } from "react-router-dom";
+import { Link,  useNavigate } from "react-router-dom";
 import HomeIcon from "@/assets/icons/home.svg";
 import DashboardIcon from "@/assets/icons/dashboard.svg";
 import LogoutIcon from "@/assets/icons/logout.svg";
-import "../styles/Navbar.css";
+import "../../styles/Navbar.css";
 import { useAuth } from "@/context/authContext";
+
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUserCircle, FaLock } from "react-icons/fa";
-import "../styles/Login.css";
+import "../../styles/Login.css";
 import { useAuth } from "@/context/authContext";
 
 const Login = () => {
