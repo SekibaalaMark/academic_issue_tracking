@@ -1,0 +1,44 @@
+/* Dropdown.css */
+
+.dropdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+
+label {
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 300px; /* Limit the width on larger screens */
+  transition: border-color 0.3s;
+}
+
+select:focus {
+  border-color: #007bff; /* Change border color on focus */
+  outline: none; /* Remove default outline */
+}
+
+@media (max-width: 600px) {
+  label {
+    font-size: 1rem; /* Smaller font size on small screens */
+  }
+
+  select {
+    font-size: 0.9rem; /* Smaller font size for the dropdown */
+  }
+}
+
+.selected-role {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #333;
+}

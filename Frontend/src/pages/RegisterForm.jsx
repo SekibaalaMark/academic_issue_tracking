@@ -7,6 +7,7 @@ import Input from "../ui/Input";
 import Option from "../ui/Option";
 import Select from "../ui/Select";
 import styles from "./register.module.css";
+import Dropdown from "components/Dropdown/Dropdown";
 
 function RegisterForm() {
   return (
@@ -31,6 +32,8 @@ function RegisterForm() {
         <FormRow label="Email">
           <Input placeholder="Enter email" required />
         </FormRow>
+        <Dropdown />
+
         {/* <FormRow label="Registration number">
           <Input placeholder="Enter registration number" required />
         </FormRow>

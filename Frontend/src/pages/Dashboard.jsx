@@ -10,13 +10,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // const token = localStorage.getItem("authToken");
-    // if (token) {
-    //   setUserLoggedIn(true);
-    //   getIssues(token);
-    // } else {
-    //   navigate("/dashboard");
-    // }
+
   }, [navigate]);
 
   const getIssues = async (token) => {

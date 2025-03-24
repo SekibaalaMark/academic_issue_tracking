@@ -13,6 +13,7 @@ import StudentDashboard from "@/ui/StudentDashboard/StudentDashboard.jsx"; // St
 import StudentComplaints from "@/ui/StudentComplaints/StudentComplaints.jsx"; // Student Complaints Page
 import Navbar from "./components/Navbar"; // Navbar Component
 import Home from "@/pages/Home"; // Home Page
+import Dropdown from "./Dropdown";
 
 const ProtectedLayout = () => {
   const { user } = useAuth();
@@ -48,6 +49,7 @@ function App() {
           path="/dashboard/academic-registrar"
           element={<AcademicRegistrar />}
         />
+         
         <Route path="/studentcomplaints" element={<StudentComplaints />} />
 
         {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
