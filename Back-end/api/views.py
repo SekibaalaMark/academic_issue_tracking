@@ -167,6 +167,8 @@ def student_login(request):
         
         user = authenticate(username=username, password=password)
         if user is not None:
+            if user.role != 'student':
+                return Response({'success': False, 'message': 'Only Students are allowed to login from here!'}, status=status.HTTP_401_UNAUTHORIZED)
             # Generate tokens
             refresh = RefreshToken.for_user(user)
             
@@ -219,6 +221,8 @@ def registrar_login(request):
         
         user = authenticate(username=username, password=password)
         if user is not None:
+            if user.role != 'registrar':
+                return Response({'success': False, 'message': 'Only Registrars are allowed to login from here!'}, status=status.HTTP_401_UNAUTHORIZED)
             # Generate tokens
             refresh = RefreshToken.for_user(user)
             
