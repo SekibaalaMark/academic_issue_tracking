@@ -51,7 +51,7 @@ class AssignIssueSerializer(serializers.ModelSerializer):
 
     
 
-class RegisterSerializer(serializers.ModelSerializer):
+class StudentRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     class Meta:
@@ -88,6 +88,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
         
+        if role != "student":
+            raise serializers.ValidationError("Role must be student")
+
         # Check if role is valid
         if role not in dict(CustomUser .USER_CHOICES):
             raise serializers.ValidationError("Invalid role selected")
@@ -102,6 +105,122 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
         return user
+
+
+class LecturerRegistrationSerializer(serializers.ModelSerializer):
+    password_confirmation = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = CustomUser 
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},  # Password is required and write-only
+            'email': {'required': True},  # Email is required
+            'username': {'required': True},  # Username is required
+            'first_name': {'required': True},  # First name is required
+            'last_name': {'required': True},  # Last name is required
+            'role':{'required':True},#Role is required on registration
+        }
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        password_confirmation = data.get('password_confirmation')
+        role = data.get('role')
+
+        # Check if username already exists
+        if username and CustomUser .objects.filter(username=username).exists():
+            raise serializers.ValidationError('Username already exists')
+        
+        if '@' not in email or email.split('@')[1] != 'gmail.com':
+            raise serializers.ValidationError('Only Gmail accounts are allowed...')
+        
+        # Check if email already exists
+        if email and CustomUser .objects.filter(email=email).exists():
+            raise serializers.ValidationError("Email already exists")
+
+        # Check if password and password confirmation match
+        if password != password_confirmation:
+            raise serializers.ValidationError("Passwords do not match")
+        
+
+        if role != 'lecturer':
+            raise serializers.ValidationError("Role Must be lecturer")
+        
+        # Check if role is valid
+        if role not in dict(CustomUser .USER_CHOICES):
+            raise serializers.ValidationError("Invalid role selected")
+
+
+        return data
+
+    def create(self, validated_data):
+        # Remove password confirmation from validated data
+        validated_data.pop('password_confirmation')
+        user = CustomUser (**validated_data)
+        user.set_password(validated_data['password'])  # Hash the password
+        user.save()
+        return user
+
+
+
+class RegistrarRegistrationSerializer(serializers.ModelSerializer):
+    password_confirmation = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = CustomUser 
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},  # Password is required and write-only
+            'email': {'required': True},  # Email is required
+            'username': {'required': True},  # Username is required
+            'first_name': {'required': True},  # First name is required
+            'last_name': {'required': True},  # Last name is required
+            'role':{'required':True},#Role is required on registration
+        }
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        password_confirmation = data.get('password_confirmation')
+        role = data.get('role')
+
+        # Check if username already exists
+        if username and CustomUser .objects.filter(username=username).exists():
+            raise serializers.ValidationError('Username already exists')
+        
+        if '@' not in email or email.split('@')[1] != 'gmail.com':
+            raise serializers.ValidationError('Only Gmail accounts are allowed...')
+        
+        # Check if email already exists
+        if email and CustomUser .objects.filter(email=email).exists():
+            raise serializers.ValidationError("Email already exists")
+
+        # Check if password and password confirmation match
+        if password != password_confirmation:
+            raise serializers.ValidationError("Passwords do not match")
+        
+        if role != 'registrar':
+            raise serializers.ValidationError("Role must be registrar")
+        
+        # Check if role is valid
+        if role not in dict(CustomUser .USER_CHOICES):
+            raise serializers.ValidationError("Invalid role selected")
+
+
+        return data
+
+    def create(self, validated_data):
+        # Remove password confirmation from validated data
+        validated_data.pop('password_confirmation')
+        user = CustomUser (**validated_data)
+        user.set_password(validated_data['password'])  # Hash the password
+        user.save()
+        return user
+
+
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
