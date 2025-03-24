@@ -88,13 +88,12 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
         
-        if role != "student":
-            raise serializers.ValidationError("Role must be student")
-
         # Check if role is valid
         if role not in dict(CustomUser .USER_CHOICES):
             raise serializers.ValidationError("Invalid role selected")
 
+        if role != "student":
+            raise serializers.ValidationError("Role must be student")
 
         return data
 
@@ -144,14 +143,12 @@ class LecturerRegistrationSerializer(serializers.ModelSerializer):
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
         
-
-        if role != 'lecturer':
-            raise serializers.ValidationError("Role Must be lecturer")
-        
         # Check if role is valid
         if role not in dict(CustomUser .USER_CHOICES):
             raise serializers.ValidationError("Invalid role selected")
 
+        if role != 'lecturer':
+            raise serializers.ValidationError("Role Must be lecturer")
 
         return data
 
@@ -202,12 +199,14 @@ class RegistrarRegistrationSerializer(serializers.ModelSerializer):
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
         
-        if role != 'registrar':
-            raise serializers.ValidationError("Role must be registrar")
-        
         # Check if role is valid
         if role not in dict(CustomUser .USER_CHOICES):
             raise serializers.ValidationError("Invalid role selected")
+
+        if role != 'registrar':
+            raise serializers.ValidationError("Role must be registrar")
+        
+        
 
 
         return data

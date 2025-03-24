@@ -158,7 +158,60 @@ class RegistrarRegistrationView(APIView):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])  # Allow anyone to access this view
-def login(request):
+def student_login(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        
+        
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'success': True,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Allow anyone to access this view
+def lecturer_login(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            if user.role != 'lecturer':
+                return Response({'success': False, 'message': 'You must be a lecturer to login!'}, status=status.HTTP_401_UNAUTHORIZED)
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'success': True,
+                'message': 'Login successful'
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Allow anyone to access this view
+def registrar_login(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         username = serializer.validated_data['username']
@@ -179,6 +232,8 @@ def login(request):
             return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
 #Log out view
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  # Only authenticated users can access this view

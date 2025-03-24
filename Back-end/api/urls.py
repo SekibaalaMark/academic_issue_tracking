@@ -14,7 +14,9 @@ router.register(r'assignissues',IssueAssignViewSet,basename='assign-issues')
 
 urlpatterns = [
     path('',include(router.urls)),
-    path("login/",login,name="login"),
+    path("login/student/",student_login,name="student-login"),
+    path("login/lecturer/",lecturer_login,name="lecturer-login"),
+    path("login/registrar/",registrar_login,name="registrar-login"),
     path('logout/',logout,name="logout"),
     path('filter_issues',filter_issues,name="filter_issues"),
     path('register/student/',StudentRegistrationView.as_view(),name = "register_studentr"),
