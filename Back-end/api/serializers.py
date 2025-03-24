@@ -35,10 +35,19 @@ class IssueSerializer(ModelSerializer):
     department =DepartmentSerializer()
     registrar = UserSerializer()
     raised_by = UserSerializer()
+    assigned_to = UserSerializer()
     class Meta:
         model= Issue
         fields = ['id','last_updated','created_at','status','department','registrar','raised_by','attachment',
-                  'description','category','year_of_study','course_code','couse_name','programme']
+                  'description','category','year_of_study','course_code','couse_name','programme','assigned_to']
+        read_only_fields = ['raised_by', 'assigned_to', 'created_at', 'last_updated']
+
+class AssignIssueSerializer(serializers.ModelSerializer):
+    assigned_to = UserSerializer()
+    class Meta:
+        model = Issue
+        fields = ['assigned_to']
+
 
     
 

@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.contrib.auth.models import Group
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 
@@ -27,6 +28,30 @@ class IssueViewSet(viewsets.ModelViewSet):
     queryset = Issue.objects.all()
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated]
+    def perform_create(self, serializer):
+        # Ensure that only students can create issues
+        if self.request.user.role != 'student':
+            return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
+        serializer.save(raised_by=self.request.user)
+
+
+class IssueAssignViewSet(viewsets.ViewSet):
+    queryset = Issue.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request, pk=None):
+        issue = Issue.objects.get(pk=pk)
+
+        # Ensure that only registrars can assign issues
+        if request.user.role != 'registrar':
+            return Response({"detail": "Only registrars can assign issues."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset=CustomUser.objects.all()
@@ -108,13 +133,21 @@ def logout(request):
     try:
         # Get the refresh token from the request
         refresh_token = request.data.get('refresh')
+        access_token = request.data.get('access')
         
         # Blacklist the refresh token
         if refresh_token:
             token = RefreshToken(refresh_token)
             token.blacklist()  # This will add the token to the blacklist
-            
+        
+        if access_token:
+            token = AccessToken(access_token)
+            token.blacklist() #This will add the token to blacklist too
+
+
         return Response({'success': True, 'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+    except TokenError as e:
+        return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

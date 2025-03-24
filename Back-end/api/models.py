@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-import shortuuid
+
 
 
 
@@ -40,7 +40,17 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def save(self, *args, **kwargs):
+        # If the user already exists, prevent changes to the role field
+        if self.pk is not None:  # Check if the user is being updated
+            original_user = CustomUser .objects.get(pk=self.pk)
+            if original_user.role != self.role:
+                self.role = original_user.role  # Revert to the original role
+        super().save(*args, **kwargs)
 
+
+        
 # Department model
 class Department(models.Model):
     DEPT_CHOICES = [
@@ -81,7 +91,7 @@ class Issue(models.Model):
     description = models.TextField()
     attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
     raised_by = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
-    #assigned_to = models.ForeignKey(User,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'})
+    assigned_to = models.ForeignKey(CustomUser,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'},null=True,blank=True)
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS_CHOICES)
