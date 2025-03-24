@@ -7,7 +7,7 @@ import Input from "../ui/Input";
 import Option from "../ui/Option";
 import Select from "../ui/Select";
 import styles from "./register.module.css";
-import Dropdown from "components/Dropdown/Dropdown";
+import Dropdown from "./components/Dropdown/Dropdown.jsx";
 
 function RegisterForm() {
   return (
