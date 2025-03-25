@@ -10,6 +10,7 @@ import IssueDetails from './pages/IssueDetails';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import UpdateProfile from './pages/UpdateProfile';
+import IssuesTable from './components/IssuesTable';
 
 function App() {
   return (
