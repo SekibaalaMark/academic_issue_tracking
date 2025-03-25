@@ -35,6 +35,7 @@ class CustomUser(AbstractUser):
     ]
     role = models.CharField(max_length=20, choices=USER_CHOICES, default='student')
     email = models.EmailField(unique=True)
+    email_is_verified = models.BooleanField(default=False)
     username=models.CharField(max_length=100,unique=True)
     programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
 

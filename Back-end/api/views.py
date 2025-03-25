@@ -1,6 +1,6 @@
 from rest_framework import status
 from .serializers import *
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .models import *
 from rest_framework.response import Response
 from rest_framework import viewsets
@@ -12,6 +12,12 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.contrib.auth.models import Group
 from rest_framework_simplejwt.exceptions import TokenError
+from django.utils.encoding import force_str  # Importing force_str
+
+from django.utils.http import urlsafe_base64_decode
+from django.contrib import messages
+from django.contrib.auth.tokens import default_token_generator  # Make sure this is imported
+
 
 
 
@@ -262,6 +268,30 @@ def logout(request):
         return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'success': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+from django.shortcuts import render, redire
+from django.utils.http import urlsafe_base64_decode
+from django.contrib import messages
+User = CustomUser
+
+def verify_email(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.email_is_verified = True
+        user.save()
+        messages.success(request, 'Your email has been verified.')
+        return redirect('home')
+    else:
+        messages.warning(request, 'The verification link is invalid.')
+        return redirect('signup')
+
 
 
 
