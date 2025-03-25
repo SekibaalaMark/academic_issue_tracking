@@ -13,8 +13,12 @@ import StudentDashboard from "@/ui/StudentDashboard/StudentDashboard.jsx"; // St
 import StudentComplaints from "@/ui/StudentComplaints/StudentComplaints.jsx"; // Student Complaints Page
 import Navbar from "./components/Navbar"; // Navbar Component
 import Home from "@/pages/Home"; // Home Page
+import ReactDOM from "react-dom";
 
-import Dropdown from "./components/Dropdown/Dropdown.jsx";
+import { BrowserRouter } from "react-router-dom";
+
+
+
 
 
 const ProtectedLayout = () => {

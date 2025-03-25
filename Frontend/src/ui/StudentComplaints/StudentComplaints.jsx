@@ -7,6 +7,8 @@ const StudentComplaints = () => {
   const [comment, setComment] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [file, setFile] = useState(null);
+  const [complaints, setComplaints] = useState([]); // State to hold complaints
+  const [notification, setNotification] = useState(""); // State for notifications
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -14,12 +16,23 @@ const StudentComplaints = () => {
       alert("Please select an issue.");
       return;
     }
+    // Add the new complaint to the complaints state
+    const newComplaint = {
+      id: complaints.length + 1,
+      issue,
+      comment,
+      status: "Pending", // Default status
+    };
+    setComplaints([...complaints, newComplaint]);
     setShowModal(true);
   };
 
   const confirmSubmit = () => {
     alert("Complaint Submitted Successfully!");
     setShowModal(false);
+    // Reset form fields
+    setIssue("");
+    setComment("");
   };
 
   const handleFileChange = (event) => {
@@ -52,8 +65,36 @@ const StudentComplaints = () => {
     }
   };
 
+  const handleResolve = (id) => {
+    // Update the status of the complaint to "Resolved"
+    setComplaints((prevComplaints) =>
+      prevComplaints.map((complaint) =>
+        complaint.id === id ? { ...complaint, status: "Resolved" } : complaint
+      )
+    );
+    setNotification("The issue has been resolved successfully!");
+    setTimeout(() => {
+      setNotification(""); // Clear notification after 3 seconds
+    }, 3000);
+  };
+
+  const handleInProgress = (id) => {
+    // Update the status of the complaint to "In Progress"
+    setComplaints((prevComplaints) =>
+      prevComplaints.map((complaint) =>
+        complaint.id === id ? { ...complaint, status: "In Progress" } : complaint
+      )
+    );
+    setNotification("The issue is now in progress.");
+    setTimeout(() => {
+      setNotification(""); // Clear notification after 3 seconds
+    }, 3000);
+  };
+
   return (
     <div className="student-complaints-container">
+      {notification && <div className="notification">{notification}</div>}
+  
       <div className="complaint-container max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
         <h2 className="text-2xl font-bold mb-4 text-center">
           Student Complaints
@@ -66,10 +107,10 @@ const StudentComplaints = () => {
             onChange={(e) => setIssue(e.target.value)}
             required
             options={[
-              "-- Select an issue --",
-              "missing_marks",
-              "under_grading",
-              "misplaced_marks",
+              " Select an issue please",
+              "missing marks",
+              "under grading",
+              "misplaced marks",
               "remarking",
               "others",
             ]}

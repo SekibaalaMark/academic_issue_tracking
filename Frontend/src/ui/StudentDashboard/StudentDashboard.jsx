@@ -99,11 +99,11 @@ const navigate=useNavigate();
               required
             />
             <FormField
-              label="Year of Sitting"
+              label="Year of Study"
               type="text"
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              placeholder="Enter year of sitting"
+              placeholder="Enter year of study"
               required
             />
             <FormField
