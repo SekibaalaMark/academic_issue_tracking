@@ -15,6 +15,7 @@ import IssueSubmissionForm from './pages/IssueSubmissionForm';
 import IssueDetails from './pages/IssueDetails';
 import Register from './pages/Register';
 import UpdateProfile from './pages/UpdateProfile';
+import IssuesTable from './components/IssuesTable';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -33,6 +34,7 @@ root.render(
       <Route path="/issuedetails" element={<IssueDetails />} />
       <Route path="/register" element={<Register />} />
       <Route path="/updateprofile" element={<UpdateProfile />} />
+      <Route path="/issues" element={<IssuesTable />} />
     </Routes>
   </Router>
 );
