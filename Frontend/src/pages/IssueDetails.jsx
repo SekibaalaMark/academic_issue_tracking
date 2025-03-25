@@ -12,7 +12,7 @@ const IssueDetails = () => {
   // Fetch issue details from backend API
   useEffect(() => {
     axios
-      .get(`/api/issues/${issueId}/`)
+      .get('http://127.0.0.1:8000/api/issues/' + issueId + '/')
       .then((response) => setIssue(response.data))
       .catch((err) => {
         console.error('Error fetching issue details:', err);
@@ -27,7 +27,7 @@ const IssueDetails = () => {
   // Delete the issue and then navigate to Issues List or Dashboard
   const handleDelete = () => {
     axios
-      .delete(`/api/issues/${issueId}/`)
+      .delete('http://127.0.0.1:8000/api/issues/')
       .then(() => {
         alert('Issue deleted successfully');
         navigate('/issues'); // or navigate('/dashboard') if preferred

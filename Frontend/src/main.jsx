@@ -34,7 +34,7 @@ root.render(
       <Route path="/issuedetails" element={<IssueDetails />} />
       <Route path="/register" element={<Register />} />
       <Route path="/updateprofile" element={<UpdateProfile />} />
-      <Route path="/issues" element={<IssuesTable />} />
+      <Route path="/issuestable" element={<IssuesTable />} />
     </Routes>
   </Router>
 );
