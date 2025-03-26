@@ -1,9 +1,11 @@
 from pathlib import Path
 
+
 import os
 from datetime import timedelta
 
-
+from dotenv import load_dotenv
+load_dotenv()
 SIMPLE_JWT = {
 
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token expiry time
@@ -145,3 +147,10 @@ SIMPLE_JWT = {
     'TOKEN_BLACKLIST': True,  # Enable token blacklisting
 }
 
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))  
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS") == "True"

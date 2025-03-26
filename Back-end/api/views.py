@@ -13,6 +13,12 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from django.contrib.auth.models import Group
 from rest_framework_simplejwt.exceptions import TokenError
 from django.utils.encoding import force_str  # Importing force_str
+from django.core.mail import send_mail,EmailMessage
+
+from django.shortcuts import render, redirect
+from django.utils.http import urlsafe_base64_decode
+from django.contrib import messages
+User = CustomUser
 
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
@@ -97,6 +103,39 @@ class StudentRegistrationView(APIView):
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
+            verification_code = randint(10000,99999)
+            verification,created = VerificationCode.objects.get_or_create(
+                user = user,
+                defaults={"code": verification_code})
+            
+            verification.code = verification_code
+            #verification_code.created_at = timezone.now()
+            verification.save()
+            
+            '''Sending the email...
+            subject = 'Email verification Code..'
+            message = f"Hello, your Verification code is: {verification_code}"
+            receipient_email= data.get('email')
+            
+            try:
+                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            '''
+            subject = 'Email Verification Code'
+            message = f"Hello, your Verification code is: {verification_code}"
+            recipient_email = data.get('email')
+
+            email = EmailMessage(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [recipient_email]
+            )
+
+            email.send(fail_silently=False)
+            
 
             return Response({
                 "message": "User  Created Successfully",
@@ -107,6 +146,52 @@ class StudentRegistrationView(APIView):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+class Student_Registration(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data=request.data
+        serializer = StudentRegistrationSerializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()  # Save user using serializer
+            '''Creating and saving the verification code object..'''
+            
+            verification_code = randint(10000,99999)
+            verification,created = Verification_code.objects.get_or_create(
+                user = user,
+                defaults={"code": verification_code})
+            
+            verification.code = verification_code
+            #verification_code.created_at = timezone.now()
+            verification.save()
+            
+            '''Sending the email...'''
+            subject = 'Email verification Code..'
+            message = f"Hello, your Verification code is: {verification_code}"
+            receipient_email= data.get('email')
+            
+            try:
+                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({
+                    "message": "User Created Successfully, Token created and email sent!",
+                    "user": {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "email": user.email,
+                    "role":user.role,
+                    "gender": user.gender,
+                    "program": user.program.id if user.program else None,
+                    "is_email_verified": user.is_email_verified,
+                
+                    }}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class LecturerRegistrationView(APIView):
     def post(self,request):
@@ -271,7 +356,81 @@ def logout(request):
 
 
 
-from django.shortcuts import render, redire
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
 User = CustomUser
