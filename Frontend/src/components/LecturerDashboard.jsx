@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import IssueTable from "./IssuesTable";
-import "./LecturerDashboard.css";// Global styles
+import IssueTable from "./IssuesTable"; // Ensure the import matches the component name
+import "./LecturerDashboard.css"; // Global styles
 
-const Dashboard = () => {
+const LecturersDashboard = () => {
   const [issues, setIssues] = useState([]); // Store student issues
   const [loading, setLoading] = useState(true); // Loading state
 
@@ -22,6 +22,10 @@ const Dashboard = () => {
       });
   }, []);
 
+  // Log loading and issues state for debugging
+  console.log("Loading:", loading);
+  console.log("Issues:", issues);
+
   return (
     <div className="dashboard-container">
       <Sidebar /> {/* Sidebar Navigation */}
@@ -29,12 +33,15 @@ const Dashboard = () => {
         <Header /> {/* Top Header */}
         <div className="issues-section">
           <h2>Student Issues</h2>
-          {loading ? <p>Loading issues...</p> : <IssuesTable issues={issues} />}
+          {loading ? (
+            <p>Loading issues...</p>
+          ) : (
+            <IssueTable issues={issues} /> // Ensure the component name is consistent
+          )}
         </div>
-        
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default LecturersDashboard;
