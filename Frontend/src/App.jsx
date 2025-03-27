@@ -16,17 +16,16 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
         <Route path="/students" element={<Students />} />
-        <Route path="/lecturers" element={<Lecturers />} />
+        <Route path="/lecturerdashboard" element={<LecturersDashboard />} />
         <Route path="/academicregistrar" element={<AcademicRegistrar />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
         <Route path="/issuedetails" element={<IssueDetails />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/updateprofile" element={<UpdateProfile />} />
-        <Route path="/issuestable" element={<IssuesTable />} />
       </Routes>
     </Router>
   );

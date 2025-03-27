@@ -22,7 +22,6 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Router>
     <Routes>
-      <Route path="/" element={<App />} />
       <Route path="/login" element={<LoginForm />} />
       <Route path="/form" element={<LoginForm />} />
       <Route path="/dashboard" element={<Dashboard />} />
@@ -34,7 +33,7 @@ root.render(
       <Route path="/issuedetails" element={<IssueDetails />} />
       <Route path="/register" element={<Register />} />
       <Route path="/updateprofile" element={<UpdateProfile />} />
-      <Route path="/issuestable" element={<IssuesTable />} />
+      <Route path="/issues" element={<IssuesTable />} />
     </Routes>
   </Router>
 );
