@@ -106,7 +106,7 @@ class Issue(models.Model):
     def __str__(self):
         return self.category
 
-
+'''
 class Verification_code(models.Model):
     user = models.OneToOneField(CustomUser,on_delete=models.CASCADE)
     code = models.IntegerField()
@@ -139,7 +139,7 @@ class Verification_code(models.Model):
         
     def _str_(self):
         return f'Verification for {self.user.username} --- {self.code}'
-
+'''
 
 
 
@@ -152,9 +152,29 @@ class VerificationCode(models.Model):
     def is_verification_code_expired(self):
         expiration_time = self.created_at + timezone.timedelta(minutes=15)
         return timezone.now() > expiration_time
+        
+    @classmethod
+    def resend_verification_code(cls,user):
+        try:
+            cls.objects.filter(user = user).delete()
     
-    def __str__(self):
-        return f'Verification for {self.user.username} '
+            new_verification_code = randint(10000,99999)
+            verification = cls.objects.create(user = user,code= new_verification_code)
+        except Exception as e:
+            return {'Error':e}
+
+        try:
+            subject = 'Email verification Code Resend..'
+            message = f"Hello, your Verification code that has been resent is: {new_verification_code}"
+            receipient_email= user.email
+            send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
+        except Exception as e:
+            return {'Error':e}
+        
+        return {'Message':'Email verification code resent successfully...'}
+    
+    def _str_(self):
+        return f'Verification for {self.user.username} --- {self.code}'
 
 
 '''

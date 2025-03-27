@@ -14,6 +14,7 @@ from django.contrib.auth.models import Group
 from rest_framework_simplejwt.exceptions import TokenError
 from django.utils.encoding import force_str  # Importing force_str
 from django.core.mail import send_mail,EmailMessage
+from django.views.decorators.csrf import csrf_exempt
 
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
@@ -147,51 +148,106 @@ class StudentRegistrationView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-class Student_Registration(APIView):
+@method_decorator(csrf_exempt, name='dispatch')
+class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
-    def post(self, request):
-        data=request.data
-        serializer = StudentRegistrationSerializer(data=data)
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        serializer = VerifyEmailSerializer(data=data)
         if serializer.is_valid():
-            user = serializer.save()  # Save user using serializer
-            '''Creating and saving the verification code object..'''
-            
-            verification_code = randint(10000,99999)
-            verification,created = Verification_code.objects.get_or_create(
-                user = user,
-                defaults={"code": verification_code})
-            
-            verification.code = verification_code
-            #verification_code.created_at = timezone.now()
-            verification.save()
-            
-            '''Sending the email...'''
-            subject = 'Email verification Code..'
-            message = f"Hello, your Verification code is: {verification_code}"
-            receipient_email= data.get('email')
+            verification_code = serializer.validated_data.get('code')
+            user_email = serializer.validated_data.get('email')
             
             try:
-                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            return Response({
-                    "message": "User Created Successfully, Token created and email sent!",
-                    "user": {
-                    "id": user.id,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "email": user.email,
-                    "role":user.role,
-                    "gender": user.gender,
-                    "program": user.program.id if user.program else None,
-                    "is_email_verified": user.is_email_verified,
+                user = CustomUser.objects.get(email=user_email)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                verification = VerificationCode.objects.get(user=user, code=verification_code)
                 
-                    }}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+                if verification.is_verification_code_expired():
+                    return Response({'error': 'Verification Code has expired..'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                verification.is_code_verified = True
+                verification.save()
+                
+                user.is_email_verified = True
+                user.save()
+                return Response({'Message': 'Email verified successfully...'}, status=status.HTTP_200_OK)
+                
+            except VerificationCode.DoesNotExist:
+                return Response({'error': 'Verification Code does not exist..'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_verification_code(request):
+    data = request.data
+    serializer = ResendVerificationCodeSerializer(data = data)
+    if serializer.is_valid():
+        user_email = serializer.validated_data.get('email')
+        try:
+            user = CustomUser.objects.get(email = user_email)
+        except CustomUser.DoesNotExist:
+            return Response({'Error':'No user found...'})
+        
+        result = VerificationCode.resend_verification_code(user = user)
+        if result:
+            return Response({'Message':f'Successful.....'},status=status.HTTP_200_OK)
+        return Response({'Error':'Failure...........--'},status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+'''    
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email(request):
+    data = request.data
+    serializer = VerifyEmailSerializer(data = data)
+    if serializer.is_valid():
+        verification_code = serializer.validated_data.get('code')
+        user_email = serializer.validated_data.get('email')
+        
+        try:
+            user = CustomUser.objects.get(email=user_email)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            verification = VerificationCode.objects.get(user = user,code = verification_code)
+            
+            if verification.is_verification_code_expired():
+                return Response({'error':'Verification Code has expired..'},status = status.HTTP_400_BAD_REQUEST)
+            
+            verification.is_code_verified = True
+            verification.save()
+            
+            user.is_email_verified = True
+            user.save()
+            return Response({'Message':'Email verified successfully...'},status = status.HTTP_200_OK)
+            
+            
+        except VerificationCode.DoesNotExist:
+            return Response({'error':'Verification Code doesnot exist..'},status = status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+'''
 
 class LecturerRegistrationView(APIView):
     def post(self,request):
