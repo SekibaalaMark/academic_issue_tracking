@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 import IssueTable from "./IssuesTable"; // Ensure the import matches the component name
-import "./LecturerDashboard.css"; // Global styles
+import "./Lecturer.css"; // Global styles
 
-const LecturersDashboard = () => {
+const Lecturer = () => {
   const [issues, setIssues] = useState([]); // Store student issues
   const [loading, setLoading] = useState(true); // Loading state
 
@@ -44,4 +44,4 @@ const LecturersDashboard = () => {
   );
 };
 
-export default LecturersDashboard;
+export default Lecturer;
