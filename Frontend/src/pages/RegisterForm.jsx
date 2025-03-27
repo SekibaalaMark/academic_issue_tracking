@@ -31,25 +31,25 @@ function RegisterForm() {
         <FormRow label="Email">
           <Input placeholder="Enter email" required />
         </FormRow>
-        {/* <FormRow label="Registration number">
+        <FormRow label="Registration number">
           <Input placeholder="Enter registration number" required />
         </FormRow>
         <FormRow label="Student number">
           <Input placeholder="Enter student number" required />
         </FormRow>
         <FormRow label="College">
-          <Input placeholder="Enter college" required />
+          <Input placeholder="Enter college"  />
         </FormRow>
         <FormRow label="Department">
-          <Input placeholder="Department" required />
+          <Input placeholder="Department"  />
         </FormRow>
         <FormRow label="Academic year">
-          <Input placeholder="Academic Year" required />
+          <Input placeholder="Academic Year"  />
         </FormRow>
         <FormRow label="Select College">
           <Select>
             <Option>COCIS</Option>
-            <Option>CEES</Option>
+            <Option>CEES</Option> 
             <Option>CAES</Option>
             <Option>COBAMS</Option>
           </Select>
@@ -57,7 +57,7 @@ function RegisterForm() {
         <Button>Register</Button>
         <p className={styles.redirectText}>
           Already have an account? <Link to="/login">Login here</Link>
-        </p>
+        </p> 
       </Form>
     </div>
   );

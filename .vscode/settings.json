@@ -1,0 +1,5 @@
+{
+  "gitlens.views.repositories.includeWorkingTree": true,
+  "gitlens.views.repositories.showStashes": true,
+  "gitlens.views.repositories.showIncomingActivity": true
+}

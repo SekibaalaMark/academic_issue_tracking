@@ -1,4 +1,4 @@
-import React from "react";
+
 import "./App.css"; // Import global styles
 import { Route, Routes, Navigate, Outlet } from "react-router-dom";
 
@@ -47,6 +47,7 @@ function App() {
             path="/dashboard/academic-registrar"
             element={<AcademicRegistrar />}
           />
+          <Route path="/dashboard/student/complaints" element={<StudentComplaints />} />
           <Route path="/student-complaints" element={<StudentComplaints />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
