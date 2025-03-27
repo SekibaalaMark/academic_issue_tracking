@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser ,FaCircle, FaLock } from "react-icons/fa";
-import "../../styles/Login.css";
+import { FaUserCircle, FaLock } from "react-icons/fa";
+import "../styles/Login.css";
 import { useAuth } from "@/context/authContext";
 
 const Login = () => {
@@ -38,16 +38,7 @@ const Login = () => {
 
       const data = await response.json();
       login(data); // Update user context
-
-      // Redirect based on user role
-      const { role } = data; // Assuming the response contains the user's role
-      if (role === "student") {
-        navigate("/Student dashboard");
-      } else if (role === "lecturer") {
-        navigate("/lecturer dashboard");
-      } else {
-        navigate("/academic dashboard");
-      }
+      navigate("/home"); // Redirect to Home page
     } catch (error) {
       setError("Login failed. Please check your credentials and try again.");
     }
@@ -69,7 +60,7 @@ const Login = () => {
               className="form-input"
               required
             />
-            <FaUser Circle className="input-icon" />
+            <FaUserCircle className="input-icon" />
           </div>
         </div>
         <div className="form-group">
