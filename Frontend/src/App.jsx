@@ -1,8 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
+import { Routes, Route } from 'react-router-dom';
 import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
+import LecturersDashboard from './components/LecturerDashboard';
 import AcademicRegistrar from './pages/AcademicRegistrar';
 import Dashboard from './pages/Dashboard';
 import IssueSubmissionForm from './pages/IssueSubmissionForm';
@@ -14,20 +14,19 @@ import IssuesTable from './components/IssuesTable';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/students" element={<Students />} />
-        <Route path="/lecturerdashboard" element={<LecturersDashboard />} />
-        <Route path="/academicregistrar" element={<AcademicRegistrar />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
-        <Route path="/issuedetails" element={<IssueDetails />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/updateprofile" element={<UpdateProfile />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Home />} />  {/* Home route accessible via / */}
+      <Route path="/home" element={<Home />} />  {/* Home route also accessible via /home */}
+      <Route path="/students" element={<Students />} />
+      <Route path="/lecturerdashboard" element={<LecturersDashboard />} />
+      <Route path="/academicregistrar" element={<AcademicRegistrar />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
+      <Route path="/issuedetails" element={<IssueDetails />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/updateprofile" element={<UpdateProfile />} />
+      <Route path="/issues" element={<IssuesTable />} />
+    </Routes>
   );
 }
 
