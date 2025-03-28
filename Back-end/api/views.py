@@ -16,15 +16,9 @@ from django.utils.encoding import force_str  # Importing force_str
 from django.core.mail import send_mail,EmailMessage
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
-
-
-
-
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
-User = CustomUser
-
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
 from django.contrib.auth.tokens import default_token_generator  # Make sure this is imported
@@ -32,6 +26,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+
+User = CustomUser
 
 
 
@@ -110,6 +106,51 @@ class ProgrammeViewSet(viewsets.ModelViewSet):
     serializer_class= ProgrammeSerializer
     permission_classes= [IsAuthenticated]
 
+
+
+@api_view(['GET'])
+def filter_issues(request):
+    """
+    Filter issues based on various criteria including status, category, and user role.
+    Registrars and lecturers will only see issues assigned to them.
+    """
+    # Get filter parameters from request
+    status = request.GET.get('status', None)
+    category = request.GET.get('category', None)
+    
+    # Start with all issues
+    issues_qs = Issue.objects.all()
+    
+    # Filter based on user role
+    user = request.user
+    if user.role == 'lecturer':
+        # Lecturers only see issues assigned to them
+        issues_qs = issues_qs.filter(lecturer=user)
+    elif user.role == 'registrar':
+        # Registrars only see issues assigned to them
+        issues_qs = issues_qs.filter(registrar=user)
+    elif user.role == 'student':
+        # Students only see their own issues
+        issues_qs = issues_qs.filter(student=user)
+    
+    # Apply additional filters if provided
+    if status:
+        issues_qs = issues_qs.filter(status=status)
+    
+    if category:
+        issues_qs = issues_qs.filter(category=category)
+    
+    # Optional: Add sorting
+    issues_qs = issues_qs.order_by('-created_at')  # Most recent first
+    
+    serializer = IssueSerializer(issues_qs, many=True)
+    return Response(serializer.data)
+
+
+
+
+
+'''
 @api_view(['GET'])
 def filter_issues(request):
     status = request.GET.get('status', None)
@@ -120,7 +161,7 @@ def filter_issues(request):
     
     serializer = IssueSerializer(issues_qs, many=True)
     return Response(serializer.data)
-
+'''
 
 class StudentRegistrationView(APIView):
     def post(self,request):

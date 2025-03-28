@@ -6,13 +6,21 @@ from datetime import timedelta
 
 from dotenv import load_dotenv
 load_dotenv()
+
+
+
+'''
 SIMPLE_JWT = {
 
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token expiry time
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=300),  # Set access token expiry time
 
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
 
-}
+}'
+'''
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

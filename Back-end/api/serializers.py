@@ -2,7 +2,9 @@ from rest_framework.serializers import ModelSerializer
 from . models import *
 from rest_framework import serializers
 
-
+STUDENT_IDENTIFICATION_NUMBERS=[0,111,222,333,444,555,1000,2000,3000]
+REGISTRA_IDS =[20,30,40,50,60]
+LECTURE_IDS =[11,22,33,44,55]
 
 
 class DepartmentSerializer(ModelSerializer):
@@ -100,7 +102,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser 
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role','staff_id_or_student_no']
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},  # Password is required and write-only
             'email': {'required': True},  # Email is required
@@ -108,6 +110,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},  # First name is required
             'last_name': {'required': True},  # Last name is required
             'role':{'required':True},#Role is required on registration
+            'staff_id_or_student_no':{'required':True},#Role is required on registration
         }
 
     def validate(self, data):
@@ -116,11 +119,27 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
         role = data.get('role')
+        staff_id_or_student_no = data.get("staff_id_or_student_no")
 
         # Check if username already exists
         if username and CustomUser .objects.filter(username=username).exists():
             raise serializers.ValidationError('Username already exists')
         
+
+            # Ensure staff_id_or_student_no is an integer
+        if staff_id_or_student_no is not None:
+            try:
+                staff_id_or_student_no = int(staff_id_or_student_no)
+            except ValueError:
+                raise serializers.ValidationError('Student number must be an integer')
+
+        # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
+        if staff_id_or_student_no not in STUDENT_IDENTIFICATION_NUMBERS:
+            raise serializers.ValidationError('Wrong Student number')
+        
+        if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
+            raise serializers.ValidationError('User with this student number already exists')
+
         if '@' not in email or email.split('@')[1] != 'gmail.com':
             raise serializers.ValidationError('Only Gmail accounts are allowed...')
         
@@ -165,16 +184,45 @@ class LecturerRegistrationSerializer(serializers.ModelSerializer):
             'role':{'required':True},#Role is required on registration
         }
 
+
+
+    
+
+
+
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
         role = data.get('role')
+        staff_id_or_student_no = data.get("staff_id_or_student_no")
 
         # Check if username already exists
         if username and CustomUser .objects.filter(username=username).exists():
             raise serializers.ValidationError('Username already exists')
+        
+
+
+
+            # Ensure staff_id_or_student_no is an integer
+        if staff_id_or_student_no is not None:
+            try:
+                staff_id_or_student_no = int(staff_id_or_student_no)
+            except ValueError:
+                raise serializers.ValidationError('Staff  number must be an integer')
+
+        # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
+        if staff_id_or_student_no not in LECTURE_IDS:
+            raise serializers.ValidationError('Wrong Staff id number')
+        
+        if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
+            raise serializers.ValidationError('User with this id already exists')
+
+
+
+
+
         
         if '@' not in email or email.split('@')[1] != 'gmail.com':
             raise serializers.ValidationError('Only Gmail accounts are allowed...')
@@ -227,10 +275,30 @@ class RegistrarRegistrationSerializer(serializers.ModelSerializer):
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
         role = data.get('role')
+        staff_id_or_student_no = data.get("staff_id_or_student_no")
 
         # Check if username already exists
         if username and CustomUser .objects.filter(username=username).exists():
             raise serializers.ValidationError('Username already exists')
+        
+
+        # Ensure staff_id_or_student_no is an integer
+        if staff_id_or_student_no is not None:
+            try:
+                staff_id_or_student_no = int(staff_id_or_student_no)
+            except ValueError:
+                raise serializers.ValidationError('Staff  number must be an integer')
+
+        # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
+        if staff_id_or_student_no not in REGISTRA_IDS:
+            raise serializers.ValidationError('Wrong Staff id number')
+        
+        if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
+            raise serializers.ValidationError('User with this id already exists')
+
+
+
+
         
         if '@' not in email or email.split('@')[1] != 'gmail.com':
             raise serializers.ValidationError('Only Gmail accounts are allowed...')

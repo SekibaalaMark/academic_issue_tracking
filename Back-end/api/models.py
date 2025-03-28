@@ -37,7 +37,10 @@ class CustomUser(AbstractUser):
         ('lecturer', 'Lecturer'),
         ('registrar', 'Registrar'),
     ]
+
+    
     role = models.CharField(max_length=20, choices=USER_CHOICES, default='student')
+    staff_id_or_student_no = models.IntegerField(default=0)
     email = models.EmailField(unique=True)
     is_email_verified = models.BooleanField(default=False)
     username=models.CharField(max_length=100,unique=True)
