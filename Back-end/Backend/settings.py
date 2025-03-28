@@ -141,7 +141,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),  # Set access token expiry time
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=200),  # Set access token expiry time
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
 
     'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist the old refresh token after a new one is issued

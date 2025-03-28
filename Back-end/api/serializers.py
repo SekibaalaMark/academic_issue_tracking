@@ -34,19 +34,63 @@ class IssueSerializer(ModelSerializer):
     programme = ProgrammeSerializer()
     department =DepartmentSerializer()
     registrar = UserSerializer()
-    raised_by = UserSerializer()
-    assigned_to = UserSerializer()
+    student = UserSerializer()
+    lecturer = UserSerializer()
     class Meta:
         model= Issue
-        fields = ['id','last_updated','created_at','status','department','registrar','raised_by','attachment',
-                  'description','category','year_of_study','course_code','couse_name','programme','assigned_to']
-        read_only_fields = ['raised_by', 'assigned_to', 'created_at', 'last_updated']
-
+        fields = ['id','last_updated','created_at','status','department','registrar','student','attachment',
+                  'description','category','year_of_study','course_code','couse_name','programme','lecturer']
+        read_only_fields = ['student', 'lecturer', 'created_at', 'last_updated']
+'''
 class AssignIssueSerializer(serializers.ModelSerializer):
-    assigned_to = UserSerializer()
+    lecturer = UserSerializer()
     class Meta:
         model = Issue
-        fields = ['assigned_to']
+        fields = ['lecturer']
+        '''
+
+class AssignIssueSerializer(serializers.ModelSerializer):
+    lecturer = serializers.SlugRelatedField(
+        slug_field='username',
+        queryset=CustomUser.objects.filter(role='lecturer'),
+        allow_null=False
+    )
+
+    class Meta:
+        model = Issue
+        fields = ['lecturer']
+
+    def validate_lecturer(self, value):
+        # Additional validation
+        if value and value.role != 'lecturer':
+            raise serializers.ValidationError("The assigned user must be a lecturer.")
+        return value
+        
+    def update(self, instance, validated_data):
+        # Explicitly update the lecturer field
+        if 'lecturer' in validated_data:
+            instance.lecturer = validated_data.get('lecturer')
+            instance.save()
+        return instance
+
+
+# class AssignIssueSerializer(serializers.ModelSerializer):
+#     lecturer = serializers.SlugRelatedField(
+#         slug_field='username',  # Use the 'username' field of CustomUser
+#         queryset=CustomUser.objects.filter(role='lecturer'),
+#         allow_null=False
+#     )
+
+#     class Meta:
+#         model = Issue
+#         fields = ['lecturer']
+
+#     def validate_lecturer(self, value):
+#         # Optional: Additional validation
+#         if value and value.role != 'lecturer':
+#             raise serializers.ValidationError("The assigned user must be a lecturer.")
+#         return value
+
 
 
     
@@ -233,7 +277,7 @@ class VerifyEmailSerializer(serializers.Serializer):
 
 class ResendVerificationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)   
-     
+
 
 
 
