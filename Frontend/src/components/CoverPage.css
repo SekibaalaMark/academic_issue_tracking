@@ -1,0 +1,129 @@
+/* Full Page Background for Body */
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: "Poppins", sans-serif;
+  transition: background-image 1s ease-in-out;
+}
+
+/* Cover Page Container */
+.coverPageContainer {
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  background-size: cover; /* Ensures background image covers the container */
+  background-position: center; /* Centers the background image */
+  transition: background-image 1s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: changeBackground 30s infinite; /* Change background every 30 seconds */
+}
+
+/* Overlay Effect */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  z-index: -1; /* Send overlay behind text */
+}
+
+/* Header Styling */
+.header {
+  color: #fff;
+  z-index: 1;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* Subheader Styling */
+.subHeader {
+  color: #fff;
+  z-index: 1;
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+}
+
+/* Role Selection Styling */
+.roleSelection {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.roleSelection li {
+  margin: 10px 0;
+}
+
+.roleLink {
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #fff;
+  background-color: #007bff;
+  border-radius: 5px;
+  font-size: 1.2em;
+  transition: background-color 0.3s ease;
+}
+
+.roleLink:hover {
+  background-color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Keyframes for changing the background image automatically */
+@keyframes changeBackground {
+  0% {
+    background-image: url("https://source.unsplash.com/1600x900/?graduation");
+  }
+  25% {
+    background-image: url("https://source.unsplash.com/1600x900/?university");
+  }
+  50% {
+    background-image: url("https://source.unsplash.com/1600x900/?education");
+  }
+  75% {
+    background-image: url("https://source.unsplash.com/1600x900/?students");
+  }
+  100% {
+    background-image: url("https://source.unsplash.com/1600x900/?learning");
+  }
+}
+
+/* Cover Page */
+.cover-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f5f5f5;
+  text-align: center;
+}
+
+.cover-title {
+  font-size: 3rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.cover-description {
+  font-size: 1.5rem;
+  color: #666;
+}
