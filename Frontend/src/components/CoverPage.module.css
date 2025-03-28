@@ -1,92 +1,114 @@
-/* Full Page Background for Body */
+/* General container styles */
 .coverPageContainer {
-  width: 100vw; /* Full viewport width */
-  height: 100vh; /* Full viewport height */
-  background-size: cover; /* Ensures background image covers the container */
-  background-position: center; /* Centers the background image */
-  transition: background-image 1s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   text-align: center;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: changeBackground 30s infinite; /* Change background every 30 seconds */
+  padding: 50px;
+  background: linear-gradient(
+    135deg,
+    #4facfe,
+    #00f2fe
+  ); /* Vibrant gradient background */
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  margin: 50px auto;
+  overflow: hidden;
+  animation: fadeIn 1s ease-in-out;
 }
 
-/* Overlay Effect */
+/* Overlay for dark filter effect */
 .overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
-  z-index: -1; /* Send overlay behind text */
+  background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  z-index: 1;
 }
 
-/* Header Styling */
+/* Header styles */
 .header {
+  position: relative;
+  font-size: 3rem;
+  font-weight: bold;
   color: #fff;
-  z-index: 1;
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+  z-index: 2;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Subheader Styling */
+/* Subheader styles */
 .subHeader {
-  color: #fff;
-  z-index: 1;
-  font-size: 1.25rem;
-  margin-bottom: 30px;
+  position: relative;
+  font-size: 1.5rem;
+  color: #e0f7fa;
+  z-index: 2;
+  margin-bottom: 40px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Role Selection Styling */
+/* Role selection list */
 .roleSelection {
+  position: relative;
   list-style: none;
   padding: 0;
-  margin: 20px 0;
+  margin: 0;
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 20px;
+  flex-wrap: wrap;
+  z-index: 2;
 }
 
-.roleSelection li {
-  margin: 10px 0;
-}
-
+/* Role link styles */
 .roleLink {
-  padding: 10px 20px;
-  text-decoration: none;
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: bold;
   color: #fff;
-  background-color: #007bff;
-  border-radius: 5px;
-  font-size: 1.2em;
-  transition: background-color 0.3s ease;
+  text-decoration: none;
+  padding: 15px 30px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #ff6f61, #ff8e53); /* Gradient button */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .roleLink:hover {
-  background-color: #0056b3;
-  text-decoration: underline;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(
+    135deg,
+    #ff8e53,
+    #ff6f61
+  ); /* Reverse gradient on hover */
 }
 
-/* Keyframes for changing the background image automatically */
-@keyframes changeBackground {
-  0% {
-    background-image: url("https://source.unsplash.com/1600x900/?graduation");
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    font-size: 2.5rem;
   }
-  25% {
-    background-image: url("https://source.unsplash.com/1600x900/?university");
+
+  .subHeader {
+    font-size: 1.2rem;
   }
-  50% {
-    background-image: url("https://source.unsplash.com/1600x900/?degree");
+
+  .roleLink {
+    font-size: 1rem;
+    padding: 12px 25px;
   }
-  75% {
-    background-image: url("https://source.unsplash.com/1600x900/?college");
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  100% {
-    background-image: url("https://source.unsplash.com/1600x900/?graduation");
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

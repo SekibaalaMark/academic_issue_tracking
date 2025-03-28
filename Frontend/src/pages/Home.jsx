@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "../../styles/Home.css";
-import graduationImage from "@/assets/graduationImage/graduation1.png";
+// import graduationImage from "@/assets/graduationImage/graduation1.png";
 
 function Home() {
   return (
