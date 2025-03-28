@@ -1,17 +1,20 @@
 nav {
-  background-color: #007bff;
-  padding: 10px 20px;
+  background-color:green;
+  padding: 20px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: white;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 nav .logo {
-  font-size: 1.5rem;
+  font-size: 3rem;
   font-weight: bold;
   color: white;
+  letter-spacing: 3px;
 }
 
 nav .search-bar {
@@ -21,16 +24,21 @@ nav .search-bar {
 
 nav .search-bar input {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 25px;
   font-size: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+
+nav .search-bar input:focus {
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 nav ul {
   list-style: none;
   display: flex;
-  gap: 20px;
+  gap: 15px; /* Adjusted gap */
   margin: 0;
   padding: 0;
 }
@@ -38,32 +46,32 @@ nav ul {
 nav ul li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0px; /* Reduced gap between icon and text */
   cursor: pointer;
+  padding: 20px;
 }
+
 nav ul li a {
-  display: inline-block;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  transition: transform 0.2s ease, background-color 0.3s ease;
-  border-radius: 5px;
-}
-nav ul li:hover {
-  transform: scale(1.1);
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-nav ul li img {
-  width: 20px;
-  height: 20px;
-}
-
-nav ul li a {
-  text-decoration: none;
-  color: white;
+  gap: 2px;
+  padding: 5px 60px; /* Decreased padding */
+  font-size: 1rem; /* Decreased font size for smaller icons */
   font-weight: bold;
+  color: white;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s ease;
+}
+
+nav ul li:hover a {
+  color: #ffcc00;
+}
+
+nav ul li:hover {
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .nav-toggle {
@@ -85,9 +93,11 @@ nav ul li a {
     position: absolute;
     top: 60px;
     right: 20px;
-    padding: 10px;
+    padding: 60px;
+    width: 300px;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
   }
 
   nav ul.active {

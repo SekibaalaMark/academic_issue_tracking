@@ -1,11 +1,7 @@
+import React from "react";
 
-import PropTypes from "prop-types";
-
-function Description({ descriptionText }) {
-  return <p>{descriptionText}</p>;
+function Description({ text }) {
+  return <p>{text}</p>;
 }
-Description.propTypes = {
-  descriptionText: PropTypes.string.isRequired,
-};
 
 export default Description;

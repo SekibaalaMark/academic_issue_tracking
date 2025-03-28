@@ -4,6 +4,16 @@
   padding: 20px;
   text-align: center;
   font-family: "Roboto", sans-serif;
+   display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full height of the viewport */
+  background-image: url('/path/to/your/graduation1.png'); /* Adjust the path as necessary */
+  background-size: cover; /* Cover the entire container */
+  background-position: center; /* Center the image */
+  background-attachment: fixed; /* Make the background fixed */
+  color: white; 
+  
 }
 
 .home-container h1 {

@@ -1,10 +1,11 @@
-import  { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link,  useNavigate } from "react-router-dom";
 import HomeIcon from "@/assets/icons/home.svg";
 import DashboardIcon from "@/assets/icons/dashboard.svg";
 import LogoutIcon from "@/assets/icons/logout.svg";
-import "../styles/Navbar.css";
+import "../../styles/Navbar.css";
 import { useAuth } from "@/context/authContext";
+
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -16,31 +17,37 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout(); // Clear user state and token
-    navigate("/login"); // Redirect to login page
+    // logout(); // Clear user state and token
+    // navigate("/login"); // Redirect to login page
   };
 
   return (
     <nav>
-      <div className="logo">AITS</div>
-      <div className="search-bar">
+      <div className="logo">ACADEMIC TRACKING SYSTEM</div>
+      {/* <div className="search-bar">
         <input type="text" placeholder="Search..." />
-      </div>
+      </div> */}
       <div className="nav-toggle" onClick={toggleMenu}>
         ☰
       </div>
       <ul className={menuOpen ? "active" : ""}>
         <li>
-          <img src={HomeIcon} alt="Home" />
-          <Link to="/home">Home</Link>
+          <Link to="/home">
+            <img src={HomeIcon} alt="Home" />
+            <span>Home</span>
+          </Link>
         </li>
         <li>
-          <img src={DashboardIcon} alt="Dashboard" />
-          <Link to="/dashboard/student">Dashboard</Link>
+          <Link to="/dashboard">
+            <img src={DashboardIcon} alt="Dashboard" />
+            <span>Dashboard</span>
+          </Link>
         </li>
         <li onClick={handleLogout}>
-          <img src={LogoutIcon} alt="Logout" />
-          Logout
+          <Link to="/home">
+            <img src={LogoutIcon} alt="Logout" />
+            <span>Logout</span>
+          </Link>
         </li>
       </ul>
     </nav>

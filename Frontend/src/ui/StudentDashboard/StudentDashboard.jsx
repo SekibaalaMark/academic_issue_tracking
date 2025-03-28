@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import FormField from "./FormField/FormField.jsx";
 import "../StudentDashboard/StudentDashboard.css";
+import { useNavigate } from "react-router";
 
 const StudentDashboard = () => {
   const [fullName, setFullName] = useState("");
@@ -12,7 +13,7 @@ const StudentDashboard = () => {
   const [semester, setSemester] = useState("");
   const [category, setCategory] = useState("");
   const [details, setDetails] = useState("");
-
+const navigate=useNavigate();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -39,6 +40,8 @@ const StudentDashboard = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    navigate("/studentcomplaints");
+
     if (
       !fullName ||
       !registrationNumber ||
@@ -96,11 +99,11 @@ const StudentDashboard = () => {
               required
             />
             <FormField
-              label="Year of Sitting"
+              label="Year of Study"
               type="text"
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              placeholder="Enter year of sitting"
+              placeholder="Enter year of study"
               required
             />
             <FormField
