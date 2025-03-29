@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import FormField from "../StudentDashboard/FormField/FormField.jsx";
 import "../StudentComplaints/StudentComplaints.css";
+import sendEmailNotification from "../../services/EmailService";
+import IssueResolution from "../../components/IssueResolution";
+import { useNavigate } from "react-router-dom";
 
 const StudentComplaints = () => {
   const [issue, setIssue] = useState("");
   const [comment, setComment] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [file, setFile] = useState(null);
-  const [complaints, setComplaints] = useState([]); // State to hold complaints
-  const [notification, setNotification] = useState(""); // State for notifications
+  const [complaints, setComplaints] = useState([]);
+  const [notification, setNotification] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,23 +20,27 @@ const StudentComplaints = () => {
       alert("Please select an issue.");
       return;
     }
-    // Add the new complaint to the complaints state
     const newComplaint = {
       id: complaints.length + 1,
       issue,
       comment,
-      status: "Pending", // Default status
+      status: "Pending",
     };
     setComplaints([...complaints, newComplaint]);
     setShowModal(true);
+
+    sendEmailNotification(
+      "recipient@example.com",
+      `Issue: ${issue}, Comment: ${comment}`
+    ).catch((error) => console.error("Error sending email notification:", error));
   };
 
   const confirmSubmit = () => {
     alert("Complaint Submitted Successfully!");
     setShowModal(false);
-    // Reset form fields
     setIssue("");
     setComment("");
+    navigate("/issue-status");
   };
 
   const handleFileChange = (event) => {
@@ -66,39 +74,31 @@ const StudentComplaints = () => {
   };
 
   const handleResolve = (id) => {
-    // Update the status of the complaint to "Resolved"
     setComplaints((prevComplaints) =>
       prevComplaints.map((complaint) =>
         complaint.id === id ? { ...complaint, status: "Resolved" } : complaint
       )
     );
     setNotification("The issue has been resolved successfully!");
-    setTimeout(() => {
-      setNotification(""); // Clear notification after 3 seconds
-    }, 3000);
+    setTimeout(() => setNotification(""), 3000);
   };
 
   const handleInProgress = (id) => {
-    // Update the status of the complaint to "In Progress"
     setComplaints((prevComplaints) =>
       prevComplaints.map((complaint) =>
         complaint.id === id ? { ...complaint, status: "In Progress" } : complaint
       )
     );
     setNotification("The issue is now in progress.");
-    setTimeout(() => {
-      setNotification(""); // Clear notification after 3 seconds
-    }, 3000);
+    setTimeout(() => setNotification(""), 3000);
   };
 
   return (
     <div className="student-complaints-container">
       {notification && <div className="notification">{notification}</div>}
-  
+
       <div className="complaint-container max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Student Complaints
-        </h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">Student Complaints</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
             label="Select Issue:"
@@ -115,14 +115,12 @@ const StudentComplaints = () => {
               "others",
             ]}
           />
-
           <FormField
             label="Add Comment (optional):"
             type="textarea"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
-
           <div className="flex justify-between">
             <button
               type="submit"
@@ -148,6 +146,20 @@ const StudentComplaints = () => {
         <input type="file" onChange={handleFileChange} />
         <button onClick={handleFileUpload}>Upload</button>
       </div>
+      {complaints.map((complaint) => (
+        <div key={complaint.id} className="complaint-item">
+          <p>
+            <strong>Issue:</strong> {complaint.issue}
+          </p>
+          <p>
+            <strong>Status:</strong> {complaint.status}
+          </p>
+          <IssueResolution
+            issueId={complaint.id}
+            recipientEmail="recipient@example.com"
+          />
+        </div>
+      ))}
       {showModal && (
         <div className="modal">
           <div className="modal-content">
