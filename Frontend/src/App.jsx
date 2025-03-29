@@ -1,6 +1,13 @@
 import React from "react";
 import "./App.css"; // Import global styles
-import { Route, Routes, Navigate, Outlet, useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import {
+  Route,
+  Routes,
+  Navigate,
+  Outlet,
+  useNavigate,
+  useLocation,
+} from "react-router-dom"; // Import useNavigate and useLocation for navigation
 import {
   Button,
   Container,
@@ -128,8 +135,12 @@ function RoleSelectionPage() {
 }
 
 function App() {
+  const location = useLocation(); // Get the current route
+
   return (
     <AuthProvider>
+      {location.pathname !== "/login" && <Navbar />}{" "}
+      {/* Conditionally render Navbar */}
       <Routes>
         <Route path="/" element={<RoleSelectionPage />} />{" "}
         {/* Updated to use RoleSelectionPage */}
@@ -137,7 +148,6 @@ function App() {
           path="*"
           element={
             <>
-              <Navbar />
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<RegisterForm />} />
