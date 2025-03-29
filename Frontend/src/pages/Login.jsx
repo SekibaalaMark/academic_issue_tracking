@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, TextField, Typography, Container, Alert } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 
 const Login = () => {
+  const [loading, setLoading] = useState(true); // Loading state
   const [role, setRole] = useState("");
   const [credentials, setCredentials] = useState({
     username: "",
@@ -12,15 +20,34 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const selectedRole = localStorage.getItem("selectedRole");
-    if (selectedRole) {
-      setRole(selectedRole);
-    } else {
-      setError("No role selected. Please go back and select a role.");
-      // Navigate back to the role selection page
-      navigate("/role-selection");
-    }
+    const fetchRole = () => {
+      const selectedRole = localStorage.getItem("selectedRole");
+      console.log(`Retrieved role from local storage: ${selectedRole}`); // Debugging line
+      if (selectedRole) {
+        setRole(selectedRole);
+      } else {
+        setError("No role selected. Please go back and select a role.");
+        navigate("/role-selection");
+      }
+      setLoading(false); // Ensure loading is set to false after role check
+    };
+
+    fetchRole();
   }, [navigate]);
+
+  if (loading) {
+    return (
+      <Container
+        maxWidth="sm"
+        style={{ textAlign: "center", marginTop: "20px" }}
+      >
+        <CircularProgress />
+        <Typography variant="body1" style={{ marginTop: "10px" }}>
+          Loading, please wait...
+        </Typography>
+      </Container>
+    ); // Display spinner while loading
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,6 +56,8 @@ const Login = () => {
 
   const handleLogin = () => {
     const { username, password } = credentials;
+
+    console.log(`Attempting login with username: ${username}, role: ${role}`); // Debugging line
 
     if (!username || !password) {
       setError("Please enter both username and password.");
@@ -42,8 +71,10 @@ const Login = () => {
     };
 
     if (username === role && password === "password" && roleRoutes[role]) {
+      console.log(`Login successful. Navigating to: ${roleRoutes[role]}`); // Debugging line
       navigate(roleRoutes[role]);
     } else {
+      console.error("Invalid credentials or role mismatch."); // Debugging line
       setError("Invalid credentials or role mismatch.");
     }
   };
@@ -53,10 +84,14 @@ const Login = () => {
       <Typography variant="h4" align="center" gutterBottom>
         Login
       </Typography>
-      {role && (
+      {role ? (
         <Typography variant="h6" align="center" gutterBottom>
           Role: {role.charAt(0).toUpperCase() + role.slice(1)}
         </Typography>
+      ) : (
+        <Alert severity="error" style={{ marginBottom: "16px" }}>
+          Unable to determine role. Please go back and select a role.
+        </Alert>
       )}
       {error && (
         <Alert severity="error" style={{ marginBottom: "16px" }}>
