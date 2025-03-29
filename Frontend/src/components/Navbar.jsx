@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { Link,  useNavigate } from "react-router-dom";
-import HomeIcon from "@/assets/icons/home.svg";
-import DashboardIcon from "@/assets/icons/dashboard.svg";
-import LogoutIcon from "@/assets/icons/logout.svg";
+import { Link, useNavigate, useLocation } from "react-router-dom"; // Added useLocation
+import HomeIcon from "../../assets/icons/home.svg";
+import DashboardIcon from "../../assets/icons/dashboard.svg";
+import LogoutIcon from "../../assets/icons/logout.svg";
 import "../../styles/Navbar.css";
-import { useAuth } from "@/context/authContext";
-
+import { useAuth } from "../../context/authContext";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Get the current route
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -21,16 +21,18 @@ const Navbar = () => {
     // navigate("/login"); // Redirect to login page
   };
 
+  // Only render Navbar on specific pages
+  if (!["/home", "/dashboard", "/another-page"].includes(location.pathname)) {
+    return null;
+  }
+
   return (
-    <nav>
+    <nav className="navbar">
       <div className="logo">ACADEMIC TRACKING SYSTEM</div>
-      {/* <div className="search-bar">
-        <input type="text" placeholder="Search..." />
-      </div> */}
       <div className="nav-toggle" onClick={toggleMenu}>
         ☰
       </div>
-      <ul className={menuOpen ? "active" : ""}>
+      <ul className={`nav-menu ${menuOpen ? "active" : ""}`}>
         <li>
           <Link to="/home">
             <img src={HomeIcon} alt="Home" />

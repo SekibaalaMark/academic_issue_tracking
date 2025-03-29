@@ -1,12 +1,7 @@
 import React from "react";
 
-function Dashboard({ role, onLogout }) {
-  return (
-    <div>
-      <h1>Welcome, {role}</h1>
-      <button onClick={onLogout}>Logout</button>
-    </div>
-  );
-}
+const Dashboard = () => {
+  return <h1>Dashboard Page</h1>;
+};
 
 export default Dashboard;
