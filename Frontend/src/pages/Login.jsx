@@ -8,14 +8,18 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
+import axios from "axios"; // Added axios import
 
 const Login = () => {
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
   const [credentials, setCredentials] = useState({
     username: "",
     password: "",
   });
+  const [email, setEmail] = useState(""); // Added email state
+  const [password, setPassword] = useState(""); // Added password state
+  const [message, setMessage] = useState(""); // Added message state
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -54,78 +58,77 @@ const Login = () => {
     setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLogin = () => {
-    const { username, password } = credentials;
-
-    console.log(`Attempting login with username: ${username}, role: ${role}`); // Debugging line
-
-    if (!username || !password) {
-      setError("Please enter both username and password.");
-      return;
-    }
-
-    const roleRoutes = {
-      student: "/dashboard/student",
-      lecturer: "/dashboard/lecturer",
-      "academic-registrar": "/dashboard/academic-registrar",
-    };
-
-    if (username === role && password === "password" && roleRoutes[role]) {
-      console.log(`Login successful. Navigating to: ${roleRoutes[role]}`); // Debugging line
-      navigate(roleRoutes[role]);
-    } else {
-      console.error("Invalid credentials or role mismatch."); // Debugging line
-      setError("Invalid credentials or role mismatch.");
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/login", {
+        email,
+        password,
+      });
+      setMessage(response.data.message);
+    } catch (error) {
+      setMessage(error.response?.data?.error || "An error occurred");
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" align="center" gutterBottom>
-        Login
-      </Typography>
-      {role ? (
-        <Typography variant="h6" align="center" gutterBottom>
-          Role: {role.charAt(0).toUpperCase() + role.slice(1)}
+    <div>
+      <h1>Login Page</h1>
+      <Container maxWidth="sm">
+        <Typography variant="h4" align="center" gutterBottom>
+          Login
         </Typography>
-      ) : (
-        <Alert severity="error" style={{ marginBottom: "16px" }}>
-          Unable to determine role. Please go back and select a role.
-        </Alert>
-      )}
-      {error && (
-        <Alert severity="error" style={{ marginBottom: "16px" }}>
-          {error}
-        </Alert>
-      )}
-      <TextField
-        fullWidth
-        label="Username"
-        name="username"
-        margin="normal"
-        variant="outlined"
-        value={credentials.username}
-        onChange={handleInputChange}
-      />
-      <TextField
-        fullWidth
-        label="Password"
-        name="password"
-        type="password"
-        margin="normal"
-        variant="outlined"
-        value={credentials.password}
-        onChange={handleInputChange}
-      />
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        onClick={handleLogin}
-      >
-        Login
-      </Button>
-    </Container>
+        {role ? (
+          <Typography variant="h6" align="center" gutterBottom>
+            Role: {role.charAt(0).toUpperCase() + role.slice(1)}
+          </Typography>
+        ) : (
+          <Alert severity="error" style={{ marginBottom: "16px" }}>
+            Unable to determine role. Please go back and select a role.
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" style={{ marginBottom: "16px" }}>
+            {error}
+          </Alert>
+        )}
+        <TextField
+          fullWidth
+          label="Email"
+          name="email"
+          margin="normal"
+          variant="outlined"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <TextField
+          fullWidth
+          label="Password"
+          name="password"
+          type="password"
+          margin="normal"
+          variant="outlined"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={handleLogin}
+        >
+          Login
+        </Button>
+        {message && (
+          <Typography
+            variant="body1"
+            align="center"
+            style={{ marginTop: "16px" }}
+          >
+            {message}
+          </Typography>
+        )}
+      </Container>
+    </div>
   );
 };
 

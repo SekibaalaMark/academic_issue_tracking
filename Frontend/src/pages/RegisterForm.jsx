@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Import Link for navigation
-import axios from "axios"; // Make sure to install axios
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Button from "../ui/Button";
 import Form from "../ui/Form";
 import FormRow from "../ui/FormRow";
@@ -16,35 +16,34 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("student"); // Default role
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [role, setRole] = useState("student");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (event) => {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
+    setMessage("");
 
-    // Basic validation
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setMessage("Passwords do not match.");
       return;
     }
 
     try {
-      await axios.post("/api/register", {
+      const response = await axios.post("http://localhost:5000/register", {
         firstName,
         lastName,
         username,
         email,
         password,
-        role, // Include the role in the registration
+        role,
       });
-      setSuccess("Registration successful! You can now log in.");
+      setMessage(response.data.message);
       navigate("/login");
     } catch (error) {
-      setError("Error registering. Try again.");
+      setMessage(
+        error.response?.data?.error || "Error registering. Try again."
+      );
     }
   };
 
@@ -52,8 +51,11 @@ function RegisterForm() {
     <div className={styles.formCenter}>
       <Form onSubmit={handleRegister}>
         <h2>REGISTER FORM</h2>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
+        {message && (
+          <p style={{ color: message.includes("Error") ? "red" : "green" }}>
+            {message}
+          </p>
+        )}
 
         <FormRow label="First Name">
           <Input

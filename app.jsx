@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@mui/material"; // Ensure @mui/material is installed
 import AcademicRegistrar from "./pages/AcademicRegistrar"; // Use relative path if alias fails
 import Dashboard from "./pages/Dashboard"; // Ensure file exists
-import CoverPage from "./components/CoverPage"; // SignInPage removed
+import CoverPage from "./components/CoverPage";
+import SignInPage from "./components/SignInPage";
 
 function App() {
   // State declarations
@@ -12,7 +13,10 @@ function App() {
   // Handlers
   const handleRoleSelection = (selectedRole) => {
     setRole(selectedRole);
-    setIsLoggedIn(true); // Automatically log in after role selection
+  };
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
@@ -23,7 +27,8 @@ function App() {
   // Render logic
   return (
     <div>
-      {!isLoggedIn && <CoverPage onSelectRole={handleRoleSelection} />}
+      {!role && !isLoggedIn && <CoverPage onSelectRole={handleRoleSelection} />}
+      {role && !isLoggedIn && <SignInPage role={role} onLogin={handleLogin} />}
       {isLoggedIn && <Dashboard role={role} onLogout={handleLogout} />}
     </div>
   );
