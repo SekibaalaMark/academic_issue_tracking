@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import FormField from "../StudentDashboard/FormField/FormField.jsx";
 import "../StudentComplaints/StudentComplaints.css";
 import sendEmailNotification from "../../services/EmailService";
-import IssueResolution from "../../components/IssueResolution";
+import IssueResolution from "../../components/IssueResolution"; // Ensure this file exists
 import { useNavigate } from "react-router-dom";
 
 const StudentComplaints = () => {
@@ -32,7 +32,9 @@ const StudentComplaints = () => {
     sendEmailNotification(
       "recipient@example.com",
       `Issue: ${issue}, Comment: ${comment}`
-    ).catch((error) => console.error("Error sending email notification:", error));
+    ).catch((error) =>
+      console.error("Error sending email notification:", error)
+    );
   };
 
   const confirmSubmit = () => {
@@ -86,7 +88,9 @@ const StudentComplaints = () => {
   const handleInProgress = (id) => {
     setComplaints((prevComplaints) =>
       prevComplaints.map((complaint) =>
-        complaint.id === id ? { ...complaint, status: "In Progress" } : complaint
+        complaint.id === id
+          ? { ...complaint, status: "In Progress" }
+          : complaint
       )
     );
     setNotification("The issue is now in progress.");
@@ -98,7 +102,9 @@ const StudentComplaints = () => {
       {notification && <div className="notification">{notification}</div>}
 
       <div className="complaint-container max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-        <h2 className="text-2xl font-bold mb-4 text-center">Student Complaints</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Student Complaints
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField
             label="Select Issue:"

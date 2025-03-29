@@ -1,45 +1,41 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Typography, Container } from "@mui/material";
+import { Container, Typography, Button } from "@mui/material";
 
 const RoleSelection = () => {
-  const navigate = useNavigate();
-
   const handleRoleSelect = (role) => {
-    localStorage.setItem("selectedRole", role);
-    navigate("/login");
+    console.log(`Selected role: ${role}`);
+    // Add logic to handle role selection
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" align="center" gutterBottom>
+    <Container
+      maxWidth="sm"
+      style={{
+        textAlign: "center",
+        marginTop: "50px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
         Select Your Role
       </Typography>
       <Button
-        fullWidth
         variant="contained"
         color="primary"
-        onClick={() => handleRoleSelect("student")}
-        style={{ marginBottom: "16px" }}
+        onClick={() => handleRoleSelect("Student")}
+        style={{ margin: "10px" }}
       >
         Student
       </Button>
       <Button
-        fullWidth
         variant="contained"
         color="secondary"
-        onClick={() => handleRoleSelect("lecturer")}
-        style={{ marginBottom: "16px" }}
+        onClick={() => handleRoleSelect("Teacher")}
+        style={{ margin: "10px" }}
       >
-        Lecturer
-      </Button>
-      <Button
-        fullWidth
-        variant="contained"
-        color="default"
-        onClick={() => handleRoleSelect("academic-registrar")}
-      >
-        Academic Registrar
+        Teacher
       </Button>
     </Container>
   );
