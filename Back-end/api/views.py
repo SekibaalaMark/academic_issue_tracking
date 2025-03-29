@@ -27,12 +27,10 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
+from django.shortcuts import render, redirect
+from django.utils.http import urlsafe_base64_decode
+from django.contrib import messages
 User = CustomUser
-
-
-
-
-
 
 
 #DEPARTMENT API VIEW
@@ -50,9 +48,7 @@ class IssueViewSet(viewsets.ModelViewSet):
         # Ensure that only students can create issues
         if self.request.user.role != 'student':
             return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
-        serializer.save(raised_by=self.request.user)
-
-
+        serializer.save(student=self.request.user)
 
 
 
@@ -150,18 +146,16 @@ def filter_issues(request):
 
 
 
-'''
-@api_view(['GET'])
-def filter_issues(request):
-    status = request.GET.get('status', None)
-    issues_qs = Issue.objects.all()
-    
-    if status:
-        issues_qs = issues_qs.filter(status=status)
-    
-    serializer = IssueSerializer(issues_qs, many=True)
-    return Response(serializer.data)
-'''
+class StudentCreateIssueView(viewsets.ModelViewSet):
+    serializer_class = IssueSerializer
+    permission_classes=[IsAuthenticated]
+    def perform_create(self, serializer):
+        if self.request.user.role =='student':
+            if serializer.is_valid():
+                return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save(student=self.request.user)
+            
+
 
 class StudentRegistrationView(APIView):
     def post(self,request):
@@ -549,84 +543,6 @@ def logout(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from django.shortcuts import render, redirect
-from django.utils.http import urlsafe_base64_decode
-from django.contrib import messages
-User = CustomUser
 
 def verify_email(request, uidb64, token):
     try:
