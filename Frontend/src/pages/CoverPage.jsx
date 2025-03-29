@@ -1,11 +1,36 @@
 import React from "react";
+import { Container, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const CoverPage = () => {
+  const navigate = useNavigate();
+
   return (
-    <div>
-      <h1>Welcome to the Academic Issue Tracking System</h1>
-      <p>Please log in or register to continue.</p>
-    </div>
+    <Container
+      maxWidth="md"
+      style={{
+        textAlign: "center",
+        marginTop: "50px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h2" gutterBottom>
+        Academic Issue Tracking System
+      </Typography>
+      <Typography variant="subtitle1" gutterBottom>
+        Streamline your academic issue resolution process.
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => navigate("/role-selection")}
+        style={{ marginTop: "20px" }}
+      >
+        Get Started
+      </Button>
+    </Container>
   );
 };
 

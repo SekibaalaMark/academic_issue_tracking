@@ -1,101 +1,96 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FaUser ,FaCircle, FaLock } from "react-icons/fa";
-import "../../styles/Login.css";
-import { useAuth } from "@/context/authContext";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button, TextField, Typography, Container, Alert } from "@mui/material";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const [error, setError] = useState("");
-  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to home if user is already authenticated
-    if (user) {
-      navigate("/home");
+    const selectedRole = localStorage.getItem("selectedRole");
+    if (selectedRole) {
+      setRole(selectedRole);
+    } else {
+      setError("No role selected. Please go back and select a role.");
+      // Navigate back to the role selection page
+      navigate("/role-selection");
     }
-  }, [user, navigate]);
+  }, [navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (email === "" || password === "") {
-      setError("Both fields are required.");
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = () => {
+    const { username, password } = credentials;
+
+    if (!username || !password) {
+      setError("Please enter both username and password.");
       return;
     }
-    setError("");
-    try {
-      const response = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
 
-      if (!response.ok) {
-        throw new Error("Invalid credentials");
-      }
+    const roleRoutes = {
+      student: "/dashboard/student",
+      lecturer: "/dashboard/lecturer",
+      "academic-registrar": "/dashboard/academic-registrar",
+    };
 
-      const data = await response.json();
-      login(data); // Update user context
-
-      // Redirect based on user role
-      const { role } = data; // Assuming the response contains the user's role
-      if (role === "student") {
-        navigate("/Student dashboard");
-      } else if (role === "lecturer") {
-        navigate("/lecturer dashboard");
-      } else {
-        navigate("/academic dashboard");
-      }
-    } catch (error) {
-      setError("Login failed. Please check your credentials and try again.");
+    if (username === role && password === "password" && roleRoutes[role]) {
+      navigate(roleRoutes[role]);
+    } else {
+      setError("Invalid credentials or role mismatch.");
     }
   };
 
   return (
-    <div className="login-container">
-      <h2>Welcome to AITS</h2>
-      <form onSubmit={handleSubmit} className="login-form">
-        <div className="form-group">
-          <label htmlFor="email">Email:</label>
-          <div className="input-wrapper">
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              required
-            />
-            <FaUser Circle className="input-icon" />
-          </div>
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <div className="input-wrapper">
-            <input
-              type="password"
-              id="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              required
-            />
-            <FaLock className="input-icon" />
-          </div>
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="login-btn">
-          Login
-        </button>
-        <p className="redirect-text">
-          Don't have an account? <Link to="/register">Register here</Link>
-        </p>
-      </form>
-    </div>
+    <Container maxWidth="sm">
+      <Typography variant="h4" align="center" gutterBottom>
+        Login
+      </Typography>
+      {role && (
+        <Typography variant="h6" align="center" gutterBottom>
+          Role: {role.charAt(0).toUpperCase() + role.slice(1)}
+        </Typography>
+      )}
+      {error && (
+        <Alert severity="error" style={{ marginBottom: "16px" }}>
+          {error}
+        </Alert>
+      )}
+      <TextField
+        fullWidth
+        label="Username"
+        name="username"
+        margin="normal"
+        variant="outlined"
+        value={credentials.username}
+        onChange={handleInputChange}
+      />
+      <TextField
+        fullWidth
+        label="Password"
+        name="password"
+        type="password"
+        margin="normal"
+        variant="outlined"
+        value={credentials.password}
+        onChange={handleInputChange}
+      />
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={handleLogin}
+      >
+        Login
+      </Button>
+    </Container>
   );
 };
 

@@ -29,6 +29,7 @@ import StudentComplaints from "@/ui/StudentComplaints/StudentComplaints.jsx"; //
 import Navbar from "./components/Navbar"; // Navbar Component
 import Home from "@/pages/Home"; // Home Page
 import CoverPage from "./pages/CoverPage"; // Import CoverPage component
+import RoleSelectionPage from "@/pages/RoleSelectionPage"; // Ensure correct import path
 import ReactDOM from "react-dom";
 // import graduationImage from "@/assets/graduationImage/graduation1.png";
 
@@ -37,139 +38,43 @@ import { BrowserRouter } from "react-router-dom";
 const ProtectedLayout = () => {
   const { user } = useAuth();
 
-  // if (user === null) {
-  //   return <div>Loading...</div>;
-  // }
+  if (user === null) {
+    return <div>Loading...</div>; // Uncommented for debugging
+  }
 
-  // if (!user) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!user) {
+    return <Navigate to="/login" replace />; // Uncommented for debugging
+  }
 
   return <Outlet />;
 };
-
-function RoleSelectionPage() {
-  const navigate = useNavigate();
-
-  const handleRoleSelection = (role) => {
-    switch (role) {
-      case "student":
-        navigate("/login?role=student");
-        break;
-      case "lecturer":
-        navigate("/login?role=lecturer");
-        break;
-      case "academic-registrar":
-        navigate("/login?role=academic-registrar");
-        break;
-      default:
-        navigate("/login");
-    }
-  };
-
-  return (
-    <Container maxWidth="md" style={{ textAlign: "center", marginTop: "50px" }}>
-      <Typography variant="h3" gutterBottom>
-        Welcome to the Academic Issue Tracking System
-      </Typography>
-      <Typography variant="subtitle1" gutterBottom>
-        Please select your role to proceed
-      </Typography>
-      <Grid
-        container
-        spacing={3}
-        justifyContent="center"
-        style={{ marginTop: "20px" }}
-      >
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Student
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleRoleSelection("student")}
-              >
-                Select
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Lecturer
-              </Typography>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => handleRoleSelection("lecturer")}
-              >
-                Select
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Academic Registrar
-              </Typography>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => handleRoleSelection("academic-registrar")}
-              >
-                Select
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Container>
-  );
-}
 
 function App() {
   const location = useLocation(); // Get the current route
 
   return (
     <AuthProvider>
-      {location.pathname !== "/login" && <Navbar />}{" "}
-      {/* Conditionally render Navbar */}
+      {/* Conditionally render the navigation bar */}
+      {location.pathname !== "/login" &&
+        location.pathname !== "/" &&
+        location.pathname !== "/role-selection" && <Navbar />}
       <Routes>
-        <Route path="/" element={<RoleSelectionPage />} />{" "}
-        {/* Updated to use RoleSelectionPage */}
-        <Route
-          path="*"
-          element={
-            <>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<RegisterForm />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route
-                  path="/dashboard/student"
-                  element={<StudentDashboard />}
-                />
-                <Route path="/dashboard/lecturer" element={<Lecturers />} />
-                <Route
-                  path="/dashboard/academic-registrar"
-                  element={<AcademicRegistrar />}
-                />
-                <Route
-                  path="/studentcomplaints"
-                  element={<StudentComplaints />}
-                />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-              </Routes>
-            </>
-          }
-        />
+        <Route path="/" element={<CoverPage />} />
+        <Route path="/role-selection" element={<RoleSelectionPage />} />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/student" element={<StudentDashboard />} />
+          <Route path="/dashboard/lecturer" element={<Lecturers />} />
+          <Route
+            path="/dashboard/academic-registrar"
+            element={<AcademicRegistrar />}
+          />
+          <Route path="/studentcomplaints" element={<StudentComplaints />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
   );
