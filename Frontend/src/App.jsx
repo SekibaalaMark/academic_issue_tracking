@@ -8,7 +8,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext"; // Auth Context
-import NavigationBar from "@/components/NavigationBar"; // Corrected import for NavigationBar
+// import NavigationBar from "@/components/NavigationBar"; // Corrected import for NavigationBar
 import Navbar from "./components/Navbar";
 import CoverPage from "./pages/CoverPage";
 import RoleSelectionPage from "./pages/RoleSelectionPage"; // Corrected import for RoleSelectionPage
@@ -20,9 +20,9 @@ import Lecturers from "./ui/Lecturers/Lecturers.jsx"; // Corrected import for Le
 import AcademicRegistrar from "@/pages/AcademicRegistrar";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx"; // Corrected import for ForgotPassword
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx"; // Corrected import for StudentComplaints
-import SubmitIssue from "./pages/SubmitIssue";
-import IssueStatus from "./pages/IssueStatus";
-import Verify from "./pages/Verify";
+// import SubmitIssue from "./pages/SubmitIssue";
+// import IssueStatus from "./pages/IssueStatus";
+// import Verify from "./pages/Verify";
 import { Container } from "@mui/material"; // Material-UI for automatic styling
 
 const ProtectedLayout = () => {

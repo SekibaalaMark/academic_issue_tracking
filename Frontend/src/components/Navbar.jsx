@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom"; // Added useLocation
-import HomeIcon from "../../assets/icons/home.svg";
-import DashboardIcon from "../../assets/icons/dashboard.svg";
-import LogoutIcon from "../../assets/icons/logout.svg";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import DashboardIcon from "/src/assets/icons/dashboard.svg";
+import HomeIcon from "/src/assets/icons/home.svg";
+import LogoutIcon from "/src/assets/icons/logout.svg";
 import "../../styles/Navbar.css";
 import { useAuth } from "../../context/authContext";
 
@@ -10,18 +10,17 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Get the current route
+  const location = useLocation();
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
 
   const handleLogout = () => {
-    // logout(); // Clear user state and token
-    // navigate("/login"); // Redirect to login page
+    logout();
+    navigate("/login");
   };
 
-  // Only render Navbar on specific pages
   if (!["/home", "/dashboard", "/another-page"].includes(location.pathname)) {
     return null;
   }

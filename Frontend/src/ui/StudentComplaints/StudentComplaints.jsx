@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import FormField from "../StudentDashboard/FormField/FormField.jsx";
 import "../StudentComplaints/StudentComplaints.css";
 import sendEmailNotification from "../../services/EmailService";
-import IssueResolution from "../../components/IssueResolution"; // Ensure this file exists
+// import IssueResolution from "../../components/IssueResolution"; // Ensure this file exists
 import { useNavigate } from "react-router-dom";
 
 const StudentComplaints = () => {

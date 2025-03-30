@@ -9,4 +9,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./Frontend/src"), // Ensure alias points to the correct directory
     },
   },
+  server: {
+    mimeTypes: {
+      // Add fallback MIME type for JavaScript files
+      "application/javascript": ["js", "jsx"],
+    },
+  },
 });
