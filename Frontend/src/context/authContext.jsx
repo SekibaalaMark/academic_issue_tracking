@@ -1,47 +1,29 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState(null); // Add error state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check for existing token in localStorage on app load
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      try {
-        // Validate token (placeholder for actual validation logic)
-        const isValid = true; // Replace with real validation logic
-        if (isValid) {
-          setUser({ token }); // Set user state if token is valid
-        } else {
-          throw new Error("Invalid token");
-        }
-      } catch (err) {
-        setError(err.message); // Set error state if token is invalid
-        localStorage.removeItem("authToken"); // Clear invalid token
-      }
-    }
-  }, []);
-
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("authToken", userData.token); // Save token to localStorage
-    setError(null); // Clear any previous errors
+  const login = () => {
+    setIsAuthenticated(true);
+    navigate("/home");
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("authToken"); // Clear token on logout
-    setError(null); // Clear any previous errors
+    setIsAuthenticated(false);
+    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, error }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  return useContext(AuthContext);
+};

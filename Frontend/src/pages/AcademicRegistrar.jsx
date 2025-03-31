@@ -1,12 +1,7 @@
 import React from "react";
 
 const AcademicRegistrar = () => {
-  return (
-    <div>
-      <h1>Academic Registrar</h1>
-      <p>Welcome to the Academic Registrar page.</p>
-    </div>
-  );
+  return <div>Academic Registrar Page</div>;
 };
 
 export default AcademicRegistrar;

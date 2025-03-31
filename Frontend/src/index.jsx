@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import App from "./App"; // Your main app with all other pages
+import App from ".App"; // Your main app with all other pages
 import RoleSelection from "./pages/RoleSelection";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  BrowserRouter as Router,
   Route,
   Routes,
   Navigate,
@@ -77,11 +76,9 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <Router>
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  </Router>
+  <AuthProvider>
+    <AppContent />
+  </AuthProvider>
 );
 
 export default App;
