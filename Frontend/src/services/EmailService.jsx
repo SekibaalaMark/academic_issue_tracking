@@ -1,4 +1,4 @@
- // Correct import for emailjs-com
+  import emailjs from "@emailjs/browser";
 
 const fetchRecipientEmail = async (userId) => {
   // Simulate fetching email from a database or API

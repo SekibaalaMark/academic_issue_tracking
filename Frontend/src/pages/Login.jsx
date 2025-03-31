@@ -10,61 +10,57 @@ const LoginForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted");
-    console.log("Username:", username);
-    console.log("Password:", password);
 
-    // Mock login logic
     const storedUsername = localStorage.getItem("userEmail");
     const storedPassword = localStorage.getItem("userPassword");
 
     if (username === storedUsername && password === storedPassword) {
-      navigate("/dashboard"); // Redirect to dashboard on successful login
+      navigate("/student-complaints"); // Redirect to StudentComplaints form
     } else {
       alert("Invalid credentials. Redirecting to register...");
-      navigate("/register"); // Redirect to register page on failed login
+      navigate("/register");
     }
   };
 
   return (
-    <div className="wrapper">
-      <form onSubmit={handleSubmit}>
-        <h1>Login</h1>
-        <div className="input-box">
-          <input
-            type="text"
-            placeholder="Username"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <FaUserCircle className="icon" />
-        </div>
-        <div className="input-box">
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <FaLock className="icon" />
-        </div>
-        <div className="remember-forget">
-          <label>
-            <input type="checkbox" /> Remember me
-          </label>
-          <a href="#">Forgot Password?</a>
-        </div>
-        <button type="submit">Login</button>
-        <div className="register-link">
-          <p>
-            Don't have an account? <a href="/register">Register</a>
-          </p>
-        </div>
-      </form>
+    <div className="container">
+      <div className="login-container">
+        <form className="login-form" onSubmit={handleSubmit}>
+          <h1>Login</h1>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Username"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <FaUserCircle className="input-icon" />
+          </div>
+          <div className="input-wrapper">
+            <input
+              type="password"
+              className="form-input"
+              placeholder="Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <FaLock className="input-icon" />
+          </div>
+          <button type="submit" className="login-btn">
+            Login
+          </button>
+          <div className="redirect-text">
+            <p>
+              Don't have an account? <a href="/register">Register</a>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default LoginForm; // Ensure the component is exported correctly
+export default LoginForm;

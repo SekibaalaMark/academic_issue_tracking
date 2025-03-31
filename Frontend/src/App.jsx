@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from "@/context/authContext";
 import Navbar from "./components/Navbar";
 import CoverPage from "./pages/CoverPage";
 import RoleSelectionPage from "./pages/RoleSelectionPage";
-import LoginForm from "./pages/Login.jsx"; // Ensure this matches the correct file and export
+import Login from "./pages/Login.jsx";
 import RegisterForm from "./pages/RegisterForm.jsx";
 import Dashboard from "./pages/Dashboard";
 import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
@@ -12,7 +12,7 @@ import Lecturers from "./ui/Lecturers/Lecturers.jsx";
 import AcademicRegistrar from "@/pages/AcademicRegistrar";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
-import EmailForm from "./components/EmailForm"; // Added import for EmailForm
+import EmailForm from "./components/EmailForm"; // Import EmailForm
 import { Container, CircularProgress } from "@mui/material";
 
 const ProtectedLayout = () => {
@@ -54,22 +54,20 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<CoverPage />} />
         <Route path="/role-selection" element={<RoleSelectionPage />} />
-        <Route path="/login" element={<LoginForm />} />{" "}
-        {/* Ensure LoginForm is used here */}
-        <Route path="/register" element={<RegisterForm />} />{" "}
-        {/* Added route for RegisterForm */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterForm />} />
         <Route
           path="/student-complaints"
           element={<StudentComplaints />}
         />{" "}
         {/* Added route for StudentComplaints */}
+        <Route path="/email" element={<EmailForm />} />{" "}
+        {/* Added route for EmailForm */}
         <Route path="/dashboard" element={<ProtectedLayout />}>
           <Route path="student" element={<StudentDashboard />} />
           <Route path="lecturer" element={<Lecturers />} />
           <Route path="academic-registrar" element={<AcademicRegistrar />} />
-          {/* Other protected routes */}
         </Route>
-        {/* Other routes */}
       </Routes>
     </Container>
   );

@@ -1,6 +1,6 @@
 import React from "react";
-// import emailjs from "emailjs-com";
-import { toast } from "react-toastify";
+import emailjs from "@emailjs/browser";
+// import { toast } from "react-toastify";
 
 class EmailForm extends React.Component {
   constructor(props) {

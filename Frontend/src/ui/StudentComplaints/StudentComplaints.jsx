@@ -1,21 +1,45 @@
 import React, { useState } from "react";
-import "@/Styles/StudentComplaints.css"; 
+import "@/Styles/StudentComplaints.css";
 
 const ComplaintsForm = () => {
   const [issue, setIssue] = useState("");
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState(false);
   const [comments, setComments] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission status
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log("Issue:", issue);
-    console.log("File:", file);
-    console.log("Comments:", comments);
-    // Reset form after submission
-    setIssue("");
-    setFile(null);
-    setComments("");
+    setIsSubmitting(true); // Start submission
+
+    const formData = new FormData();
+    formData.append("issue", issue);
+    formData.append("file", file);
+    formData.append("comments", comments);
+
+    try {
+      const response = await fetch("/api/submit-issue", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit the issue");
+      }
+
+      const data = await response.json();
+      setSuccessMessage("Issue submitted successfully!");
+      // Reset form after submission
+      setIssue("");
+      setFile(null);
+      setComments("");
+      setErrorMessage(""); // Clear any previous error messages
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setIsSubmitting(false); // End submission
+    }
   };
 
   const handleCancel = () => {
@@ -23,6 +47,8 @@ const ComplaintsForm = () => {
     setIssue("");
     setFile(null);
     setComments("");
+    setSuccessMessage(""); // Clear any previous success messages
+    setErrorMessage(""); // Clear any previous error messages
   };
 
   return (
@@ -62,12 +88,18 @@ const ComplaintsForm = () => {
         ></textarea>
 
         <div className="button-container">
-          <button type="submit">Submit</button>
+          <button type="submit" disabled={isSubmitting}>
+            Submit
+          </button>
           <button type="button" onClick={handleCancel}>
             Cancel
           </button>
         </div>
       </form>
+
+      {successMessage && <p className="success-message">{successMessage}</p>}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+
       <footer>
         <p>@2025 Makerere University (AITS) All rights reserved</p>
       </footer>
