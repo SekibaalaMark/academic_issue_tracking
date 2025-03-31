@@ -1,56 +1,58 @@
 import React, { useState } from "react";
-import { TextField, Button, Container, Typography } from "@mui/material";
+import "styles/Login.css"; // Ensure this path is correct
+import { FaUserCircle, FaLock } from "react-icons/fa";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
+const LoginForm = () => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    const storedEmail = localStorage.getItem("userEmail");
-    const storedPassword = localStorage.getItem("userPassword");
-    const isVerified = localStorage.getItem("isVerified");
-
-    if (email === storedEmail && password === storedPassword) {
-      if (isVerified === "true") {
-        alert("Login successful!");
-      } else {
-        alert("Please verify your email before logging in.");
-      }
-    } else {
-      alert("Invalid credentials. Try again.");
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Form submitted");
+    console.log("Username:", username);
+    console.log("Password:", password);
+    // Here you can add your login logic (e.g., API call)
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" align="center">
-        Login
-      </Typography>
-      <TextField
-        fullWidth
-        label="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        margin="normal"
-      />
-      <TextField
-        fullWidth
-        label="Password"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        margin="normal"
-      />
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        onClick={handleLogin}
-      >
-        Login
-      </Button>
-    </Container>
+    <div className="wrapper">
+      <form onSubmit={handleSubmit}>
+        <h1>Login</h1>
+        <div className="input-box">
+          <input
+            type="text"
+            placeholder="Username"
+            required
+            value={username}
+            onChange={(e) => setUsername(e.target.value)} // Update state
+          />
+          <FaUserCircle className="icon" />
+        </div>
+        <div className="input-box">
+          <input
+            type="password"
+            placeholder="Password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)} // Update state
+          />
+          <FaLock className="icon" />
+        </div>
+        <div className="remember-forget">
+          <label>
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#">Forgot Password?</a>
+        </div>
+        <button type="submit">Login</button>
+        <div className="register-link">
+          <p>
+            Don't have an account? <a href="#">Register</a>
+          </p>
+        </div>
+      </form>
+    </div>
   );
 };
 
-export default Login;
+export default LoginForm;
