@@ -14,7 +14,7 @@ const Login = () => {
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/admin", {
+      const response = await axios.post("http://127.0.0.1:8000/api/users/", {
         email,
         password,
       });
@@ -26,13 +26,13 @@ const Login = () => {
         // Navigate based on role
         switch (response.data.role) {
           case "student":
-            navigate("/students");
+            navigate("/Students");
             break;
           case "lecturer":
-            navigate("/lecturers");
+            navigate("/Lecturer");
             break;
-          case "registrar":
-            navigate("/academic-registrar");
+          case "AcademicRegistrar":
+            navigate("/AcademicRegistrar");
             break;
           default:
             navigate("/dashboard"); // Default fallback
@@ -88,7 +88,8 @@ const Login = () => {
       </div>
 
       <div className="auth-links">
-        <a href="#">Login</a> | <a href="#">Register</a>
+        <p>Don't have an account?</p>
+        <a href="/register">Register here</a>
       </div>
     </div>
   );

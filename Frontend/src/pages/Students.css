@@ -9,11 +9,11 @@
 
 /* Sidebar */
 .sidebar {
-  width: 270px; /* Slightly wider for better readability */
-  background-color: #008000; /* Green background */
-  padding: 25px;
-  color: #fff; /* White text */
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  width: 250px; /* Adjusted for better spacing */
+  background-color: #f8f9fa; /* Light gray background */
+  padding: 20px;
+  color: #333; /* Dark text */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-title {
@@ -21,7 +21,7 @@
   margin-bottom: 25px;
   text-align: center;
   font-weight: bold;
-  text-transform: uppercase;
+  color: #333;
 }
 
 .sidebar-nav {
@@ -33,13 +33,39 @@
 .sidebar-nav li {
   padding: 12px 15px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  color: #333;
+  transition: background 0.3s ease-in-out;
 }
 
 .sidebar-nav li:hover {
-  background-color: #006400; /* Darker green on hover */
+  background-color: #e9ecef; /* Slightly darker on hover */
   border-radius: 5px;
+}
+
+.sidebar-nav li i {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #007bff; /* Blue icons */
+}
+
+.sidebar-nav li a {
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.sidebar-nav li a:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+/* Active link */
+.sidebar-nav li.active {
+  background-color: #d4edda; /* Light green */
+  font-weight: bold;
+  border-left: 4px solid #008000;
 }
 
 /* Main content */

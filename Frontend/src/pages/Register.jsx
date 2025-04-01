@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Register.css";
 
 const Register = () => {
@@ -10,6 +11,8 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
+  
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ 
@@ -20,8 +23,23 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Handle form submission (e.g., API call)
+    // TODO: API call for registration can be placed here.
     console.log("Submitted data:", formData);
+    
+    // Redirect based on selected userType
+    switch(formData.userType) {
+      case "Student":
+        navigate("/students");
+        break;
+      case "Lecturer":
+        navigate("/lecturers");
+        break;
+      case "AcademicRegistrar":
+        navigate("/academic-registrar");
+        break;
+      default:
+        navigate("/dashboard");
+    }
   };
 
   return (
@@ -46,7 +64,6 @@ const Register = () => {
           required
         />
 
-
         <label>User Type*</label>
         <select 
           name="userType" 
@@ -57,7 +74,7 @@ const Register = () => {
           <option value="">Select</option>
           <option value="Student">Student</option>
           <option value="Lecturer">Lecturer</option>
-          <option value="AcademicRegistrar">AcademicRegistrar</option>
+          <option value="AcademicRegistrar">Academic Registrar</option>
         </select>
 
         <label>E-Mail Address*</label>
@@ -86,8 +103,6 @@ const Register = () => {
           onChange={handleChange}
           required
         />
-
-        
 
         <button type="submit">Register</button>
 

@@ -1,80 +1,129 @@
-// src/pages/Students.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Students.css";
 
-function Students() {
+// Define all API endpoints for easy maintenance
+const ENDPOINTS = {
+  departments: "http://127.0.0.1:8000/api/departments/",
+  issues: "http://127.0.0.1:8000/api/issues/",
+  users: "http://127.0.0.1:8000/api/users/",
+  lecturerIssueManagement: "http://127.0.0.1:8000/api/lecturer-issue-management/",
+  studentIssues: "http://127.0.0.1:8000/api/student-issues/",
+  registrarIssuesManagement: "http://127.0.0.1:8000/api/registrar-issues-management/",
+  assignLecturer: "http://127.0.0.1:8000/api/assignlecturer/",
+  raiseIssue: "http://127.0.0.1:8000/api/raise-issue/"
+};
+
+const Students = () => {
+  const [departments, setDepartments] = useState([]);
   const [issues, setIssues] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [formData, setFormData] = useState({
-    courseCode: "",
-    issueType: "missing marks",
+    course_name: "",
+    course_code: "",
+    year_of_study: "year_1",
+    category: "Missing_Marks",
     description: "",
+    department: "",
+    attachment: null,
   });
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const authToken = localStorage.getItem("authToken");
   const navigate = useNavigate();
 
-  // Fetch issues and notifications
   useEffect(() => {
-    fetch("/api/issues/mine")
-      .then((res) => res.json())
-      .then((data) => setIssues(Array.isArray(data) ? data : []))
-      .catch((err) => console.error("Error fetching issues:", err));
-
+    // Fetch departments using the defined endpoint
     axios
-      .get("/api/notifications")
-      .then((res) => setNotifications(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching notifications:", err));
-  }, []);
-
-  // Handle input change
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // Submit issue
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    axios
-      .post("/api/issues", formData)
-      .then((res) => {
-        setIssues([...issues, res.data]);
-        setFormData({
-          courseCode: "",
-          issueType: "missing marks",
-          description: "",
-        });
-        navigate("/"); // Redirect to home after submission (adjust as needed)
+      .get(ENDPOINTS.departments, {
+        headers: { Authorization: `Token ${authToken}` },
       })
-      .catch((err) => console.error("Error submitting issue:", err));
-  };
+      .then((res) => {
+        setDepartments(res.data);
+        if (res.data.length > 0) {
+          setFormData((prev) => ({ ...prev, department: res.data[0].id }));
+        }
+      })
+      .catch((err) =>
+        console.error("Error fetching departments:", err)
+      );
 
-  // Helper function for determining status color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "orange";
-      case "resolved":
-        return "green";
-      case "overdue":
-        return "red";
-      default:
-        return "gray";
+    // Fetch student issues using the defined endpoint
+    axios
+      .get(ENDPOINTS.studentIssues, {
+        headers: { Authorization: `Token ${authToken}` },
+      })
+      .then((res) => setIssues(res.data))
+      .catch((err) =>
+        console.error("Error fetching issues:", err)
+      );
+  }, [authToken]);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (files) {
+      setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Redirect to the issue details page
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccessMsg("");
+    const data = new FormData();
+    data.append("course_name", formData.course_name);
+    data.append("course_code", formData.course_code);
+    data.append("year_of_study", formData.year_of_study);
+    data.append("category", formData.category);
+    data.append("description", formData.description);
+    data.append("department", formData.department);
+    if (formData.attachment) {
+      data.append("attachment", formData.attachment);
+    }
+    axios
+      .post(ENDPOINTS.raiseIssue, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Token ${authToken}`,
+        },
+      })
+      .then((res) => {
+        setSuccessMsg("Issue raised successfully.");
+        // Refresh issues list after successful submission
+        axios
+          .get(ENDPOINTS.studentIssues, {
+            headers: { Authorization: `Token ${authToken}` },
+          })
+          .then((res) => setIssues(res.data))
+          .catch((err) =>
+            console.error("Error refreshing issues:", err)
+          );
+        setFormData((prev) => ({
+          ...prev,
+          course_name: "",
+          course_code: "",
+          year_of_study: "year_1",
+          category: "Missing_Marks",
+          description: "",
+          attachment: null,
+        }));
+      })
+      .catch((err) => {
+        setError("Failed to raise issue.");
+        console.error("Error submitting issue:", err);
+      });
+  };
+
   const handleViewDetails = (issueId) => {
     navigate(`/issue-details/${issueId}`);
   };
 
-  // Redirect to the notification details page
   const handleNotificationClick = (notificationId) => {
     navigate(`/notification-details/${notificationId}`);
   };
-
-  // For demonstration, the "Home" and "Notifications" side menu items could also route accordingly
-  // E.g., navigate("/notifications") or navigate("/dashboard") as needed.
 
   return (
     <div className="student-dashboard">
@@ -83,116 +132,141 @@ function Students() {
         <h2 className="sidebar-title">Student Dashboard</h2>
         <ul className="sidebar-nav">
           <li onClick={() => navigate("/")}>Home</li>
-          <li onClick={() => navigate("#issue-form")}>Submit Issue</li>
+          <li onClick={() => navigate("#IssueTable")}>Submit Issue</li>
           <li onClick={() => navigate("/notifications")}>Notifications</li>
-          <li onClick={() => navigate("/update-profile")}>Profile</li>
+          <li onClick={() => navigate("/login")}>Logout</li>
         </ul>
       </aside>
 
       {/* Main Content */}
       <main className="main-content">
-        <h1 className="page-title">Student Issue Tracking</h1>
+        <h1 className="page-title">My Issues</h1>
+        <div className="issue-form" id="issue-form">
+          <div className="section-title">Raise a New Issue</div>
+          {error && <div className="error-message">{error}</div>}
+          {successMsg && <div className="success-message">{successMsg}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="course_name">Course Name</label>
+              <input
+                type="text"
+                id="course_name"
+                name="course_name"
+                value={formData.course_name}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="course_code">Course Code</label>
+              <input
+                type="text"
+                id="course_code"
+                name="course_code"
+                value={formData.course_code}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="year_of_study">Year of Study</label>
+              <select
+                id="year_of_study"
+                name="year_of_study"
+                value={formData.year_of_study}
+                onChange={handleChange}
+              >
+                <option value="year_1">Year 1</option>
+                <option value="year_2">Year 2</option>
+                <option value="year_3">Year 3</option>
+                <option value="year_4">Year 4</option>
+                <option value="year_5">Year 5</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="category">Issue Category</label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+              >
+                <option value="Missing_Marks">Missing Marks</option>
+                <option value="wrong grading">wrong grading</option>
+                <option value="wrong marks">wrong marks</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="department">Department</label>
+              <select
+                id="department"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                required
+              >
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="attachment">Attachment</label>
+              <input
+                type="file"
+                id="attachment"
+                name="attachment"
+                onChange={handleChange}
+              />
+            </div>
+            <button type="submit" className="btn-submit">
+              Submit Issue
+            </button>
+          </form>
+        </div>
 
-        {/* Issue Submission Form */}
-        <form onSubmit={handleSubmit} id="issue-form" className="issue-form">
-          <div className="form-group">
-            <label>Course Code:</label>
-            <input
-              type="text"
-              name="courseCode"
-              value={formData.courseCode}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Issue Type:</label>
-            <select
-              name="issueType"
-              value={formData.issueType}
-              onChange={handleChange}
-            >
-              <option value="missing marks">Missing Marks</option>
-              <option value="appeals">Appeals</option>
-              <option value="corrections">Corrections</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Description:</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button type="submit" className="btn-submit">
-            Submit Issue
-          </button>
-        </form>
-
-        {/* Issue List */}
-        <h2 className="section-title">Your Issues</h2>
-        {issues.length > 0 ? (
-          <table className="issues-table">
-            <thead>
-              <tr>
-                <th>Course Code</th>
-                <th>Issue Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {issues.map((issue) => (
-                <tr key={issue.id}>
-                  <td>{issue.courseCode}</td>
-                  <td>{issue.issueType}</td>
-                  <td style={{ color: getStatusColor(issue.status) }}>
-                    {issue.status}
-                  </td>
-                  <td>
-                    <button
-                      className="btn-action"
-                      onClick={() => handleViewDetails(issue.id)}
-                    >
-                      View Details
-                    </button>
-                    <button className="btn-action">Edit Issue</button>
-                    <button className="btn-action">Delete Issue</button>
-                  </td>
+        <div className="issues-table-container">
+          <h2 className="section-title">My Logged Issues</h2>
+          {issues.length === 0 ? (
+            <p>No issues logged yet.</p>
+          ) : (
+            <table className="issues-table">
+              <thead>
+                <tr>
+                  <th>Course Code</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Created At</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No issues found.</p>
-        )}
-
-        <hr />
-
-        {/* Notifications */}
-        <h2 className="section-title">Notifications</h2>
-        {notifications.length > 0 ? (
-          <ul className="notifications-list">
-            {notifications.map((note, idx) => (
-              <li key={idx} className="notification-item">
-                <a onClick={() => handleNotificationClick(note.id)}>
-                  {note.message} (Status: {note.statusChange})
-                </a>
-                <br />
-                <small>
-                  Received on: {new Date(note.timestamp).toLocaleString()}
-                </small>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No notifications found.</p>
-        )}
+              </thead>
+              <tbody>
+                {issues.map((issue) => (
+                  <tr key={issue.id}>
+                    <td>{issue.course_code}</td>
+                    <td>{issue.category}</td>
+                    <td>{issue.status}</td>
+                    <td>{new Date(issue.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </main>
     </div>
   );
-}
+};
 
 export default Students;
