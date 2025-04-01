@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@emailjs/browser": "^4.4.1",
-    "express": "^5.1.0",
-    "express-session": "^1.18.1"
-  }
-}
