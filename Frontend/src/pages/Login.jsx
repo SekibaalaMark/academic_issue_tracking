@@ -4,7 +4,7 @@ import axios from "axios";
 import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -14,11 +14,11 @@ const Login = () => {
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/admin", {
-        email,
+      const response = await axios.post("http://127.0.0.1:8000/api/login/student/", {
+        username,
         password,
       });
-
+console.log(response);
       if (response.data.token) {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("userRole", response.data.role);
@@ -39,6 +39,7 @@ const Login = () => {
         }
       }
     } catch (err) {
+      console.log(err)
       setError("Invalid email or password");
     }
   };
@@ -53,11 +54,11 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <label htmlFor="email">E-Mail Address</label>
             <input
-              type="email"
+              type="text"
               id="email"
               name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
 

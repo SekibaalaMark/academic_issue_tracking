@@ -61,6 +61,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+
 # 🔹 Allow React Frontend to Access Django Backend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # ✅ Add your React app URL
@@ -146,6 +151,10 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
 
 
 SIMPLE_JWT = {
