@@ -616,22 +616,103 @@ def verify_email(request, uidb64, token):
 
 
 
-    
-    '''
-    def assign_user_group(self, user):
-        """Assign user to a group based on their role."""
-    role_to_group = {
-        "student": "Students",
-        "lecturer": "Lecturers",
-        "academic_registrar": "Registrars"
-    }
-    
-    group_name = role_to_group.get(user.role)  # Get the group name based on role
-    if group_name:
-        group, created = Group.objects.get_or_create(name=group_name)  # Ensure group exists
-        user.groups.add(group)
-        '''
-    
+
+
+'''
+@api_view(['POST'])
+def password_reset_code(request):
+    serializer = Password_ResetSerializer(data = request.data)
+    if serializer.is_valid():
+        email = serializer.validated_data.get('email')
+        
+        try:
+            user = CustomUser.objects.get(email = email)
+        except Exception as e:
+            return Response({'Error': e})
+        
+        verification_code, created = Verification_code.objects.get_or_create(user=user)
+        verification_code.code = randint(100000, 999999)
+        verification_code.created_at = timezone.now()
+        verification_code.is_verified = False
+        verification_code.save()
+        
+        send_mail(
+            "Password Reset Code",
+            f"Your password reset code is {verification_code.code}. It will expire in 10 minutes.",
+            "no-reply@aits.com",
+            [user.email],
+            fail_silently=False,
+        )
+
+        return Response({"message": "Password reset code sent to email"}, status=status.HTTP_200_OK)
+        
+        
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+'''
+
+
+
+
+'''
+@api_view(['POST'])
+def resend_password_reset_code(request):
+    serializer= Resend_Password_Reset_CodeSerializer(data = request.data)
+    if serializer.is_valid():
+        user_email = serializer.validated_data.get('email')
+        try:
+            user = CustomUser.objects.get(email = user_email)
+        except CustomUser.DoesNotExist:
+            return Response({'Error':'No user found...'})
+        """I am using the verification code model to rsend the password reset code.."""
+        result = Verification_code.resend_verification_code(user = user, subject= 'Reset Account Password...')
+        if result:
+            return Response({'Message':f'Successfully Resent the Password Reset Code .....'},status=status.HTTP_200_OK)
+        return Response({'Error':'Failure...........--'},status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+     
+        
+@api_view(['POST'])
+def verify_password_reset_code(request):
+    serializer = VerifyPasswordResetCodeSerializer(data = request.data)
+    if serializer.is_valid():
+        code = serializer.validated_data.get('code')
+        user = serializer.validated_data.get('user')
+        print(serializer.validated_data)
+        get_code = Verification_code.objects.filter(code=code).first()
+        if not get_code:
+            return Response({"error": "Invalid verification code or user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if get_code.is_verification_code_expired():
+            return Response({"error": "Verification code has expired"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'Message':'Confirmed...'})
+        
+        
+        
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
+        
+@api_view(['POST'])
+def final_password_reset(request):
+    serializer = PasswordResetSerializer(data = request.data)
+    if serializer.is_valid():
+        password = serializer.validated_data.get('password')
+        password_confirmation = serializer.validated_data.get('password_confirmation')
+        email = serializer.validated_data.get('email')
+        
+        try:
+            get_user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if password != password_confirmation:
+            return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+        get_user.set_password(password)
+        #get_user.set_password(confirm_password)
+        
+        get_user.save()
+        
+        return Response({"message": "Password reset successful"}, status=status.HTTP_200_OK)
+    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST) '''
+
 
 '''
 # Login View

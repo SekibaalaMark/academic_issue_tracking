@@ -219,6 +219,13 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         if email and CustomUser .objects.filter(email=email).exists():
             raise serializers.ValidationError("Email already exists")
 
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if len(password_confirmation) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+
+
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
@@ -527,6 +534,14 @@ class LecturerRegistrationSerializer(serializers.ModelSerializer):
         if email and CustomUser .objects.filter(email=email).exists():
             raise serializers.ValidationError("Email already exists")
 
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if len(password_confirmation) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+
+
+
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
@@ -606,7 +621,14 @@ class RegistrarRegistrationSerializer(serializers.ModelSerializer):
         # Check if email already exists
         if email and CustomUser .objects.filter(email=email).exists():
             raise serializers.ValidationError("Email already exists")
+        
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if len(password_confirmation) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
 
+        
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
@@ -647,9 +669,55 @@ class ResendVerificationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)   
 
 
+'''
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+class VerifyPasswordResetCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.IntegerField(required=True)
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.IntegerField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    password_confirmation = serializers.CharField(required=True, write_only=True)
+    
+    def validate(self, data):
+        # Check if passwords match
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Passwords do not match")
+        
+        # Validate password strength if needed
+        password = data['password']
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+            
+        return data
+'''
 
 
 
+
+'''
+class PasswordResetSerializer(serializers.Serializer):
+    password = serializers.CharField(max_length=50,write_only=True)
+    password_confirmation = serializers.CharField(max_length=50,write_only=True)
+    email = serializers.EmailField()
+    
+    def validate(self,validated_data):
+        if validated_data['password'] != validated_data['password_confirmation']:
+            raise serializers.ValidationError("Passwords donot match....")
+        
+        return validated_data
+        
+
+
+    
+class VerifyPasswordResetCodeSerializer(serializers.Serializer):
+    code = serializers.IntegerField()
+
+'''
 
 
 
