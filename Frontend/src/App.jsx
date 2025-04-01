@@ -13,28 +13,15 @@ import AcademicRegistrar from "@/pages/AcademicRegistrar";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
 import EmailForm from "./components/EmailForm"; // Import EmailForm
+import Logout from "./components/Logout"; // Corrected the import path
 import { Container, CircularProgress } from "@mui/material";
 
 const ProtectedLayout = () => {
   const { user } = useAuth();
-  const selectedRole = localStorage.getItem("selectedRole");
+  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
 
-  if (user === null) {
-    return (
-      <div
-        style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
-      >
-        <CircularProgress />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return selectedRole ? (
-      <Navigate to="/login" replace />
-    ) : (
-      <Navigate to="/role-selection" replace />
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
@@ -56,13 +43,9 @@ const AppContent = () => {
         <Route path="/role-selection" element={<RoleSelectionPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route
-          path="/student-complaints"
-          element={<StudentComplaints />}
-        />{" "}
-        {/* Added route for StudentComplaints */}
-        <Route path="/email" element={<EmailForm />} />{" "}
-        {/* Added route for EmailForm */}
+        <Route path="/student-complaints" element={<StudentComplaints />} />
+        <Route path="/email" element={<EmailForm />} />
+        <Route path="/logout" element={<Logout />} /> {/* Added logout route */}
         <Route path="/dashboard" element={<ProtectedLayout />}>
           <Route path="student" element={<StudentDashboard />} />
           <Route path="lecturer" element={<Lecturers />} />

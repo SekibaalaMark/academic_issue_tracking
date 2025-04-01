@@ -1,9 +1,11 @@
 import React from "react";
+import Logout from "./components/Logout";
 
 const Header = () => {
   return (
-    <header>
-      <h1>Academic Issue Tracking System</h1>
+    <header className="header">
+      <h1 className="header-title">Academic Issue Tracking, Thanks for using the system!</h1>
+      <LogoutButton />
     </header>
   );
 };

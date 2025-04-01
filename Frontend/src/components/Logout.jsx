@@ -17,14 +17,29 @@ const LogoutButton = () => {
         sessionStorage.removeItem("user");
 
         alert("Logout successful!");
-        navigate("/login"); // Redirect to the login page after logout
+        navigate("/cover"); // Redirect to the cover page after logout
       } catch (error) {
         alert("Logout failed. Please try again.");
       }
     }
   };
 
-  return <button onClick={handleLogout}>Logout</button>;
+  return (
+    <button onClick={handleLogout} style={buttonStyle}>
+      Logout
+    </button>
+  );
+};
+
+// Optional: Add some simple styles for better UX
+const buttonStyle = {
+  backgroundColor: "#ff4d4d",
+  color: "#ffffff",
+  padding: "10px 15px",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+  fontSize: "16px",
 };
 
 export default LogoutButton;
