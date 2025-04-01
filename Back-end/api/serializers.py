@@ -168,9 +168,10 @@ class CreateIssueSerializer(ModelSerializer):
 
 
 
-
+'''
 class StudentRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
+    #staff_id_or_student_no = serializers.CharField(required=True)  # Explicitly define the field
 
     class Meta:
         model = CustomUser 
@@ -183,7 +184,29 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             'last_name': {'required': True},  # Last name is required
             'role':{'required':True},#Role is required on registration
             'staff_id_or_student_no':{'required':True},#Role is required on registration
+        }'''
+
+
+
+'''
+class StudentRegistrationSerializer(serializers.ModelSerializer):
+    password_confirmation = serializers.CharField(write_only=True)
+    #staff_id_or_student_no = serializers.IntegerField(required=True)  # Explicitly define as IntegerField
+    class Meta:
+        model = CustomUser 
+        # Reorder fields to match the working serializer
+        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'staff_id_or_student_no', 'password', 'password_confirmation', 'role']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},
+            'email': {'required': True},
+            'username': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'role': {'required': True},
+            'staff_id_or_student_no': {'required': True},
         }
+    
+    # Rest of your validate and create methods remain the same
 
     def validate(self, data):
         username = data.get('username')
@@ -192,6 +215,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         password_confirmation = data.get('password_confirmation')
         role = data.get('role')
         staff_id_or_student_no = data.get("staff_id_or_student_no")
+
 
         # Check if username already exists
         if username and CustomUser .objects.filter(username=username).exists():
@@ -245,99 +269,16 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         user = CustomUser (**validated_data)
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
-        return user
+        return user  '''
 
 
 
-#class LecturerRegistrationSerializer(serializers.ModelSerializer):
-    password_confirmation = serializers.CharField(write_only=True)
-    
-    class Meta:
-        model = CustomUser 
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 
-                 'password_confirmation', 'role', 'staff_id_or_student_no']  # Removed duplicate field
-        extra_kwargs = {
-            'password': {'write_only': True, 'required': True},
-            'email': {'required': True},
-            'username': {'required': True},
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-            'role': {'required': True},
-            'staff_id_or_student_no': {'required': True},
-        }
-    
-    def validate(self, data):
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
-        password_confirmation = data.get('password_confirmation')
-        role = data.get('role')
-        staff_id_or_student_no = data.get("staff_id_or_student_no")
-        
-        # Debug prints
-        print(f"Original staff_id_or_student_no: {staff_id_or_student_no}, type: {type(staff_id_or_student_no)}")
-        print(f"LECTURE_IDS: {LECTURE_IDS}")
-        
-        # Check if username already exists
-        if username and CustomUser.objects.filter(username=username).exists():
-            raise serializers.ValidationError('Username already exists')
-        
-        # Ensure staff_id_or_student_no is an integer
-        if staff_id_or_student_no is not None:
-            try:
-                # Convert to integer if it's a string
-                if isinstance(staff_id_or_student_no, str):
-                    staff_id_or_student_no = int(staff_id_or_student_no)
-                    data['staff_id_or_student_no'] = staff_id_or_student_no  # Update the data
-                
-                print(f"Converted staff_id_or_student_no: {staff_id_or_student_no}, type: {type(staff_id_or_student_no)}")
-                print(f"Is in LECTURE_IDS: {staff_id_or_student_no in LECTURE_IDS}")
-            except ValueError:
-                raise serializers.ValidationError('Staff ID must be an integer')
-            
-            # Check if staff_id_or_student_no is in LECTURE_IDS
-            if staff_id_or_student_no not in LECTURE_IDS:
-                raise serializers.ValidationError('Wrong Staff id number')  # Match the error message exactly
-            
-            # Check if user with this staff ID already exists
-            if CustomUser.objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
-                raise serializers.ValidationError('User with this staff ID already exists')
-        
-        # Rest of validation...
-        if '@' not in email or email.split('@')[1] != 'gmail.com':
-            raise serializers.ValidationError('Only Gmail accounts are allowed...')
-        
-        if email and CustomUser.objects.filter(email=email).exists():
-            raise serializers.ValidationError("Email already exists")
-        
-        if password != password_confirmation:
-            raise serializers.ValidationError("Passwords do not match")
-        
-        if role not in dict(CustomUser.USER_CHOICES):
-            raise serializers.ValidationError("Invalid role selected")
-        
-        if role != "lecturer":
-            raise serializers.ValidationError("Role must be lecturer")
-        
-        return data
-    
-
-    def create(self, validated_data):
-        # Remove password confirmation from validated data
-        validated_data.pop('password_confirmation')
-        user = CustomUser (**validated_data)
-        user.set_password(validated_data['password'])  # Hash the password
-        user.save()
-        return user
-
-
-
-#class LecturerRegistrationSerializer(serializers.ModelSerializer):
+class StudentRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser 
-        fields = ['id', 'first_name', 'last_name', 'staff_id_or_student_no','email', 'username', 'password', 'password_confirmation','role','staff_id_or_student_no']
+        fields = ['id', 'first_name', 'last_name', 'email', 'username','staff_id_or_student_no', 'password', 'password_confirmation','role']
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},  # Password is required and write-only
             'email': {'required': True},  # Email is required
@@ -345,83 +286,11 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},  # First name is required
             'last_name': {'required': True},  # Last name is required
             'role':{'required':True},#Role is required on registration
-            'staff_id_or_student_no':{'required':True},#Role is required on registration
+            'staff_id_or_student_no':{'required':True},# required on registration
+            
+            
         }
-    def validate(self, data):
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
-        password_confirmation = data.get('password_confirmation')
-        role = data.get('role')
-        staff_id_or_student_no = data.get("staff_id_or_student_no")
 
-        # Check if username already exists
-        if username and CustomUser .objects.filter(username=username).exists():
-            raise serializers.ValidationError('Username already exists')
-
-        # Ensure staff_id_or_student_no is an integer
-        if staff_id_or_student_no is not None:
-            try:
-                staff_id_or_student_no = int(staff_id_or_student_no)
-                print("Converted staff_id_or_student_no:", staff_id_or_student_no)  # Debug statement
-            except ValueError:
-                raise serializers.ValidationError('Student number must be an integer')
-
-            # Check if staff_id_or_student_no is in LECTURE_IDS
-            if staff_id_or_student_no not in LECTURE_IDS:
-                raise serializers.ValidationError('Wrong staff Id')
-
-            # Check if user with this student number already exists
-            if CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
-                raise serializers.ValidationError('User  with this student number already exists')
-
-        # Validate email
-        if '@' not in email or email.split('@')[1] != 'gmail.com':
-            raise serializers.ValidationError('Only Gmail accounts are allowed...')
-
-        # Check if email already exists
-        if email and CustomUser .objects.filter(email=email).exists():
-            raise serializers.ValidationError("Email already exists")
-
-        # Check if password and password confirmation match
-        if password != password_confirmation:
-            raise serializers.ValidationError("Passwords do not match")
-
-        # Check if role is valid
-        if role not in dict(CustomUser .USER_CHOICES):
-            raise serializers.ValidationError("Invalid role selected")
-
-        if role != "lecturer":
-            raise serializers.ValidationError("Role must be lecturer")
-
-        return data
-
-    def create(self, validated_data):
-        # Remove password confirmation from validated data
-        validated_data.pop('password_confirmation')
-        user = CustomUser (**validated_data)
-        user.set_password(validated_data['password'])  # Hash the password
-        user.save()
-        return user
-
-
-
-
-#class LecturerRegistrationSerializer(serializers.ModelSerializer):
-    password_confirmation = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = CustomUser 
-        fields = ['id', 'first_name', 'last_name', 'email', 'username', 'password', 'password_confirmation','role']
-        extra_kwargs = {
-            'password': {'write_only': True, 'required': True},  # Password is required and write-only
-            'email': {'required': True},  # Email is required
-            'username': {'required': True},  # Username is required
-            'first_name': {'required': True},  # First name is required
-            'last_name': {'required': True},  # Last name is required
-            'role':{'required':True},#Role is required on registration
-            'staff_id_or_student_no':{'required':True},#Role is required on registration
-        }
 
     def validate(self, data):
         username = data.get('username')
@@ -436,9 +305,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Username already exists')
         
 
-
-
-            # Ensure staff_id_or_student_no is an integer
+        # Ensure staff_id_or_student_no is an integer
         if staff_id_or_student_no is not None:
             try:
                 staff_id_or_student_no = int(staff_id_or_student_no)
@@ -446,12 +313,11 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Staff  number must be an integer')
 
         # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
-        if staff_id_or_student_no not in LECTURE_IDS:
-            raise serializers.ValidationError('Wrong Staff id number')
+        if staff_id_or_student_no not in STUDENT_IDENTIFICATION_NUMBERS:
+            raise serializers.ValidationError('Student number does not exist')
         
         if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
-            raise serializers.ValidationError('User with this id already exists')
-
+            raise serializers.ValidationError('Student with this student number already exists')
 
 
 
@@ -463,7 +329,14 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         # Check if email already exists
         if email and CustomUser .objects.filter(email=email).exists():
             raise serializers.ValidationError("Email already exists")
+        
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if len(password_confirmation) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
 
+        
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
@@ -472,9 +345,9 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         if role not in dict(CustomUser .USER_CHOICES):
             raise serializers.ValidationError("Invalid role selected")
 
-        if role != 'lecturer':
-            raise serializers.ValidationError("Role Must be lecturer")
-
+        if role != 'student':
+            raise serializers.ValidationError("Role must be student")
+        
         return data
 
     def create(self, validated_data):
@@ -484,6 +357,17 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
         return user
+
+
+
+
+
+
+
+
+
+
+'''
 class LecturerRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
@@ -562,6 +446,96 @@ class LecturerRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
         return user
+'''
+
+
+
+
+
+class LecturerRegistrationSerializer(serializers.ModelSerializer):
+    password_confirmation = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = CustomUser 
+        fields = ['id', 'first_name', 'last_name', 'email', 'username','staff_id_or_student_no', 'password', 'password_confirmation','role']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},  # Password is required and write-only
+            'email': {'required': True},  # Email is required
+            'username': {'required': True},  # Username is required
+            'first_name': {'required': True},  # First name is required
+            'last_name': {'required': True},  # Last name is required
+            'role':{'required':True},#Role is required on registration
+            'staff_id_or_student_no':{'required':True},# required on registration
+            
+            
+        }
+
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        password_confirmation = data.get('password_confirmation')
+        role = data.get('role')
+        staff_id_or_student_no = data.get("staff_id_or_student_no")
+
+        # Check if username already exists
+        if username and CustomUser .objects.filter(username=username).exists():
+            raise serializers.ValidationError('Username already exists')
+        
+
+        # Ensure staff_id_or_student_no is an integer
+        if staff_id_or_student_no is not None:
+            try:
+                staff_id_or_student_no = int(staff_id_or_student_no)
+            except ValueError:
+                raise serializers.ValidationError('Staff  number must be an integer')
+
+        # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
+        if staff_id_or_student_no not in LECTURE_IDS:
+            raise serializers.ValidationError('Staff id does not exist')
+        
+        if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
+            raise serializers.ValidationError('Lecturer with this id already exists')
+
+
+
+
+        
+        if '@' not in email or email.split('@')[1] != 'gmail.com':
+            raise serializers.ValidationError('Only Gmail accounts are allowed...')
+        
+        # Check if email already exists
+        if email and CustomUser .objects.filter(email=email).exists():
+            raise serializers.ValidationError("Email already exists")
+        
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+        
+        if len(password_confirmation) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+
+        
+        # Check if password and password confirmation match
+        if password != password_confirmation:
+            raise serializers.ValidationError("Passwords do not match")
+        
+        # Check if role is valid
+        if role not in dict(CustomUser .USER_CHOICES):
+            raise serializers.ValidationError("Invalid role selected")
+
+        if role != 'lecturer':
+            raise serializers.ValidationError("Role must be student")
+        
+        return data
+
+    def create(self, validated_data):
+        # Remove password confirmation from validated data
+        validated_data.pop('password_confirmation')
+        user = CustomUser (**validated_data)
+        user.set_password(validated_data['password'])  # Hash the password
+        user.save()
+        return user
 
 
 
@@ -583,6 +557,7 @@ class RegistrarRegistrationSerializer(serializers.ModelSerializer):
             
             
         }
+
 
     def validate(self, data):
         username = data.get('username')
@@ -669,7 +644,10 @@ class ResendVerificationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)   
 
 
-'''
+
+
+
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -694,7 +672,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Password must be at least 8 characters long")
             
         return data
-'''
+
 
 
 

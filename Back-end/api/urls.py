@@ -15,6 +15,10 @@ router.register(r'assignlecturer',AssignIssueViewSet,basename='assign-lecturer')
 router.register(r'raise-issue',StudentCreateIssueView,basename='student-raise-issue')
 
 #urls
+# Add these to your existing urls.py file
+
+
+
 
 urlpatterns = [
     path('',include(router.urls)),
@@ -28,6 +32,9 @@ urlpatterns = [
     path('filter_issues',filter_issues,name="filter_issues"),
     path('verify-email/',VerifyEmailView.as_view(),name="email-verification"),
     path('resend-verification-code/',resend_verification_code,name='student-resend-code'),
+    path('password-reset/request/', request_password_reset, name='request-password-reset'),
+    path('password-reset/verify-code/', verify_password_reset_code, name='verify-password-reset-code'),
+    path('password-reset/set-password/', set_new_password, name='set-new-password'),
 
     path("token/",TokenObtainPairView.as_view(),name="get_token"),
     path('token/refresh',TokenRefreshView.as_view(),name="refresh_token"),

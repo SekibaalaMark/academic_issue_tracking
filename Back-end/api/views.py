@@ -173,7 +173,7 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
             '''
             
 
-
+'''
 class StudentRegistrationView(APIView):
     def post(self,request):
         data = request.data 
@@ -197,18 +197,7 @@ class StudentRegistrationView(APIView):
             verification.code = verification_code
             #verification_code.created_at = timezone.now()
             verification.save()
-            
-            '''Sending the email...
-            subject = 'Email verification Code..'
-            message = f"Hello, your Verification code is: {verification_code}"
-            receipient_email= data.get('email')
-            
-            try:
-                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            '''
+
             subject = 'Email Verification Code'
             message = f"Hello, your Verification code is: {verification_code}"
             recipient_email = data.get('email')
@@ -232,7 +221,7 @@ class StudentRegistrationView(APIView):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
+'''    
 
 
 
@@ -240,7 +229,7 @@ class StudentRegistrationView(APIView):
 class LecturerRegistrationView(APIView):
     def post(self,request):
         data = request.data 
-        serializer = StudentRegistrationSerializer(data=data)
+        serializer = LecturerRegistrationSerializer(data=data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
@@ -261,17 +250,7 @@ class LecturerRegistrationView(APIView):
             #verification_code.created_at = timezone.now()
             verification.save()
             
-            '''Sending the email...
-            subject = 'Email verification Code..'
-            message = f"Hello, your Verification code is: {verification_code}"
-            receipient_email= data.get('email')
-            
-            try:
-                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
-            except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            
-            '''
+          
             subject = 'Email Verification Code'
             message = f"Hello, your Verification code is: {verification_code}"
             recipient_email = data.get('email')
@@ -315,6 +294,30 @@ class RegistrarRegistrationView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
 
+            verification_code = randint(10000,99999)
+            verification,created = VerificationCode.objects.get_or_create(
+                user = user,
+                defaults={"code": verification_code})
+            
+            verification.code = verification_code
+            #verification_code.created_at = timezone.now()
+            verification.save()
+            
+          
+            subject = 'Email Verification Code'
+            message = f"Hello, your Verification code is: {verification_code}"
+            recipient_email = data.get('email')
+
+            email = EmailMessage(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [recipient_email]
+            )
+
+            email.send(fail_silently=False)
+            
+
             return Response({
                 "message": "User  Created Successfully",
                 'data': validated_data,
@@ -324,7 +327,58 @@ class RegistrarRegistrationView(APIView):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
+
+
+
+class StudentRegistrationView(APIView):
+    def post(self,request):
+        data = request.data 
+        serializer = StudentRegistrationSerializer(data=data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            password = validated_data.pop('password')
+            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
+            
+            user = CustomUser(**validated_data)
+            user.set_password(password)
+            user.save()
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+
+            verification_code = randint(10000,99999)
+            verification,created = VerificationCode.objects.get_or_create(
+                user = user,
+                defaults={"code": verification_code})
+            
+            verification.code = verification_code
+            #verification_code.created_at = timezone.now()
+            verification.save()
+            
+          
+            subject = 'Email Verification Code'
+            message = f"Hello, your Verification code is: {verification_code}"
+            recipient_email = data.get('email')
+
+            email = EmailMessage(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [recipient_email]
+            )
+
+            email.send(fail_silently=False)
+            
+
+            return Response({
+                "message": "User  Created Successfully",
+                'data': validated_data,
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": access_token
+                }
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -612,6 +666,160 @@ def verify_email(request, uidb64, token):
     else:
         messages.warning(request, 'The verification link is invalid.')
         return redirect('signup')
+    
+
+#Password resetting
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    serializer = PasswordResetRequestSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            # For security reasons, don't reveal that the email doesn't exist
+            return Response(
+                {"message": "If your email exists in our system, you will receive a password reset code."},
+                status=status.HTTP_200_OK
+            )
+        
+        # Generate a new verification code
+        verification_code = randint(10000, 99999)
+        
+        # Create or update verification code
+        verification, created = VerificationCode.objects.get_or_create(
+            user=user,
+            defaults={"code": verification_code}
+        )
+        
+        if not created:
+            verification.code = verification_code
+            verification.created_at = timezone.now()
+            verification.is_code_verified = False
+            verification.save()
+        
+        # Send email with verification code
+        subject = 'Password Reset Code'
+        message = f"Hello {user.username},\n\nYour password reset code is: {verification_code}\n\nThis code will expire in 15 minutes.\n\nIf you did not request this password reset, please ignore this email."
+        
+        try:
+            email_message = EmailMessage(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [email]
+            )
+            email_message.send(fail_silently=False)
+            
+            return Response(
+                {"message": "Password reset code has been sent to your email."},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Failed to send email. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_password_reset_code(request):
+    serializer = VerifyPasswordResetCodeSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "Invalid email or code."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            verification = VerificationCode.objects.get(user=user, code=code)
+            
+            if verification.is_verification_code_expired():
+                return Response(
+                    {"error": "Verification code has expired. Please request a new one."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Mark the code as verified
+            verification.is_code_verified = True
+            verification.save()
+            
+            return Response(
+                {"message": "Code verified successfully. You can now reset your password."},
+                status=status.HTTP_200_OK
+            )
+        except VerificationCode.DoesNotExist:
+            return Response(
+                {"error": "Invalid email or code."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def set_new_password(request):
+    serializer = SetNewPasswordSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+        password = serializer.validated_data['password']
+        
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "Invalid email or code."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            verification = VerificationCode.objects.get(user=user, code=code)
+            
+            if not verification.is_code_verified:
+                return Response(
+                    {"error": "Please verify your code first."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if verification.is_verification_code_expired():
+                return Response(
+                    {"error": "Verification code has expired. Please request a new one."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Set the new password
+            user.set_password(password)
+            user.save()
+            
+            # Delete the verification code after successful password reset
+            verification.delete()
+            
+            return Response(
+                {"message": "Password has been reset successfully. You can now login with your new password."},
+                status=status.HTTP_200_OK
+            )
+        except VerificationCode.DoesNotExist:
+            return Response(
+                {"error": "Invalid email or code."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
