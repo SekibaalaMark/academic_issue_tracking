@@ -1,4 +1,5 @@
 import React from "react";
+<<<<<<< HEAD
 import { Link } from "react-router-dom";
 import "../../styles/Home.css";
 // import graduationImage from "@/assets/graduationImage/graduation1.png";
@@ -23,5 +24,31 @@ function Home() {
     </div>
   );
 }
+=======
+import "./Home.css";
+
+const Home = () => {
+  return (
+    <div className="home">
+       {/* Top navigation bar */}
+       <header className="home-header">
+        <nav>
+          <ul>
+            <li><a href="/login">LOGIN</a></li>
+            <li><a href="/register">REGISTER</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      {/* Main content */}
+      <main className="home-main">       
+        <h1 className="landing-title">ACADEMIC ISSUE TRACKING</h1>
+      </main>
+    </div>
+  );
+};
+
+
+>>>>>>> origin/main
 
 export default Home;

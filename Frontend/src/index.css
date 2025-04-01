@@ -40,6 +40,18 @@ body {
   background-size: 400% 400%;
   animation: gradientAnimation 15s ease infinite;
 }
+body {
+  
+  font-family: 'Poppins',sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display:flex;
+  justify-content: center;
+  min-height: 100vh;
+  /* background:url('./components/Assets/sign image.jpg')no-repeat; */
+  background-size: cover;
+  background-position: center;
+}
 
 /* Overlay image with parallax effect */
 body::before {
