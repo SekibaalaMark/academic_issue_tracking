@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import "@/Styles/StudentComplaints.css";
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
 
 const ComplaintsForm = () => {
+  const { user } = useAuth(); // Access the authenticated user if needed
   const [issue, setIssue] = useState("");
   const [file, setFile] = useState(false);
   const [comments, setComments] = useState("");
@@ -54,6 +56,8 @@ const ComplaintsForm = () => {
   return (
     <div className="form-container">
       <h1>Student Complaints Form</h1>
+      {user && <p>Welcome, {user.name}!</p>}{" "}
+      {/* Display user info if available */}
       <form onSubmit={handleSubmit}>
         <label htmlFor="issueSelect">Select from the issues below:</label>
         <select
@@ -96,10 +100,8 @@ const ComplaintsForm = () => {
           </button>
         </div>
       </form>
-
       {successMessage && <p className="success-message">{successMessage}</p>}
       {errorMessage && <p className="error-message">{errorMessage}</p>}
-
       <footer>
         <p>@2025 Makerere University (AITS) All rights reserved</p>
       </footer>

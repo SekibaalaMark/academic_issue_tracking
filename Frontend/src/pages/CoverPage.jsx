@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Typography } from "@mui/material";
+import graduation1 from "@/assets/graduationImage/graduation1.png";
 
 const CoverPage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const CoverPage = () => {
 
   return (
     <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "50px" }}>
+      <div><img src="graduation1.png" className="Image" alt="GRADUATION" /></div>
       <Typography variant="h3" gutterBottom>
         Welcome to Academic Issue Tracking
       </Typography>

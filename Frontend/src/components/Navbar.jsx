@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import DashboardIcon from "/src/assets/icons/dashboard.svg";
 import HomeIcon from "/src/assets/icons/home.svg";
-import LogoutIcon from "/src/assets/icons/logout.svg";
+
 import "../../styles/Navbar.css";
 import { useAuth } from "../context/authContext.jsx";
 import { Button } from "@mui/material";

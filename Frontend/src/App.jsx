@@ -46,6 +46,8 @@ const AppContent = () => {
         <Route path="/student-complaints" element={<StudentComplaints />} />
         <Route path="/email" element={<EmailForm />} />
         <Route path="/logout" element={<Logout />} /> {/* Added logout route */}
+        <Route path="/CoverPage" element={<CoverPage />} />{" "}
+        {/* Add route for CoverPage */}
         <Route path="/dashboard" element={<ProtectedLayout />}>
           <Route path="student" element={<StudentDashboard />} />
           <Route path="lecturer" element={<Lecturers />} />

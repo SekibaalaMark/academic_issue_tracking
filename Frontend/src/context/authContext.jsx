@@ -1,90 +1,62 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
-const AuthContext = createContext();
+// Create the auth context and export it
+export const AuthContext = createContext(null);
 
+// Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState(null);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for authentication state on initial load
-    const storedAuth = localStorage.getItem("isAuthenticated");
-    const storedRole = localStorage.getItem("userRole");
-    if (storedAuth === "true") {
-      setIsAuthenticated(true);
-      setUserRole(storedRole);
+    // Check if user is authenticated on component mount
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    const storedUser = localStorage.getItem("user");
+
+    if (isAuthenticated && storedUser) {
+      setUser(JSON.parse(storedUser));
     }
+
+    setLoading(false);
   }, []);
 
-  const login = async (username, password) => {
-    try {
-      // Replace with your API call
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Invalid credentials");
-      }
-
-      const data = await response.json();
-      setIsAuthenticated(true);
-      setUserRole(data.role); // Assuming the API returns the user role
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", data.role);
-      navigate("/home");
-    } catch (err) {
-      setError(err.message);
-    }
+  // Login function
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const register = async (username, password, role) => {
-    try {
-      // Replace with your API call
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password, role }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Registration failed");
-      }
-
-      const data = await response.json();
-      // Optionally log in the user after registration
-      await login(username, password);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+  // Logout function
   const logout = () => {
-    setIsAuthenticated(false);
-    setUserRole(null);
+    setUser(null);
     localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("userRole");
-    navigate("/login");
+    localStorage.removeItem("user");
+  };
+
+  // Register function
+  const register = (userData) => {
+    // You might want to add more logic here
+    login(userData);
+  };
+
+  // Auth context value
+  const value = {
+    user,
+    login,
+    logout,
+    register,
+    loading,
   };
 
   return (
-    <AuthContext.Provider
-      value={{ isAuthenticated, userRole, login, register, logout, error }}
-    >
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading ? children : <div>Loading...</div>}
     </AuthContext.Provider>
   );
 };
 
+// Hook for child components to get the auth object and re-render when it changes
 export const useAuth = () => {
   return useContext(AuthContext);
 };

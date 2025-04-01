@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "@/context/AuthContext";
 
 const LogoutButton = () => {
   const { logout } = useContext(AuthContext);
@@ -17,7 +17,7 @@ const LogoutButton = () => {
         sessionStorage.removeItem("user");
 
         alert("Logout successful!");
-        navigate("/cover"); // Redirect to the cover page after logout
+        navigate("/CoverPage"); // Redirect to the existing CoverPage route
       } catch (error) {
         alert("Logout failed. Please try again.");
       }
@@ -25,9 +25,12 @@ const LogoutButton = () => {
   };
 
   return (
-    <button onClick={handleLogout} style={buttonStyle}>
-      Logout
-    </button>
+    <div>
+      <button onClick={handleLogout} style={buttonStyle}>
+        Logout
+      </button>
+      <img src="/images/graduation1.png" alt="Graduation" />
+    </div>
   );
 };
 
