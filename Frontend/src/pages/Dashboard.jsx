@@ -3,18 +3,18 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Dashboard() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setIsLoggedIn(true);
-    } else {
-      window.location.href = '/login'; // Redirect to login if not authenticated
-    }
-  }, []);
+  // useEffect(() => {
+  //   const token = localStorage.getItem('authToken');
+  //   if (token) {
+  //     setIsLoggedIn(true);
+  //   } else {
+  //     window.location.href = '/login'; // Redirect to login if not authenticated
+  //   }
+  // }, []);
 
-  if (!isLoggedIn) return <div>Loading...</div>;
+  // if (!isLoggedIn) return <div>Loading...</div>;
 
   return (
     <div>

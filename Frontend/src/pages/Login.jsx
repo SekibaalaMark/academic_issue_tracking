@@ -4,7 +4,7 @@ import axios from "axios";
 import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(""); // Changed from username to email
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -14,14 +14,17 @@ const Login = () => {
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/users/", {
+      // Single API call to login endpoint
+      const response = await axios.post("http://127.0.0.1:8000/admin/", {
         email,
         password,
       });
+      console.log(response);
 
       if (response.data.token) {
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("userRole", response.data.role);
+        localStorage.setItem("userId", response.data.userId); // Store user ID if needed
 
         // Navigate based on role
         switch (response.data.role) {
@@ -39,6 +42,7 @@ const Login = () => {
         }
       }
     } catch (err) {
+      console.log(err);
       setError("Invalid email or password");
     }
   };
@@ -78,7 +82,9 @@ const Login = () => {
 
             {error && <div className="error-message">{error}</div>}
 
-            <button type="submit" className="login-btn">Login</button>
+            <button type="submit" className="login-btn">
+              Login
+            </button>
           </form>
 
           <div className="login-links">

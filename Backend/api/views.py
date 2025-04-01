@@ -458,10 +458,15 @@ def student_login(request):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'success': True,
+                'data':{
+                'authenticated':True,
+                    'role':user.role,'email':user.email,'username':user.username
+                },
+
                 'message': 'Login successful'
             }, status=status.HTTP_200_OK)
         else:
-            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'success': False, 'message': 'Invalid credentials','authenticated':False}, status=status.HTTP_401_UNAUTHORIZED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
