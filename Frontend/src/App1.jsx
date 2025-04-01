@@ -3,7 +3,7 @@ import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext";
 
 import CoverPage from "./StudentPages/CoverPage.jsx";
-import RoleSelectionPage from "./StudentPages/RoleSelectionPage";
+import RoleSelectionPage from "./StudentPages/RoleSelectionPage.jsx";
 import Login from "./StudentPages/Login.jsx";
 import RegisterForm from "./StudentPages/RegisterForm.jsx";
 
@@ -12,7 +12,7 @@ import RegisterForm from "./StudentPages/RegisterForm.jsx";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
 // Import EmailForm
-import Logout from "./StudentComponents/Logout"; // Corrected the import path
+import Logout from "./StudentComponents/Logout.jsx"; // Corrected the import path
 import { Container, CircularProgress } from "@mui/material";
 
 const ProtectedLayout = () => {
