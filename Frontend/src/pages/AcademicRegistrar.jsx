@@ -132,7 +132,7 @@ function AcademicRegistrar() {
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
             <option value="">All</option>
             <option value="missing marks">Missing Marks</option>
-            <option value="appeals">Appeals</option>
+            <option value="appeal">Appeal</option>
             <option value="corrections">Corrections</option>
           </select>
         </label>
