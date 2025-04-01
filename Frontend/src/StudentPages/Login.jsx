@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "./Login.css";
-import PageTemplate from "@/Pages/PageTemplate";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -69,7 +68,7 @@ const Login = () => {
   }, []);
 
   return (
-    <PageTemplate>
+    // <PageTemplate>
       <div className="container">
         <div className="login-container">
           <form className="login-form" onSubmit={handleSubmit}>
@@ -135,7 +134,7 @@ const Login = () => {
           </form>
         </div>
       </div>
-    </PageTemplate>
+    // </PageTemplate>
   );
 };
 

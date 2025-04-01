@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle } from "react-icons/fa";
 // import "@/Styles/ForgotPassword.css"; // You'll need to create this CSS file
-import PageTemplate from "@/Pages/PageTemplate";
+
 
 const ForgotPassword = () => {
   const [username, setUsername] = useState("");
@@ -54,7 +54,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <PageTemplate>
+    
       <div className="container">
         <div className="forgot-password-container">
           <form className="forgot-password-form" onSubmit={handleSubmit}>
@@ -102,7 +102,7 @@ const ForgotPassword = () => {
           </form>
         </div>
       </div>
-    </PageTemplate>
+    
   );
 };
 
