@@ -88,6 +88,14 @@ class Issue(models.Model):
         ('year_4','Year 4'),
         ('year_5','Year 5')
     ]
+
+
+    PROGRAMME_CHOICES = [
+        ('computer_science','Bachelor of Science in Computer Science'),
+        ('software_engineering','Bachelor of Science in Software Engineering'),
+        ('BIST','Bachelor Information Systems and Technology'),
+        ('BLIS','Bachelor of Library and Information Sciences')
+    ]
     student = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     programme = models.ForeignKey(Programme,related_name='programmes',on_delete=models.CASCADE,null=True,blank=True)
     couse_name = models.CharField(max_length=150,null=True,help_text="course name")

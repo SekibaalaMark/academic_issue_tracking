@@ -12,6 +12,7 @@ router.register(r'lecturer-issue-management',LecturerIssueManangementView,basena
 router.register(r'student-issues',StudentIssueReadOnlyViewset,basename='student-issues-read')
 router.register(r'registrar-issues-management',RegistrarIssuesMonitorViewSet,basename='registrar-issues-manager')
 router.register(r'assignlecturer',AssignIssueViewSet,basename='assign-lecturer')
+router.register(r'raise-issue',StudentCreateIssueView,basename='student-raise-issue')
 
 #urls
 

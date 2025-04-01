@@ -147,13 +147,30 @@ def filter_issues(request):
 
 
 class StudentCreateIssueView(viewsets.ModelViewSet):
-    serializer_class = IssueSerializer
+    serializer_class = CreateIssueSerializer
     permission_classes=[IsAuthenticated]
+    def perform_create(self, serializer):
+        # Check if user is a student
+        if self.request.user.role != 'student':
+            return Response({'success': False, 'message': 'Only Students can raise issues'}, status=status.HTTP_401_UNAUTHORIZED)
+            #raise ("Only students can raise issues.")
+        
+        # Save with the current user as the student
+        serializer.save(student=self.request.user)
+        
+        # Add debug print to confirm save was called
+        print(f"Issue created with ID: {serializer.instance.id}")
+
+
+
+
+    '''
     def perform_create(self, serializer):
         if self.request.user.role =='student':
             if serializer.is_valid():
                 return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
             serializer.save(student=self.request.user)
+            '''
             
 
 
@@ -219,10 +236,11 @@ class StudentRegistrationView(APIView):
 
 
 
+
 class LecturerRegistrationView(APIView):
     def post(self,request):
         data = request.data 
-        serializer = LecturerRegistrationSerializer(data=data)
+        serializer = StudentRegistrationSerializer(data=data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
@@ -234,6 +252,39 @@ class LecturerRegistrationView(APIView):
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
+            verification_code = randint(10000,99999)
+            verification,created = VerificationCode.objects.get_or_create(
+                user = user,
+                defaults={"code": verification_code})
+            
+            verification.code = verification_code
+            #verification_code.created_at = timezone.now()
+            verification.save()
+            
+            '''Sending the email...
+            subject = 'Email verification Code..'
+            message = f"Hello, your Verification code is: {verification_code}"
+            receipient_email= data.get('email')
+            
+            try:
+                send_mail(subject,message,settings.EMAIL_HOST_USER,[receipient_email],fail_silently=False)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            '''
+            subject = 'Email Verification Code'
+            message = f"Hello, your Verification code is: {verification_code}"
+            recipient_email = data.get('email')
+
+            email = EmailMessage(
+                subject,
+                message,
+                settings.EMAIL_HOST_USER,
+                [recipient_email]
+            )
+
+            email.send(fail_silently=False)
+            
 
             return Response({
                 "message": "User  Created Successfully",
@@ -245,6 +296,8 @@ class LecturerRegistrationView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
+
+
 
 class RegistrarRegistrationView(APIView):
     def post(self,request):
