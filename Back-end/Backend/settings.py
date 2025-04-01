@@ -1,16 +1,26 @@
 from pathlib import Path
 
+
 import os
 from datetime import timedelta
 
+from dotenv import load_dotenv
+load_dotenv()
 
+
+
+'''
 SIMPLE_JWT = {
 
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token expiry time
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=300),  # Set access token expiry time
 
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
 
-}
+}'
+'''
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist'
 
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # ✅ Add this at the top
@@ -138,10 +149,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),  # Set access token expiry time
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=200),  # Set access token expiry time
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
 
     'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist the old refresh token after a new one is issued
     'TOKEN_BLACKLIST': True,  # Enable token blacklisting
 }
 
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))  
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS") == "True"
