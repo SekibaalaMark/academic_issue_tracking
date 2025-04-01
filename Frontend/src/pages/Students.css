@@ -1,0 +1,163 @@
+/* src/pages/Students.css */
+
+/* Overall layout */
+.student-dashboard {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f9f9f9;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 250px;
+    background-color: #008000; /* Green theme */
+    padding: 20px;
+    color: #fff;
+  }
+  
+  .sidebar-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .sidebar-nav li {
+    padding: 10px 0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .sidebar-nav li:hover {
+    background-color: #006400; /* Darker green on hover */
+  }
+  
+  /* Main content */
+  .main-content {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .section-title {
+    font-size: 18px;
+    margin: 20px 0 10px;
+    color: #333;
+  }
+  
+  /* Issue form */
+  .issue-form {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .issue-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .issue-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .issue-form input,
+  .issue-form select,
+  .issue-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  
+  .issue-form textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .btn-submit {
+    padding: 10px 20px;
+    background-color: #008000; /* Green theme */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .btn-submit:hover {
+    background-color: #006400; /* Darker green */
+  }
+  
+  /* Issues table */
+  .issues-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .issues-table th,
+  .issues-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .issues-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .btn-action {
+    margin-right: 5px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #008000;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .btn-action:hover {
+    background-color: #006400;
+  }
+  
+  /* Notifications */
+  .notifications-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .notification-item {
+    margin-bottom: 10px;
+  }
+  
+  .notification-item a {
+    cursor: pointer;
+    color: #008000; /* Green text for links */
+    text-decoration: none;
+  }
+  
+  .notification-item a:hover {
+    text-decoration: underline;
+  }
+  
