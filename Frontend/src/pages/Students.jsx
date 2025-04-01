@@ -1,67 +1,8 @@
+// src/pages/Students.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom"; // Use useNavigate instead of useHistory
-
-const Input = styled.input`
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-`;
-
-const Button = styled.button`
-  padding: 8px 12px;
-  margin-right: 10px;
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 2rem;
-
-  th,
-  td {
-    padding: 8px;
-    text-align: left;
-    border: 1px solid #ddd;
-  }
-
-  tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
-
-  tr:hover {
-    background-color: #f1f1f1;
-  }
-`;
-
-const Navigation = styled.nav`
-  margin-bottom: 2rem;
-  background-color: #333;
-  padding: 1rem;
-
-  a {
-    color: white;
-    text-decoration: none;
-    padding: 10px 15px;
-    margin-right: 10px;
-    border-radius: 5px;
-    background-color: #444;
-
-    &:hover {
-      background-color: #555;
-    }
-  }
-`;
+import { useNavigate } from "react-router-dom";
+import "./Students.css";
 
 function Students() {
   const [issues, setIssues] = useState([]);
@@ -71,7 +12,7 @@ function Students() {
     issueType: "missing marks",
     description: "",
   });
-  const navigate = useNavigate(); // Initialize navigate for redirection
+  const navigate = useNavigate();
 
   // Fetch issues and notifications
   useEffect(() => {
@@ -103,7 +44,7 @@ function Students() {
           issueType: "missing marks",
           description: "",
         });
-        navigate("/"); // Redirect to home after submission
+        navigate("/"); // Redirect to home after submission (adjust as needed)
       })
       .catch((err) => console.error("Error submitting issue:", err));
   };
@@ -127,117 +68,129 @@ function Students() {
     navigate(`/issue-details/${issueId}`);
   };
 
-  // Redirect to the submit issue page
-  const handleSubmitIssue = () => {
-    navigate("/submit-issue");
-  };
-
   // Redirect to the notification details page
   const handleNotificationClick = (notificationId) => {
     navigate(`/notification-details/${notificationId}`);
   };
 
+  // For demonstration, the "Home" and "Notifications" side menu items could also route accordingly
+  // E.g., navigate("/notifications") or navigate("/dashboard") as needed.
+
   return (
-    <div style={{ padding: "1rem" }}>
-      <Navigation>
-        <a href="/">Home</a>
-        <a onClick={handleSubmitIssue}>Submit Issue</a>
-        <a href="/notifications">Notifications</a>
-        <a href="/profile">Profile</a>
-      </Navigation>
-
-      <h1>Student Issue Tracking</h1>
-
-      {/* Issue Submission Form */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-        <div>
-          <label>Course Code: </label>
-          <Input
-            type="text"
-            name="courseCode"
-            value={formData.courseCode}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Issue Type: </label>
-          <select
-            name="issueType"
-            value={formData.issueType}
-            onChange={handleChange}
-          >
-            <option value="missing marks">Missing Marks</option>
-            <option value="appeals">Appeals</option>
-            <option value="corrections">Corrections</option>
-          </select>
-        </div>
-        <div>
-          <label>Description: </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <Button type="submit">Submit Issue</Button>
-      </form>
-
-      {/* Issue List */}
-      <h2>Your Issues</h2>
-      {issues.length > 0 ? (
-        <Table>
-          <thead>
-            <tr>
-              <th>Course Code</th>
-              <th>Issue Type</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {issues.map((issue) => (
-              <tr key={issue.id}>
-                <td>{issue.courseCode}</td>
-                <td>{issue.issueType}</td>
-                <td style={{ color: getStatusColor(issue.status) }}>
-                  {issue.status}
-                </td>
-                <td>
-                  <Button onClick={() => handleViewDetails(issue.id)}>
-                    View Details
-                  </Button>
-                  <Button>Edit Issue</Button>
-                  <Button>Delete Issue</Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p>No issues found.</p>
-      )}
-
-      <hr />
-
-      {/* Notifications */}
-      <h2>Notifications</h2>
-      {notifications.length > 0 ? (
-        <ul>
-          {notifications.map((note, idx) => (
-            <li key={idx}>
-              <a onClick={() => handleNotificationClick(note.id)}>
-                {note.message} (Status: {note.statusChange})
-              </a>
-              <br />
-              <small>Received on: {new Date(note.timestamp).toLocaleString()}</small>
-            </li>
-          ))}
+    <div className="student-dashboard">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <h2 className="sidebar-title">Student Dashboard</h2>
+        <ul className="sidebar-nav">
+          <li onClick={() => navigate("/")}>Home</li>
+          <li onClick={() => navigate("#issue-form")}>Submit Issue</li>
+          <li onClick={() => navigate("/notifications")}>Notifications</li>
+          <li onClick={() => navigate("/update-profile")}>Profile</li>
         </ul>
-      ) : (
-        <p>No notifications found.</p>
-      )}
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        <h1 className="page-title">Student Issue Tracking</h1>
+
+        {/* Issue Submission Form */}
+        <form onSubmit={handleSubmit} id="issue-form" className="issue-form">
+          <div className="form-group">
+            <label>Course Code:</label>
+            <input
+              type="text"
+              name="courseCode"
+              value={formData.courseCode}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Issue Type:</label>
+            <select
+              name="issueType"
+              value={formData.issueType}
+              onChange={handleChange}
+            >
+              <option value="missing marks">Missing Marks</option>
+              <option value="appeals">Appeals</option>
+              <option value="corrections">Corrections</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Description:</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button type="submit" className="btn-submit">
+            Submit Issue
+          </button>
+        </form>
+
+        {/* Issue List */}
+        <h2 className="section-title">Your Issues</h2>
+        {issues.length > 0 ? (
+          <table className="issues-table">
+            <thead>
+              <tr>
+                <th>Course Code</th>
+                <th>Issue Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {issues.map((issue) => (
+                <tr key={issue.id}>
+                  <td>{issue.courseCode}</td>
+                  <td>{issue.issueType}</td>
+                  <td style={{ color: getStatusColor(issue.status) }}>
+                    {issue.status}
+                  </td>
+                  <td>
+                    <button
+                      className="btn-action"
+                      onClick={() => handleViewDetails(issue.id)}
+                    >
+                      View Details
+                    </button>
+                    <button className="btn-action">Edit Issue</button>
+                    <button className="btn-action">Delete Issue</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No issues found.</p>
+        )}
+
+        <hr />
+
+        {/* Notifications */}
+        <h2 className="section-title">Notifications</h2>
+        {notifications.length > 0 ? (
+          <ul className="notifications-list">
+            {notifications.map((note, idx) => (
+              <li key={idx} className="notification-item">
+                <a onClick={() => handleNotificationClick(note.id)}>
+                  {note.message} (Status: {note.statusChange})
+                </a>
+                <br />
+                <small>
+                  Received on: {new Date(note.timestamp).toLocaleString()}
+                </small>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No notifications found.</p>
+        )}
+      </main>
     </div>
   );
 }

@@ -78,10 +78,10 @@ const IssueSubmissionForm = () => {
             value={formData.issueType}
             onChange={handleChange}
           >
-            <option value="Missing_Marks">Missing Marks</option>
-            <option value="Wrong_grading">Wrong Grading</option>
-            <option value="wrong_marks">Wrong Marks</option>
-            <option value="other">Other</option>
+            <option value="missing_Marks">Missing Marks</option>
+            <option value="appeal">Appeal</option>
+            <option value="corrections">Corrections</option>
+  
           </select>
         </div>
         <div className="form-group">
