@@ -1,34 +1,105 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Container, Typography } from "@mui/material";
-import graduation1 from "@/assets/graduationImage/graduation1.png";
+import { Button, Container, Typography, Box } from "@mui/material";
 
 const CoverPage = () => {
   const navigate = useNavigate();
-
   const handleStart = () => {
     console.log("Get Started button clicked"); // Debugging line
     navigate("/role-selection"); // Navigate to RoleSelectionPage
   };
 
   return (
-    <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "50px" }}>
-      <div><img src="graduation1.png" className="Image" alt="GRADUATION" /></div>
-      <Typography variant="h3" gutterBottom>
-        Welcome to Academic Issue Tracking
-      </Typography>
-      <Typography variant="h6" gutterBottom>
-        Streamline your academic issue resolution process.
-      </Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleStart}
-        style={{ marginTop: "20px" }}
+    <Box
+      sx={{
+        position: "relative",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
+      {/* Background Image */}
+      <Box
+        component="img"
+        src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1600&h=900&fit=crop"
+        alt="Graduation"
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Optional overlay for better text readability */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)", // Dark overlay for text readability
+          zIndex: 1,
+        }}
+      />
+
+      {/* Content Container */}
+      <Container
+        maxWidth="sm"
+        sx={{
+          textAlign: "center",
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 2,
+          color: "white", // Text color
+        }}
       >
-        Get Started
-      </Button>
-    </Container>
+        <Typography
+          variant="h3"
+          gutterBottom
+          sx={{
+            fontSize: { xs: "1.8rem", sm: "2.5rem", md: "3rem" },
+            fontWeight: "bold",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+          }}
+        >
+          Welcome to Academic Issue Tracking
+        </Typography>
+
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{
+            fontSize: { xs: "0.9rem", sm: "1rem", md: "1.2rem" },
+            mb: 3,
+            textShadow: "1px 1px 3px rgba(0,0,0,0.5)",
+          }}
+        >
+          Streamline your academic issue resolution process.
+        </Typography>
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleStart}
+          size="large"
+          sx={{
+            mt: { xs: 2, sm: 3 },
+            px: { xs: 3, sm: 4 },
+            py: 1.5,
+            fontSize: "1.1rem",
+          }}
+        >
+          Get Started
+        </Button>
+      </Container>
+    </Box>
   );
 };
 

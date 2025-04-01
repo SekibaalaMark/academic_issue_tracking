@@ -106,3 +106,33 @@
   margin-top: 10px;
   text-align: center;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .login-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-header p {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .login-btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .redirect-text {
+    font-size: 0.8rem;
+  }
+}
