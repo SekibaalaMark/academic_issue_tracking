@@ -39,13 +39,11 @@ const Button = styled.button`
   }
 `;
 
-<<<<<<< HEAD
-const AcademicRegistrar = () => {
-  return <div>Academic Registrar Page</div>;
-};
-=======
+
+
+
 function AcademicRegistrar() {
-  const [issues, setIssues] = useState([]);
+  // const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -209,6 +207,6 @@ function AcademicRegistrar() {
     </div>
   );
 }
->>>>>>> origin/main
+
 
 export default AcademicRegistrar;

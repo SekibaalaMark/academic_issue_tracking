@@ -1,55 +1,40 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import "@/styles/Login.css";
+import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
-import PageTemplate from "./PageTemplate";
+import "./Login.css";
+import PageTemplate from "@/Pages/PageTemplate";
 
-const LoginForm = () => {
+const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-=======
-import axios from "axios";
-import "./Login.css";
-
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
->>>>>>> origin/main
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setErrorMessage(""); // Clear previous errors
 
     try {
-<<<<<<< HEAD
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) throw new Error("Invalid username or password");
-
-      const data = await response.json();
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", data.role);
-      navigate("/student-complaints");
-    } catch (error) {
-      setErrorMessage(error.message);
-=======
-      const response = await axios.post("http://127.0.0.1:8000/admin", {
-        email,
+      // Using axios for the API call
+      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
+        username,
         password,
       });
 
       if (response.data.token) {
+        // Store authentication data
         localStorage.setItem("authToken", response.data.token);
         localStorage.setItem("userRole", response.data.role);
+        localStorage.setItem("isAuthenticated", "true");
+
+        // Remember me functionality
+        if (rememberMe) {
+          localStorage.setItem("rememberedUsername", username);
+        } else {
+          localStorage.removeItem("rememberedUsername");
+        }
 
         // Navigate based on role
         switch (response.data.role) {
@@ -67,13 +52,23 @@ const Login = () => {
         }
       }
     } catch (err) {
-      setError("Invalid email or password");
->>>>>>> origin/main
+      console.error("Login error:", err);
+      setErrorMessage(
+        err.response?.data?.message || "Invalid username or password"
+      );
     }
   };
 
+  // Check for remembered username on component mount
+  React.useEffect(() => {
+    const rememberedUsername = localStorage.getItem("rememberedUsername");
+    if (rememberedUsername) {
+      setUsername(rememberedUsername);
+      setRememberMe(true);
+    }
+  }, []);
+
   return (
-<<<<<<< HEAD
     <PageTemplate>
       <div className="container">
         <div className="login-container">
@@ -141,56 +136,7 @@ const Login = () => {
         </div>
       </div>
     </PageTemplate>
-=======
-    <div className="login-page">
-      <h2 className="site-title">ACADEMIC ISSUE TRACKING</h2>
-
-      <div className="login-container">
-        <div className="login-header">Login</div>
-        <div className="login-form">
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="email">E-Mail Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <div className="remember-me">
-              <input type="checkbox" id="remember" />
-              <label htmlFor="remember">Remember Me</label>
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
-            <button type="submit" className="login-btn">Login</button>
-          </form>
-
-          <div className="login-links">
-            <a href="#">Forgot Your Password?</a>
-          </div>
-        </div>
-      </div>
-
-      <div className="auth-links">
-        <a href="#">Login</a> | <a href="#">Register</a>
-      </div>
-    </div>
->>>>>>> origin/main
   );
 };
 
-export default LoginForm;
+export default Login;
