@@ -4,10 +4,7 @@ import "./Register.css";
 const Register = () => {
   const [formData, setFormData] = useState({
     firstName: "",
-    middleName: "",
     lastName: "",
-    gender: "",
-    phone: "",
     userType: "",
     email: "",
     password: "",
@@ -40,40 +37,11 @@ const Register = () => {
           required
         />
 
-        <label>Middle Name</label>
-        <input
-          type="text"
-          name="middleName"
-          value={formData.middleName}
-          onChange={handleChange}
-        />
-
         <label>Last Name*</label>
         <input
           type="text"
           name="lastName"
           value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
-
-        <label>Gender*</label>
-        <select 
-          name="gender" 
-          value={formData.gender} 
-          onChange={handleChange} 
-          required
-        >
-          <option value="">Select</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-
-        <label>Phone*</label>
-        <input
-          type="tel"
-          name="phone"
-          value={formData.phone}
           onChange={handleChange}
           required
         />
@@ -89,7 +57,7 @@ const Register = () => {
           <option value="">Select</option>
           <option value="Student">Student</option>
           <option value="Lecturer">Lecturer</option>
-          <option value="Registrar">Registrar</option>
+          <option value="AcademicRegistrar">AcademicRegistrar</option>
         </select>
 
         <label>E-Mail Address*</label>
@@ -124,7 +92,7 @@ const Register = () => {
         <button type="submit">Register</button>
 
         <div className="register-footer">
-          <a href="/forgot-password">Trouble Signing up?</a>
+          Already have an account? <a href="/login">Login here</a>
         </div>
       </form>
     </div>
