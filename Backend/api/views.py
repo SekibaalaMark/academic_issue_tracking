@@ -7,6 +7,7 @@ from .models import *
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.decorators import APIView
+from django.db.models import Count
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
@@ -20,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import serializers
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
+from .utils import send_issue_assignment_email
 from django.contrib import messages
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
@@ -55,6 +57,61 @@ class IssueViewSet(viewsets.ModelViewSet):
 
 
 
+
+class AssignIssueViewSet(viewsets.ModelViewSet):
+    queryset = Issue.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = AssignIssueSerializer
+    
+    def partial_update(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        try:
+            issue = Issue.objects.get(pk=pk)
+        except Issue.DoesNotExist:
+            return Response({"detail": "Issue not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+        if request.user.role != 'registrar':
+            return Response({"detail": "Only registrars can assign issues to lecturers."}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        
+        # Print request data for debugging
+        print(f"Request data: {request.data}")
+                
+        serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Save with explicit commit
+            updated_issue = serializer.save()
+            
+            # Verify the update happened
+            print(f"Updated issue lecturer: {updated_issue.lecturer}")
+                        
+            # Refresh from DB to confirm changes were saved
+            issue.refresh_from_db()
+            print(f"Issue after refresh: {issue.lecturer}")
+            
+            # Send email notification to the assigned lecturer
+            email_sent = send_issue_assignment_email(issue)
+            
+            response_data = serializer.data
+            response_data['email_sent'] = email_sent
+            
+            return Response({
+                'success': True,
+                'message': 'Issue assigned successfully',
+                'email_notification': 'Sent successfully' if email_sent else 'Failed to send',
+                'data': response_data
+            })
+        else:
+            print(f"Serializer errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+'''
 class AssignIssueViewSet(viewsets.ModelViewSet):
     queryset = Issue.objects.all()
     permission_classes = [IsAuthenticated]
@@ -88,7 +145,7 @@ class AssignIssueViewSet(viewsets.ModelViewSet):
         else:
             print(f"Serializer errors: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+'''
 
 
 
@@ -175,194 +232,6 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
             headers=headers
         )
 
-
-
-
-
-
-'''
-class StudentCreateIssueView(viewsets.ModelViewSet):
-    serializer_class = CreateIssueSerializer
-    permission_classes=[IsAuthenticated]
-    def perform_create(self, serializer):
-        # Check if user is a student
-        if self.request.user.role != 'student':
-            return Response({'success': False, 'message': 'Only Students can raise issues'}, status=status.HTTP_401_UNAUTHORIZED)
-            #raise ("Only students can raise issues.")
-        
-        # Save with the current user as the student
-        serializer.save(student=self.request.user)
-        
-        # Add debug print to confirm save was called
-        print(f"Issue created with ID: {serializer.instance.id}")
-'''
-
-
-
-'''
-    def perform_create(self, serializer):
-        if self.request.user.role =='student':
-            if serializer.is_valid():
-                return Response({"detail": "Only students can raise issues."}, status=status.HTTP_403_FORBIDDEN)
-            serializer.save(student=self.request.user)
-            '''
-            
-
-'''
-class StudentRegistrationView(APIView):
-    def post(self,request):
-        data = request.data 
-        serializer = StudentRegistrationSerializer(data=data)
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            password = validated_data.pop('password')
-            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
-            
-            user = CustomUser(**validated_data)
-            user.set_password(password)
-            user.save()
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            verification_code = randint(10000,99999)
-            verification,created = VerificationCode.objects.get_or_create(
-                user = user,
-                defaults={"code": verification_code})
-            
-            verification.code = verification_code
-            #verification_code.created_at = timezone.now()
-            verification.save()
-
-            subject = 'Email Verification Code'
-            message = f"Hello, your Verification code is: {verification_code}"
-            recipient_email = data.get('email')
-
-            email = EmailMessage(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [recipient_email]
-            )
-
-            email.send(fail_silently=False)
-            
-
-            return Response({
-                "message": "User  Created Successfully",
-                'data': validated_data,
-                "tokens": {
-                    "refresh": str(refresh),
-                    "access": access_token
-                }
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-'''    
-
-
-
-'''
-class LecturerRegistrationView(APIView):
-    def post(self,request):
-        data = request.data 
-        serializer = LecturerRegistrationSerializer(data=data)
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            password = validated_data.pop('password')
-            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
-            
-            user = CustomUser(**validated_data)
-            user.set_password(password)
-            user.save()
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            verification_code = randint(10000,99999)
-            verification,created = VerificationCode.objects.get_or_create(
-                user = user,
-                defaults={"code": verification_code})
-            
-            verification.code = verification_code
-            #verification_code.created_at = timezone.now()
-            verification.save()
-            
-          
-            subject = 'Email Verification Code'
-            message = f"Hello, your Verification code is: {verification_code}"
-            recipient_email = data.get('email')
-
-            email = EmailMessage(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [recipient_email]
-            )
-
-            email.send(fail_silently=False)
-            
-
-            return Response({
-                "message": "User  Created Successfully",
-                'data': validated_data,
-                "tokens": {
-                    "refresh": str(refresh),
-                    "access": access_token
-                }
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
-
-
-
-class RegistrarRegistrationView(APIView):
-    def post(self,request):
-        data = request.data 
-        serializer = RegistrarRegistrationSerializer(data=data)
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            password = validated_data.pop('password')
-            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
-            
-            user = CustomUser(**validated_data)
-            user.set_password(password)
-            user.save()
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-
-            verification_code = randint(10000,99999)
-            verification,created = VerificationCode.objects.get_or_create(
-                user = user,
-                defaults={"code": verification_code})
-            
-            verification.code = verification_code
-            #verification_code.created_at = timezone.now()
-            verification.save()
-            
-          
-            subject = 'Email Verification Code'
-            message = f"Hello, your Verification code is: {verification_code}"
-            recipient_email = data.get('email')
-
-            email = EmailMessage(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [recipient_email]
-            )
-
-            email.send(fail_silently=False)
-            
-
-            return Response({
-                "message": "User  Created Successfully",
-                'data': validated_data,
-                "tokens": {
-                    "refresh": str(refresh),
-                    "access": access_token
-                }
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-'''
 
 
 class UserRegistrationView(APIView):
@@ -502,62 +371,6 @@ def login(request):
         else:
             return Response({'success': False, 'message': 'Invalid credentials','authenticated':False}, status=status.HTTP_401_UNAUTHORIZED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-'''
-@api_view(['POST'])
-@permission_classes([AllowAny])  # Allow anyone to access this view
-def lecturer_login(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
-        
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.role != 'lecturer':
-                return Response({'success': False, 'message': 'You must be a lecturer to login!'}, status=status.HTTP_401_UNAUTHORIZED)
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'success': True,
-                'message': 'Login successful'
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''
-
-
-'''
-@api_view(['POST'])
-@permission_classes([AllowAny])  # Allow anyone to access this view
-def registrar_login(request):
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
-        
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.role != 'registrar':
-                return Response({'success': False, 'message': 'Only Registrars are allowed to login from here!'}, status=status.HTTP_401_UNAUTHORIZED)
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'success': True,
-                'message': 'Login successful'
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''
-
 
 
 
@@ -861,126 +674,106 @@ def set_new_password(request):
 
 
 
-
-
-
-'''
-@api_view(['POST'])
-def password_reset_code(request):
-    serializer = Password_ResetSerializer(data = request.data)
-    if serializer.is_valid():
-        email = serializer.validated_data.get('email')
-        
-        try:
-            user = CustomUser.objects.get(email = email)
-        except Exception as e:
-            return Response({'Error': e})
-        
-        verification_code, created = Verification_code.objects.get_or_create(user=user)
-        verification_code.code = randint(100000, 999999)
-        verification_code.created_at = timezone.now()
-        verification_code.is_verified = False
-        verification_code.save()
-        
-        send_mail(
-            "Password Reset Code",
-            f"Your password reset code is {verification_code.code}. It will expire in 10 minutes.",
-            "no-reply@aits.com",
-            [user.email],
-            fail_silently=False,
-        )
-
-        return Response({"message": "Password reset code sent to email"}, status=status.HTTP_200_OK)
-        
-        
-    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-'''
-
-
-
-
-'''
-@api_view(['POST'])
-def resend_password_reset_code(request):
-    serializer= Resend_Password_Reset_CodeSerializer(data = request.data)
-    if serializer.is_valid():
-        user_email = serializer.validated_data.get('email')
-        try:
-            user = CustomUser.objects.get(email = user_email)
-        except CustomUser.DoesNotExist:
-            return Response({'Error':'No user found...'})
-        """I am using the verification code model to rsend the password reset code.."""
-        result = Verification_code.resend_verification_code(user = user, subject= 'Reset Account Password...')
-        if result:
-            return Response({'Message':f'Successfully Resent the Password Reset Code .....'},status=status.HTTP_200_OK)
-        return Response({'Error':'Failure...........--'},status=status.HTTP_400_BAD_REQUEST)
-    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-     
-        
-@api_view(['POST'])
-def verify_password_reset_code(request):
-    serializer = VerifyPasswordResetCodeSerializer(data = request.data)
-    if serializer.is_valid():
-        code = serializer.validated_data.get('code')
-        user = serializer.validated_data.get('user')
-        print(serializer.validated_data)
-        get_code = Verification_code.objects.filter(code=code).first()
-        if not get_code:
-            return Response({"error": "Invalid verification code or user."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if get_code.is_verification_code_expired():
-            return Response({"error": "Verification code has expired"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'Message':'Confirmed...'})
-        
-        
-        
-    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
-        
-@api_view(['POST'])
-def final_password_reset(request):
-    serializer = PasswordResetSerializer(data = request.data)
-    if serializer.is_valid():
-        password = serializer.validated_data.get('password')
-        password_confirmation = serializer.validated_data.get('password_confirmation')
-        email = serializer.validated_data.get('email')
-        
-        try:
-            get_user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if password != password_confirmation:
-            return Response({"error": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
-        get_user.set_password(password)
-        #get_user.set_password(confirm_password)
-        
-        get_user.save()
-        
-        return Response({"message": "Password reset successful"}, status=status.HTTP_200_OK)
-    return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST) '''
-
-
-'''
-# Login View
-@api_view(['POST'])
-@permission_classes([AllowAny])  # Allow anyone to access this view
-def login(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+class StudentDashboardCountView(APIView):
+    permission_classes = [IsAuthenticated]
     
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        # Generate tokens
-        refresh = RefreshToken.for_user(user)
+    def get(self, request):
+        if request.user.role != 'student':
+            return Response(
+                {"detail": "Only students can access this dashboard."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        student_issues = Issue.objects.filter(student=request.user)
+        
+        total_issues = student_issues.count()
+        pending_count = student_issues.filter(status='pending').count()
+        in_progress_count = student_issues.filter(status='in_progress').count()
+        resolved_count = student_issues.filter(status='resolved').count()
+        
+        dashboard_data = {
+            'total_issues': total_issues,
+            'pending_count': pending_count,
+            'in_progress_count': in_progress_count,
+            'resolved_count': resolved_count
+        }
         
         return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
             'success': True,
-            'message': 'Login successful'
-        }, status=status.HTTP_200_OK)
-    else:
-        return Response({'success': False, 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        '''
+            'dashboard': dashboard_data
+        })
 
 
+
+
+class LecturerDashboardCountView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Step 1: Verify the user is a lecturer
+        if request.user.role != 'lecturer':
+            return Response(
+                {"detail": "Only lecturers can access this dashboard."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Step 2: Get all issues assigned to this lecturer
+        lecturer_issues = Issue.objects.filter(lecturer=request.user)
+        
+        # Step 3: Count issues by status
+        total_assigned = lecturer_issues.count()
+        in_progress_count = lecturer_issues.filter(status='in_progress').count()
+        resolved_count = lecturer_issues.filter(status='resolved').count()
+        
+        # Step 4: Prepare the response data
+        dashboard_data = {
+            'total_assigned': total_assigned,
+            'in_progress_count': in_progress_count,
+            'resolved_count': resolved_count
+        }
+        
+        # Step 5: Return the response
+        return Response({
+            'success': True,
+            'dashboard': dashboard_data
+        })
+    
+
+
+
+
+class RegistrarDashboardCountView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Step 1: Verify the user is a registrar
+        if request.user.role != 'registrar':
+            return Response(
+                {"detail": "Only registrars can access this dashboard."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Step 2: Get all issues assigned to this registrar
+        registrar_issues = Issue.objects.filter(registrar=request.user)
+        
+        # Step 3: Count total issues
+        total_issues = registrar_issues.count()
+        
+        # Step 4: Count issues by status
+        pending_count = registrar_issues.filter(status='pending').count()
+        in_progress_count = registrar_issues.filter(status='in_progress').count()
+        resolved_count = registrar_issues.filter(status='resolved').count()
+        
+        # Step 5: Prepare the response data
+        dashboard_data = {
+            'total_issues': total_issues,
+            'pending_count': pending_count,
+            'in_progress_count': in_progress_count,
+            'resolved_count': resolved_count
+        }
+        
+        # Step 6: Return the response
+        return Response({
+            'success': True,
+            'dashboard': dashboard_data
+        })

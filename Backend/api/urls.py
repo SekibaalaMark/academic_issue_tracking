@@ -31,6 +31,9 @@ urlpatterns = [
     path('password-reset/request/', request_password_reset, name='request-password-reset'),
     path('password-reset/verify-code/', verify_password_reset_code, name='verify-password-reset-code'),
     path('password-reset/set-password/', set_new_password, name='set-new-password'),
+    path('registrar/issues/summary/',RegistrarDashboardCountView.as_view(),name="registrar-issues-dashboard"),
+    path('student/issues/summary/',StudentDashboardCountView.as_view(),name="student-issues-dashboard"),
+    path('lecturer/issues/summary/',LecturerDashboardCountView.as_view(),name="student-issues-dashboard"),
 
     path("token/",TokenObtainPairView.as_view(),name="get_token"),
     path('token/refresh',TokenRefreshView.as_view(),name="refresh_token"),
