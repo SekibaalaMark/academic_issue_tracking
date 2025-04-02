@@ -1,16 +1,148 @@
 /* src/App.css */
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Roboto", sans-serif;
   margin: 0;
   padding: 0;
+  background: linear-gradient(
+    135deg,
+    #e3f2fd,
+    #bbdefb
+  ); /* Gradient background */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: row; /* Align items in a row */
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .logo {
   height: 50px;
+  margin: 20px 0;
 }
 
 h1 {
   font-size: 2rem;
+  text-align: center;
+  margin: 20px 0;
+  color: #444;
+}
+
+.navbar {
+  width: 200px; /* Set a fixed width for the navbar */
+  background-color: #007bff;
+  padding: 10px;
+  border-radius: 8px;
+  height: auto; /* Adjust height automatically based on content */
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex; /* Use flexbox for layout */
+  flex-direction: column; /* Align links in a single column */
+  gap: 10px; /* Add spacing between links */
+}
+
+.nav-item {
+  margin: 0;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 10px 15px;
+  border-radius: 4px;
+  background-color: #0056b3;
+  transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: #003d80;
+}
+
+.content {
+  margin-left: 20px; /* Add spacing between navbar and content */
+  margin-top: 20px;
+  width: 100%;
+  padding: 20px;
+  flex-grow: 1; /* Allow content to take up remaining space */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1024px) {
+  .navbar {
+    width: 150px;
+  }
+
+  .content {
+    margin-left: 170px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-item {
+    width: auto;
+  }
+
+  .nav-link {
+    width: auto;
+  }
+
+  .content {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-container {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .nav-link {
+    padding: 10px 12px;
+  }
+
+  button {
+    padding: 8px 16px;
+  }
+
+  input,
+  textarea {
+    padding: 8px;
+  }
 }
 
 nav ul {
@@ -25,4 +157,161 @@ nav li {
 a {
   text-decoration: none;
   color: #00f;
+}
+
+button {
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  width: 100%;
+}
+
+button.primary {
+  background-color: #1976d2;
+  color: white;
+}
+
+button.primary:hover {
+  background-color: #1565c0;
+}
+
+button.secondary {
+  background-color: #9c27b0;
+  color: white;
+}
+
+button.secondary:hover {
+  background-color: #7b1fa2;
+}
+
+button.success {
+  background-color: #388e3c;
+  color: white;
+}
+
+button.success:hover {
+  background-color: #2e7d32;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.single-column-table {
+  position: absolute; /* Position the table */
+  top: 20px; /* Adjust the top position */
+  left: 20px; /* Align the table to the left */
+  width: auto; /* Adjust the width as needed */
+  border-collapse: collapse; /* Remove spacing between table cells */
+  background-color: #fff; /* Add a background color */
+  border: 1px solid #ddd; /* Add a border */
+  border-radius: 8px; /* Add rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+}
+
+.single-column-table th,
+.single-column-table td {
+  padding: 10px; /* Add padding to cells */
+  text-align: left; /* Align text to the left */
+  border-bottom: 1px solid #ddd; /* Add a border between rows */
+}
+
+.single-column-table th {
+  background-color: #007bff; /* Add a background color for the header */
+  color: white; /* Make the text white */
+  font-weight: bold; /* Make the text bold */
+}
+
+.single-column-table tr:last-child td {
+  border-bottom: none; /* Remove the border for the last row */
+}
+
+/* RoleSelectionPage styles */
+.container {
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  width: 90%;
+  animation: fadeIn 1s ease-in-out;
+}
+
+h3 {
+  color: #1976d2;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.grid-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.card {
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 250px;
+  text-align: center;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-content {
+  padding: 20px;
+}
+
+.card h5 {
+  color: #444;
+  margin-bottom: 15px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .grid-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .card {
+    width: 100%;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
