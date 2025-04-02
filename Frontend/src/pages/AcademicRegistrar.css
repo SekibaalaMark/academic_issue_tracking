@@ -1,44 +1,107 @@
 .academic-registrar-container {
-    padding: 1rem;
-    font-family: Arial, sans-serif;
-  }
-  
-  .filter-container {
-    margin-bottom: 1rem;
-  }
-  
-  .filter-container label {
-    margin-right: 15px;
-  }
-  
-  .issues-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-  }
-  
-  .issues-table th,
-  .issues-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  .issues-table th {
-    background-color: #f2f2f2;
-  }
-  
-  .resolve-btn {
-    margin-left: 10px;
-    padding: 5px 10px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  
-  .resolve-btn:hover {
-    background-color: #218838;
-  }
-  
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #f8f9fa; /* Light gray background */
+  padding: 20px;
+  color: #333; /* Dark text */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-title {
+  font-size: 22px;
+  margin-bottom: 25px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li {
+  padding: 12px 15px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  color: #333;
+  transition: background 0.3s ease-in-out;
+}
+
+.sidebar-nav li:hover {
+  background-color: #e9ecef; /* Slightly darker on hover */
+  border-radius: 5px;
+}
+
+.sidebar-nav li i {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #007bff; /* Blue icons */
+}
+
+.sidebar-nav li a {
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.sidebar-nav li a:hover {
+  color: #0056b3; /* Darker blue on hover */
+}
+
+/* Active link */
+.sidebar-nav li.active {
+  background-color: #d4edda; /* Light green */
+  font-weight: bold;
+  border-left: 4px solid #008000;
+}
+
+/* Filtering Controls */
+.filter-container {
+  margin-bottom: 1rem;
+}
+
+.filter-container label {
+  margin-right: 15px;
+}
+
+/* Issues Table */
+.issues-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.issues-table th,
+.issues-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.issues-table th {
+  background-color: #f2f2f2;
+}
+
+/* Resolve Button */
+.resolve-btn {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.resolve-btn:hover {
+  background-color: #218838;
+}

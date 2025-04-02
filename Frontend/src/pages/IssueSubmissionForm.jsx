@@ -111,7 +111,7 @@ const IssueSubmissionForm = () => {
         <button type="submit">Submit Issue</button>
       </form>
       <div className="button-group">
-        <button onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
+        <button onClick={() => navigate('/Students')}>Go to Dashboard</button>
         <button onClick={() => navigate('/issues')}>View Issues</button>
       </div>
     </div>

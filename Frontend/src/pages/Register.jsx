@@ -7,7 +7,9 @@ const Register = () => {
     firstName: "",
     lastName: "",
     userType: "",
-    email: "",
+    studentNumberOrStaffId: "",
+    useremail: "",
+    username: "",
     password: "",
     confirmPassword: "",
   });
@@ -77,11 +79,20 @@ const Register = () => {
           <option value="AcademicRegistrar">Academic Registrar</option>
         </select>
 
-        <label>Student Number*</label>
+        <label>Student Number or Staff Id*</label>
         <input
           type="number"
-          name="studentNumber"
-          value={formData.studentNumber}
+          name="studentNumberOrStaffId"
+          value={formData.studentNumberOrStaffId}
+          onChange={handleChange}
+          required
+        />
+
+        <label>User Email*</label>
+        <input
+          type="text"
+          name="useremail"
+          value={formData.useremail}
           onChange={handleChange}
           required
         />

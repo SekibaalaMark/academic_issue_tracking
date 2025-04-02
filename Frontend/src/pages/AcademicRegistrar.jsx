@@ -1,45 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import styled from "styled-components";
+import "./AcademicRegistrar.css"; // Import the separate CSS file
 
-// Styled components for the table and controls
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-`;
-
-const Th = styled.th`
-  border: 1px solid #ddd;
-  padding: 8px;
-  background-color: #f2f2f2;
-`;
-
-const Td = styled.td`
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-`;
-
-const FilterContainer = styled.div`
-  margin-top: 1rem;
-`;
-
-const Button = styled.button`
-  margin: 0 0.5px;
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-function AcademicRegistrar() {
+const AcademicRegistrar = () => {
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
@@ -50,27 +13,17 @@ function AcademicRegistrar() {
   useEffect(() => {
     axios
       .get("http://localhost:5000/issues")
-      .then((res) => {
-        setIssues(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch((err) => {
-        console.error("Error fetching issues:", err);
-        setIssues([]);
-      });
+      .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error fetching issues:", err));
 
     // Fetch lecturers
     axios
       .get("http://localhost:5000/lecturers")
-      .then((res) => {
-        setLecturers(Array.isArray(res.data) ? res.data : []);
-      })
-      .catch((err) => {
-        console.error("Error fetching lecturers:", err);
-        setLecturers([]);
-      });
+      .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error fetching lecturers:", err));
   }, []);
 
-  // Compute filtered issues
+  // Filter issues based on user input
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueType === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
@@ -81,11 +34,11 @@ function AcademicRegistrar() {
     return matchType && matchStatus && matchLecturer;
   });
 
-  // Handle assigning an issue to a lecturer
+  // Assign an issue to a lecturer
   const handleAssign = (issueId, lecturerId) => {
     axios
       .patch(`/api/issues/${issueId}/assign`, { assigned_to: lecturerId })
-      .then((res) => {
+      .then(() => {
         setIssues((prevIssues) =>
           prevIssues.map((issue) =>
             issue.id === issueId
@@ -95,18 +48,15 @@ function AcademicRegistrar() {
         );
         alert("Issue assigned successfully!");
       })
-      .catch((err) => {
-        console.error("Error assigning issue:", err);
-        alert("Error assigning issue.");
-      });
+      .catch((err) => alert("Error assigning issue."));
   };
 
-  // Handle resolving an issue
+  // Resolve an issue
   const handleResolve = (issueId) => {
     if (window.confirm("Are you sure you want to mark this issue as resolved?")) {
       axios
         .patch(`/api/issues/${issueId}/resolve`, { status: "resolved" })
-        .then((res) => {
+        .then(() => {
           setIssues((prevIssues) =>
             prevIssues.map((issue) =>
               issue.id === issueId ? { ...issue, status: "resolved" } : issue
@@ -114,30 +64,29 @@ function AcademicRegistrar() {
           );
           alert("Issue marked as resolved.");
         })
-        .catch((err) => {
-          console.error("Error resolving issue:", err);
-          alert("Error resolving issue.");
-        });
+        .catch(() => alert("Error resolving issue."));
     }
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div className="academic-registrar-container">
       <h1>Academic Registrar Dashboard</h1>
 
-      {/* Filtering Controls */}
-      <FilterContainer>
+      {/* Filters */}
+      <div className="filter-container">
         <label>
-          Filter by Issue Type:&nbsp;
+          Filter by Issue Category:
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
             <option value="">All</option>
             <option value="missing marks">Missing Marks</option>
-            <option value="appeal">Appeal</option>
-            <option value="corrections">Corrections</option>
+            <option value="wrong marks">wrong marks</option>
+            <option value="wrong grading">wrong grading</option>
+            <option value="other">other</option>
           </select>
         </label>
-        <label style={{ marginLeft: "1rem" }}>
-          Filter by Status:&nbsp;
+
+        <label>
+          Filter by Status:
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
             <option value="">All</option>
             <option value="pending">Pending</option>
@@ -145,8 +94,9 @@ function AcademicRegistrar() {
             <option value="resolved">Resolved</option>
           </select>
         </label>
-        <label style={{ marginLeft: "1rem" }}>
-          Filter by Assigned Lecturer:&nbsp;
+
+        <label>
+          Filter by Lecturer:
           <input
             type="text"
             value={filterLecturer}
@@ -154,32 +104,32 @@ function AcademicRegistrar() {
             placeholder="Lecturer's name"
           />
         </label>
-      </FilterContainer>
+      </div>
 
       {/* Issues Table */}
-      <Table>
+      <table className="issues-table">
         <thead>
           <tr>
-            <Th>ID</Th>
-            <Th>Course Code</Th>
-            <Th>Issue Type</Th>
-            <Th>Description</Th>
-            <Th>Status</Th>
-            <Th>Assigned Lecturer</Th>
-            <Th>Actions</Th>
+            <th>ID</th>
+            <th>Course Code</th>
+            <th>Issue Category</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Assigned Lecturer</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {filteredIssues.length > 0 ? (
             filteredIssues.map((issue) => (
               <tr key={issue.id}>
-                <Td>{issue.id}</Td>
-                <Td>{issue.courseCode}</Td>
-                <Td>{issue.issueType}</Td>
-                <Td>{issue.description}</Td>
-                <Td>{issue.status}</Td>
-                <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
-                <Td>
+                <td>{issue.id}</td>
+                <td>{issue.courseCode}</td>
+                <td>{issue.issueCategory}</td>
+                <td>{issue.description}</td>
+                <td>{issue.status}</td>
+                <td>{issue.assignedLecturer || "Not Assigned"}</td>
+                <td>
                   <select onChange={(e) => handleAssign(issue.id, e.target.value)}>
                     <option value="">Select Lecturer</option>
                     {lecturers.map((lecturer) => (
@@ -189,20 +139,22 @@ function AcademicRegistrar() {
                     ))}
                   </select>
                   {issue.status !== "resolved" && (
-                    <Button onClick={() => handleResolve(issue.id)}>Resolve</Button>
+                    <button className="resolve-btn" onClick={() => handleResolve(issue.id)}>
+                      Resolve
+                    </button>
                   )}
-                </Td>
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <Td colSpan="7">No issues found.</Td>
+              <td colSpan="7">No issues found.</td>
             </tr>
           )}
         </tbody>
-      </Table>
+      </table>
     </div>
   );
-}
+};
 
 export default AcademicRegistrar;
