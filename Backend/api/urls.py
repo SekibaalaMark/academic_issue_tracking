@@ -22,10 +22,8 @@ router.register(r'raise-issue',StudentCreateIssueView,basename='student-raise-is
 
 urlpatterns = [
     path('',include(router.urls)),
-    path('register/student/',UserRegistrationView.as_view(),name = "register_users"),
-    path("login/student/",student_login,name="student-login"),
-    path("login/lecturer/",lecturer_login,name="lecturer-login"),
-    path("login/registrar/",registrar_login,name="registrar-login"),
+    path('registration/',UserRegistrationView.as_view(),name = "register_users"),
+    path("login/",login,name="login"),
     path('logout/',logout,name="logout"),
     path('filter_issues',filter_issues,name="filter_issues"),
     path('verify-email/',VerifyEmailView.as_view(),name="email-verification"),
