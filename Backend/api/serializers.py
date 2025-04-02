@@ -152,6 +152,54 @@ class CreateIssueSerializer(ModelSerializer):
 
 
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    code = serializers.IntegerField(required=True)
+    email = serializers.EmailField(required=True)
+
+
+class ResendVerificationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)   
+
+
+
+
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+class VerifyPasswordResetCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.IntegerField(required=True)
+
+class SetNewPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    code = serializers.IntegerField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    password_confirmation = serializers.CharField(required=True, write_only=True)
+    
+    def validate(self, data):
+        # Check if passwords match
+        if data['password'] != data['password_confirmation']:
+            raise serializers.ValidationError("Passwords do not match")
+        
+        # Validate password strength if needed
+        password = data['password']
+        if len(password) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long")
+            
+        return data
+
+
+
+
+
+
 
 
 
@@ -331,7 +379,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
 
 
 
-class StudentRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     class Meta:
@@ -368,11 +416,33 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             try:
                 staff_id_or_student_no = int(staff_id_or_student_no)
             except ValueError:
-                raise serializers.ValidationError('Staff  number must be an integer')
+                raise serializers.ValidationError('Invalid student number or staff id must be an integer')
+            
+        if role not in dict(CustomUser .USER_CHOICES):
+            raise serializers.ValidationError("Invalid role selected")
+
+        if role == 'student':
+            if staff_id_or_student_no not in STUDENT_IDENTIFICATION_NUMBERS:
+                raise serializers.ValidationError('Student number does not exist')
+            
+
+
+        if role == 'lecturer':
+            if staff_id_or_student_no not in LECTURE_IDS:
+                raise serializers.ValidationError('Staff Id does not exist')
+            
+        if role == 'registrar':
+            if staff_id_or_student_no not in REGISTRA_IDS:
+                raise serializers.ValidationError('Staff Id does not exist')
+        
+
+
+            #raise serializers.ValidationError("Role must be student")
+        
+            
 
         # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
-        if staff_id_or_student_no not in STUDENT_IDENTIFICATION_NUMBERS:
-            raise serializers.ValidationError('Student number does not exist')
+        
         
         if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
             raise serializers.ValidationError('Student with this student number already exists')
@@ -400,11 +470,7 @@ class StudentRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         
         # Check if role is valid
-        if role not in dict(CustomUser .USER_CHOICES):
-            raise serializers.ValidationError("Invalid role selected")
-
-        if role != 'student':
-            raise serializers.ValidationError("Role must be student")
+        
         
         return data
 
@@ -509,7 +575,7 @@ class LecturerRegistrationSerializer(serializers.ModelSerializer):
 
 
 
-
+'''
 class LecturerRegistrationSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
@@ -685,52 +751,7 @@ class RegistrarRegistrationSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])  # Hash the password
         user.save()
         return user
-
-
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
-
-
-class VerifyEmailSerializer(serializers.Serializer):
-    code = serializers.IntegerField(required=True)
-    email = serializers.EmailField(required=True)
-
-
-class ResendVerificationCodeSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)   
-
-
-
-
-
-
-class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-
-class VerifyPasswordResetCodeSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    code = serializers.IntegerField(required=True)
-
-class SetNewPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
-    code = serializers.IntegerField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
-    password_confirmation = serializers.CharField(required=True, write_only=True)
-    
-    def validate(self, data):
-        # Check if passwords match
-        if data['password'] != data['password_confirmation']:
-            raise serializers.ValidationError("Passwords do not match")
-        
-        # Validate password strength if needed
-        password = data['password']
-        if len(password) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters long")
-            
-        return data
-
+'''
 
 
 

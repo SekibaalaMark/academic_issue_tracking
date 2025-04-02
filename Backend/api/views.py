@@ -260,7 +260,7 @@ class StudentRegistrationView(APIView):
 
 
 
-
+'''
 class LecturerRegistrationView(APIView):
     def post(self,request):
         data = request.data 
@@ -362,13 +362,13 @@ class RegistrarRegistrationView(APIView):
                 }
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+'''
 
 
-
-class StudentRegistrationView(APIView):
+class UserRegistrationView(APIView):
     def post(self,request):
         data = request.data 
-        serializer = StudentRegistrationSerializer(data=data)
+        serializer = UserRegistrationSerializer(data=data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
