@@ -17,10 +17,10 @@ class ProgrammeSerializer(ModelSerializer):
         model = Programme
         fields = '__all__'
 
-class CourseUnitSerializer(ModelSerializer):
+'''class CourseUnitSerializer(ModelSerializer):
     class Meta:
         model = Course_unit
-        fields = '__all__'
+        fields = '__all__' '''
 
 class UserSerializer(ModelSerializer):
     class Meta:
@@ -41,7 +41,7 @@ class IssueSerializer(ModelSerializer):
     class Meta:
         model= Issue
         fields = ['id','last_updated','created_at','status','department','registrar','student','attachment',
-                  'description','category','year_of_study','course_code','couse_name','programme','lecturer']
+                  'description','category','year_of_study','course_code','course_name','programme','lecturer']
         read_only_fields = ['student', 'lecturer', 'created_at', 'last_updated']
 
 
@@ -103,6 +103,60 @@ class AssignIssueSerializer(serializers.ModelSerializer):
         return instance
 
 
+
+
+
+class CreateIssueSerializer(ModelSerializer):
+    department = serializers.CharField(max_length=50)
+    registrar = serializers.CharField(max_length=100)
+    programme = serializers.CharField(max_length=110)
+    
+    class Meta:
+        model = Issue
+        fields = [
+            'id', 'department', 'registrar', 'attachment', 'description',
+            'category', 'year_of_study', 'course_code', 'course_name', 'programme'
+        ]
+        read_only_fields = ['student', 'created_at', 'last_updated', 'status']
+    
+    def validate_department(self, value):
+        try:
+            department = Department.objects.get(name=value)
+            return department
+        except Department.DoesNotExist:
+            raise serializers.ValidationError(f"Department '{value}' does not exist.")
+    
+    def validate_registrar(self, value):
+        try:
+            registrar = CustomUser.objects.get(username=value, role='registrar')
+            return registrar
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError(f"Registrar with username '{value}' does not exist.")
+    
+    def validate_programme(self, value):
+        try:
+            programme = Programme.objects.get(programme_name=value)
+            return programme
+        except Programme.DoesNotExist:
+            raise serializers.ValidationError(f"Programme '{value}' does not exist.")
+    
+    def create(self, validated_data):
+        print(f"Creating issue with data: {validated_data}")
+        
+        # Create the issue
+        issue = Issue.objects.create(**validated_data)
+        
+        print(f"Issue created with ID: {issue.id}")
+        
+        return issue
+
+
+
+
+
+
+
+
 # class AssignIssueSerializer(serializers.ModelSerializer):
 #     lecturer = serializers.SlugRelatedField(
 #         slug_field='username',  # Use the 'username' field of CustomUser
@@ -143,6 +197,10 @@ class CreateIssueSerializer(ModelSerializer):
         }
 '''
 
+
+
+
+'''
 class CreateIssueSerializer(ModelSerializer):
     class Meta:
         model = Issue
@@ -163,7 +221,7 @@ class CreateIssueSerializer(ModelSerializer):
         print(f"Issue created with ID: {issue.id}")
         
         return issue
-
+'''
 
 
 

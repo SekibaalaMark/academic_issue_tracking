@@ -11,12 +11,12 @@ from django.utils import timezone
 
 # Create your models here.
 
-class Course_unit(models.Model):
+'''class Course_unit(models.Model):
     course_name = models.CharField(max_length=100)
     course_code=models.CharField(max_length=20)
 
     def __str__(self):
-        return self.course_name
+        return self.course_name'''
 
 class Programme(models.Model):
     PROGRAMME_CHOICES = [
@@ -26,7 +26,7 @@ class Programme(models.Model):
         ('BLIS','Bachelor of Library and Information Sciences')
     ]
     programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES)
-    course_unit=models.ManyToManyField(Course_unit,related_name="course_units")
+    #course_unit=models.ManyToManyField(Course_unit,related_name="course_units")
 
     def __str__(self):
         return self.programme_name
@@ -44,7 +44,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_email_verified = models.BooleanField(default=False)
     username=models.CharField(max_length=100,unique=True)
-    programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
+    #programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
     def __str__(self):
         return self.username
     
@@ -98,7 +98,7 @@ class Issue(models.Model):
     ]
     student = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     programme = models.ForeignKey(Programme,related_name='programmes',on_delete=models.CASCADE,null=True,blank=True)
-    couse_name = models.CharField(max_length=150,null=True,help_text="course name")
+    course_name = models.CharField(max_length=150,null=True,help_text="course name")
     course_code = models.CharField(max_length=50,null=True,help_text="course code")
     year_of_study = models.CharField(max_length=50,choices=YEAR_CHOICES,help_text="your year of study")
     lecturer = models.ForeignKey(CustomUser,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"lecturer"},null=True,blank=True)

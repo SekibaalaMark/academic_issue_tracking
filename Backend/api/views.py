@@ -1,4 +1,6 @@
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from .serializers import *
 from django.shortcuts import render,redirect
 from .models import *
@@ -146,6 +148,39 @@ def filter_issues(request):
 
 
 
+
+
+
+class StudentCreateIssueView(viewsets.ModelViewSet):
+    serializer_class = CreateIssueSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        # Check if user is a student
+        if self.request.user.role != 'student':
+            raise PermissionDenied("Only students can raise issues.")
+        
+        # Save with the current user as the student
+        serializer.save(student=self.request.user)
+        print(f"Issue created with ID: {serializer.instance.id}")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {'success': True, 'message': 'Issue submitted successfully', 'data': serializer.data},
+            status=status.HTTP_201_CREATED, 
+            headers=headers
+        )
+
+
+
+
+
+
+'''
 class StudentCreateIssueView(viewsets.ModelViewSet):
     serializer_class = CreateIssueSerializer
     permission_classes=[IsAuthenticated]
@@ -160,11 +195,11 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
         
         # Add debug print to confirm save was called
         print(f"Issue created with ID: {serializer.instance.id}")
+'''
 
 
 
-
-    '''
+'''
     def perform_create(self, serializer):
         if self.request.user.role =='student':
             if serializer.is_valid():
