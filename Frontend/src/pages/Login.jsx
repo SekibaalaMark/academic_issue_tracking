@@ -4,19 +4,20 @@ import axios from "axios";
 import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState(""); // Changed from username to email
+  const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); // State for "Remember Me" checkbox
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError(""); 
 
     try {
       // Single API call to login endpoint
       const response = await axios.post("http://127.0.0.1:8000/admin/", {
-        email,
+        username,
         password,
       });
       console.log(response);
@@ -38,12 +39,12 @@ const Login = () => {
             navigate("/AcademicRegistrar");
             break;
           default:
-            navigate("/dashboard"); // Default fallback
+            navigate("/home"); // Default case if role is not recognized
         }
       }
     } catch (err) {
       console.log(err);
-      setError("Invalid email or password");
+      setError("Invalid username or password");
     }
   };
 
@@ -55,12 +56,13 @@ const Login = () => {
         <div className="login-header">Login</div>
         <div className="login-form">
           <form onSubmit={handleSubmit}>
-            <label htmlFor="email">E-Mail Address</label>
+            <label htmlFor="email">username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter your username"
+              value={username}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
@@ -70,6 +72,7 @@ const Login = () => {
               type="password"
               id="password"
               name="password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

@@ -1,6 +1,6 @@
+/* src/pages/Students.css */
 
-
-
+/* Overall layout */
 .student-dashboard {
   display: flex;
   min-height: 100vh;
@@ -9,19 +9,18 @@
 
 /* Sidebar */
 .sidebar {
-  width: 250px; /* Adjusted for better spacing */
-  background-color: #f8f9fa; /* Light gray background */
+  width: 250px;
+  background-color: #008000; /* Green background */
   padding: 20px;
-  color: #333; /* Dark text */
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  color: #fff;
 }
 
 .sidebar-title {
-  font-size: 22px;
-  margin-bottom: 25px;
+  font-size: 20px;
+  margin-bottom: 20px;
   text-align: center;
   font-weight: bold;
-  color: #333;
+  color: #fff;
 }
 
 .sidebar-nav {
@@ -31,70 +30,68 @@
 }
 
 .sidebar-nav li {
-  padding: 12px 15px;
+  padding: 10px 0;
   cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  color: #333;
-  transition: background 0.3s ease-in-out;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .sidebar-nav li:hover {
-  background-color: #e9ecef; /* Slightly darker on hover */
-  border-radius: 5px;
-}
-
-.sidebar-nav li i {
-  margin-right: 10px;
-  font-size: 18px;
-  color: #007bff; /* Blue icons */
-}
-
-.sidebar-nav li a {
-  text-decoration: none;
-  color: inherit;
-  width: 100%;
-}
-
-.sidebar-nav li a:hover {
-  color: #0056b3; /* Darker blue on hover */
-}
-
-/* Active link */
-.sidebar-nav li.active {
-  background-color: #d4edda; /* Light green */
-  font-weight: bold;
-  border-left: 4px solid #008000;
+  background-color: #006400; /* Darker green on hover */
 }
 
 /* Main content */
 .main-content {
   flex: 1;
-  padding: 25px;
+  padding: 20px;
 }
 
+/* Page Title */
 .page-title {
-  font-size: 26px;
+  font-size: 24px;
   margin-bottom: 20px;
   color: #333;
-  font-weight: bold;
 }
 
-.section-title {
-  font-size: 18px;
-  margin: 20px 0 15px;
+/* Dashboard Summary */
+.dashboard-summary {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  background-color: #e0ffe0; /* Light green background */
+  padding: 10px 15px;
+  border-radius: 5px;
+  text-align: center;
+  flex: 1;
+}
+
+.summary-label {
+  font-weight: bold;
+  color: #008000;
+}
+
+.summary-value {
+  font-size: 1.2rem;
   color: #333;
-  font-weight: bold;
 }
 
-/* Issue form */
+/* Issue Submission Form */
 .issue-form {
   background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 25px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.issue-form .section-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
 }
 
 .issue-form .form-group {
@@ -103,7 +100,7 @@
 
 .issue-form label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   font-weight: bold;
   color: #333;
 }
@@ -112,86 +109,52 @@
 .issue-form select,
 .issue-form textarea {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 15px;
+  border-radius: 4px;
+  font-size: 14px;
   box-sizing: border-box;
 }
 
 .issue-form textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
 }
 
 .btn-submit {
-  padding: 12px 20px;
+  padding: 10px 20px;
   background-color: #008000; /* Green theme */
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
 }
 
 .btn-submit:hover {
   background-color: #006400; /* Darker green */
 }
 
-/* Issues table */
+/* Issues Table */
+.issues-table-container {
+  margin-top: 20px;
+}
+
 .issues-table {
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
-  border-radius: 8px;
+  border-radius: 5px;
   overflow: hidden;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .issues-table th,
 .issues-table td {
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid #ddd;
   text-align: left;
 }
 
 .issues-table tr:hover {
   background-color: #f1f1f1;
-}
-
-.btn-action {
-  margin-right: 6px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  background-color: #008000;
-  color: #fff;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-.btn-action:hover {
-  background-color: #006400;
-}
-
-/* Notifications */
-.notifications-list {
-  list-style: none;
-  padding: 0;
-}
-
-.notification-item {
-  margin-bottom: 12px;
-}
-
-.notification-item a {
-  cursor: pointer;
-  color: #008000; /* Green text for links */
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.notification-item a:hover {
-  text-decoration: underline;
 }

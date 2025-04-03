@@ -1,17 +1,13 @@
+// src/pages/Students.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Students.css";
 
-// Define all API endpoints for easy maintenance
+// Define API endpoints
 const ENDPOINTS = {
   departments: "http://127.0.0.1:8000/api/departments/",
-  issues: "http://127.0.0.1:8000/api/issues/",
-  users: "http://127.0.0.1:8000/api/users/",
-  lecturerIssueManagement: "http://127.0.0.1:8000/api/lecturer-issue-management/",
   studentIssues: "http://127.0.0.1:8000/api/student-issues/",
-  registrarIssuesManagement: "http://127.0.0.1:8000/api/registrar-issues-management/",
-  assignLecturer: "http://127.0.0.1:8000/api/assignlecturer/",
   raiseIssue: "http://127.0.0.1:8000/api/raise-issue/"
 };
 
@@ -34,7 +30,7 @@ const Students = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch departments using the defined endpoint
+    // Fetch departments
     axios
       .get(ENDPOINTS.departments, {
         headers: { Authorization: `Token ${authToken}` },
@@ -49,7 +45,7 @@ const Students = () => {
         console.error("Error fetching departments:", err)
       );
 
-    // Fetch student issues using the defined endpoint
+    // Fetch student issues
     axios
       .get(ENDPOINTS.studentIssues, {
         headers: { Authorization: `Token ${authToken}` },
@@ -101,6 +97,7 @@ const Students = () => {
           .catch((err) =>
             console.error("Error refreshing issues:", err)
           );
+        // Reset form fields (except department)
         setFormData((prev) => ({
           ...prev,
           course_name: "",
@@ -121,9 +118,11 @@ const Students = () => {
     navigate(`/issue-details/${issueId}`);
   };
 
-  const handleNotificationClick = (notificationId) => {
-    navigate(`/notification-details/${notificationId}`);
-  };
+  // Calculate issue statistics
+  const totalIssues = issues.length;
+  const pendingIssues = issues.filter((issue) => issue.status === "pending").length;
+  const inProgressIssues = issues.filter((issue) => issue.status === "in_progress").length;
+  const resolvedIssues = issues.filter((issue) => issue.status === "resolved").length;
 
   return (
     <div className="student-dashboard">
@@ -132,7 +131,7 @@ const Students = () => {
         <h2 className="sidebar-title">Student Dashboard</h2>
         <ul className="sidebar-nav">
           <li onClick={() => navigate("/")}>Home</li>
-          <li onClick={() => navigate("#IssueTable")}>Submit Issue</li>
+          <li onClick={() => navigate("#issue-form")}>Submit Issue</li>
           <li onClick={() => navigate("/notifications")}>Notifications</li>
           <li onClick={() => navigate("/login")}>Logout</li>
         </ul>
@@ -141,6 +140,28 @@ const Students = () => {
       {/* Main Content */}
       <main className="main-content">
         <h1 className="page-title">My Issues</h1>
+
+        {/* Dashboard Summary */}
+        <div className="dashboard-summary">
+          <div className="summary-item">
+            <span className="summary-label">Total Issues:</span>
+            <span className="summary-value">{totalIssues}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Pending:</span>
+            <span className="summary-value">{pendingIssues}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">In Progress:</span>
+            <span className="summary-value">{inProgressIssues}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Resolved:</span>
+            <span className="summary-value">{resolvedIssues}</span>
+          </div>
+        </div>
+
+        {/* Issue Submission Form */}
         <div className="issue-form" id="issue-form">
           <div className="section-title">Raise a New Issue</div>
           {error && <div className="error-message">{error}</div>}
@@ -237,6 +258,7 @@ const Students = () => {
           </form>
         </div>
 
+        {/* Issues Table */}
         <div className="issues-table-container">
           <h2 className="section-title">My Logged Issues</h2>
           {issues.length === 0 ? (
