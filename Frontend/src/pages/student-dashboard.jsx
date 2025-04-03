@@ -4,7 +4,7 @@ import { MdDashboard } from "react-icons/md";
 import { FaFileAlt } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom"; // Use React Router's navigation
-import "./student-dashboard.css";
+// import "./student-dashboard.css";
 
 // Create axios instance with base URL
 const api = axios.create({
