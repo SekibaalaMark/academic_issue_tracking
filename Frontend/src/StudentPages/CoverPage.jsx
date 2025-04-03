@@ -6,7 +6,7 @@ const CoverPage = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate("/login"); // Navigate to Login page
+    navigate("/students"); // Navigate to Login page
   };
 
   const handleRegister = () => {
