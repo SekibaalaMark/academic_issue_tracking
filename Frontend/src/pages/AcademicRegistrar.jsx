@@ -488,6 +488,6 @@ function AcademicRegistrar() {
       </div>
     </div>
   );
-}
+};
 
 export default AcademicRegistrar;
