@@ -32,8 +32,8 @@ class UserSerializer(ModelSerializer):
 
 
 
-# Simple Dashboard Count Serializers
 
+#Dashboard Count Serializers
 class StudentDashboardCountSerializer(serializers.Serializer):
     total_issues = serializers.IntegerField()
     pending_count = serializers.IntegerField()
@@ -100,37 +100,6 @@ class AssignIssueSerializer(serializers.ModelSerializer):
 
 
 
-
-'''
-class AssignIssueSerializer(serializers.ModelSerializer):
-    lecturer = serializers.SlugRelatedField(
-        slug_field='username',
-        queryset=CustomUser.objects.filter(role='lecturer'),
-        allow_null=False
-    )
-
-    class Meta:
-        model = Issue
-        fields = ['lecturer']
-
-    def validate_lecturer(self, value):
-        # Additional validation
-        if value and value.role != 'lecturer':
-            raise serializers.ValidationError("The assigned user must be a lecturer.")
-        return value
-        
-    def update(self, instance, validated_data):
-        # Explicitly update the lecturer field
-        if 'lecturer' in validated_data:
-            instance.lecturer = validated_data.get('lecturer')
-            instance.save()
-        return instance
-'''
-
-
-
-
-
 class CreateIssueSerializer(ModelSerializer):
     department = serializers.CharField(max_length=50)
     registrar = serializers.CharField(max_length=100)
@@ -166,67 +135,10 @@ class CreateIssueSerializer(ModelSerializer):
             raise serializers.ValidationError(f"Programme '{value}' does not exist.")
     
     def create(self, validated_data):
-        print(f"Creating issue with data: {validated_data}")
-        
-        # Create the issue
+        # Creating the issue
         issue = Issue.objects.create(**validated_data)
-        
-        # Debug print to verify registrar assignment
-        print(f"Issue created with ID: {issue.id}, assigned to registrar: {issue.registrar.username if issue.registrar else 'None'}")
-        
         return issue
-
-
-
-
-
-
-
-'''
-class CreateIssueSerializer(ModelSerializer):
-    department = serializers.CharField(max_length=50)
-    registrar = serializers.CharField(max_length=100)
-    programme = serializers.CharField(max_length=110)
     
-    class Meta:
-        model = Issue
-        fields = [
-            'id', 'department', 'registrar', 'attachment', 'description',
-            'category', 'year_of_study', 'course_code', 'course_name', 'programme'
-        ]
-        read_only_fields = ['student', 'created_at', 'last_updated', 'status']
-    
-    def validate_department(self, value):
-        try:
-            department = Department.objects.get(name=value)
-            return department
-        except Department.DoesNotExist:
-            raise serializers.ValidationError(f"Department '{value}' does not exist.")
-    
-    def validate_registrar(self, value):
-        try:
-            registrar = CustomUser.objects.get(username=value, role='registrar')
-            return registrar
-        except CustomUser.DoesNotExist:
-            raise serializers.ValidationError(f"Registrar with username '{value}' does not exist.")
-    
-    def validate_programme(self, value):
-        try:
-            programme = Programme.objects.get(programme_name=value)
-            return programme
-        except Programme.DoesNotExist:
-            raise serializers.ValidationError(f"Programme '{value}' does not exist.")
-    
-    def create(self, validated_data):
-        print(f"Creating issue with data: {validated_data}")
-        
-        # Create the issue
-        issue = Issue.objects.create(**validated_data)
-        
-        print(f"Issue created with ID: {issue.id}")
-        
-        return issue
-'''
 
 
 class LoginSerializer(serializers.Serializer):
@@ -245,8 +157,6 @@ class ResendVerificationCodeSerializer(serializers.Serializer):
 
 
 
-
-
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -261,11 +171,11 @@ class SetNewPasswordSerializer(serializers.Serializer):
     password_confirmation = serializers.CharField(required=True, write_only=True)
     
     def validate(self, data):
-        # Check if passwords match
+        # Checking if passwords match
         if data['password'] != data['password_confirmation']:
             raise serializers.ValidationError("Passwords do not match")
         
-        # Validate password strength if needed
+        # Validating password strength
         password = data['password']
         if len(password) < 8:
             raise serializers.ValidationError("Password must be at least 8 characters long")
@@ -287,12 +197,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'username': {'required': True},  # Username is required
             'first_name': {'required': True},  # First name is required
             'last_name': {'required': True},  # Last name is required
-            'role':{'required':True},#Role is required on registration
-            'staff_id_or_student_no':{'required':True},# required on registration
-            
-            
+            'role':{'required':True},
+            'staff_id_or_student_no':{'required':True},
         }
-
 
     def validate(self, data):
         username = data.get('username')
@@ -321,8 +228,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             if staff_id_or_student_no not in STUDENT_IDENTIFICATION_NUMBERS:
                 raise serializers.ValidationError('Student number does not exist')
             
-
-
         if role == 'lecturer':
             if staff_id_or_student_no not in LECTURE_IDS:
                 raise serializers.ValidationError('Staff Id does not exist')
@@ -330,15 +235,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if role == 'registrar':
             if staff_id_or_student_no not in REGISTRA_IDS:
                 raise serializers.ValidationError('Staff Id does not exist')
-        
-
-
-            #raise serializers.ValidationError("Role must be student")
-        
-            
-
-        # Check if staff_id_or_student_no is in IDENTIFICATION_NUMBERS
-        
         
         if staff_id_or_student_no and CustomUser .objects.filter(staff_id_or_student_no=staff_id_or_student_no).exists():
             raise serializers.ValidationError('Student with this student number already exists')
@@ -361,9 +257,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # Check if password and password confirmation match
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
-        
-        # Check if role is valid
-        
         
         return data
 

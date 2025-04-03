@@ -9,17 +9,6 @@ load_dotenv()
 
 
 
-'''
-SIMPLE_JWT = {
-
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=300),  # Set access token expiry time
-
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token expiry time
-
-}'
-'''
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -104,12 +93,30 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Backend.wsgi.application'
 
 # Database
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'AITs',
+        'USER': 'postgres',
+        'PASSWORD': 'Jahbless256*',  # The password you set during PostgreSQL installation
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+
+
+
+
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+}'
+'''
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
