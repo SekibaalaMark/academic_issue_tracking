@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext";
 
+
 import CoverPage from "./StudentPages/CoverPage.jsx";
 
 import Login from "./StudentPages/Login.jsx";
@@ -10,9 +11,14 @@ import RegisterForm from "./StudentPages/RegisterForm.jsx";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 
 import  Logout from "./components/Logout"; // Import  Logout from "./StudentComponents/Logout";
+
 import { Container } from "@mui/material";        
 import Students from "./pages/Students.jsx";
 import "./App.css";   
+
+
+
+
 import AcademicRegistrar from "./pages/AcademicRegistrar.jsx";
 // import LecturerDashboard from "./pages/LecturerDashboard.jsx"; // Added LecturerDashboard
 
@@ -65,7 +71,11 @@ const AppContent = () => {
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
+
           
+
+          
+
 
           {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
           
