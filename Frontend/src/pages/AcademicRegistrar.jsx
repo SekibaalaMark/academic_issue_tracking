@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
 
-
+// Define API endpoints (adjust as needed)
 const ENDPOINTS = {
   issues: "http://127.0.0.1:8000/api/registrar-issues-management/",
   lecturers: "http://127.0.0.1:8000/api/lecturers/",
@@ -16,9 +16,9 @@ const AcademicRegistrar = () => {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-
-  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState("home"); // "home" or "management"
   const authToken = localStorage.getItem("authToken");
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch registrar issues
@@ -38,7 +38,13 @@ const AcademicRegistrar = () => {
       .catch((err) => console.error("Error fetching lecturers:", err));
   }, [authToken]);
 
-  // Filter issues based on user input
+  // Calculate summary counts
+  const totalIssues = issues.length;
+  const pendingIssues = issues.filter((issue) => issue.status === "pending").length;
+  const inProgressIssues = issues.filter((issue) => issue.status === "in progress").length;
+  const resolvedIssues = issues.filter((issue) => issue.status === "resolved").length;
+
+  // Filter issues for management view
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueCategory === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
@@ -48,12 +54,6 @@ const AcademicRegistrar = () => {
       : true;
     return matchType && matchStatus && matchLecturer;
   });
-
-  // Calculate summary counts
-  const totalIssues = issues.length;
-  const pendingIssues = issues.filter((issue) => issue.status === "pending").length;
-  const inProgressIssues = issues.filter((issue) => issue.status === "in progress").length;
-  const resolvedIssues = issues.filter((issue) => issue.status === "resolved").length;
 
   // Assign an issue to a lecturer
   const handleAssign = (issueId, lecturerId) => {
@@ -100,14 +100,32 @@ const AcademicRegistrar = () => {
     }
   };
 
+  // Navigation in sidebar (e.g., Logout, Notifications, etc.)
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    navigate("/login");
+  };
+
   return (
     <div className="academic-registrar-dashboard">
       {/* Sidebar */}
       <aside className="sidebar">
         <h2 className="sidebar-title">Registrar Dashboard</h2>
         <ul className="sidebar-nav">
-          <li onClick={() => navigate("/AcademicRegistrar")}>Home</li>
-          <li onClick={() => navigate("/login")}>Logout</li>
+          <li
+            className={selectedTab === "home" ? "active" : ""}
+            onClick={() => setSelectedTab("home")}
+          >
+            Home
+          </li>
+          <li
+            className={selectedTab === "management" ? "active" : ""}
+            onClick={() => setSelectedTab("management")}
+          >
+            Issue Management
+          </li>
+          <li onClick={() => navigate("/notifications")}>Notifications</li>
+          <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
 
@@ -115,115 +133,120 @@ const AcademicRegistrar = () => {
       <main className="main-content">
         <h1 className="page-title">Academic Registrar Dashboard</h1>
 
-        {/* Dashboard Summary */}
-        <div className="dashboard-summary">
-          <div className="summary-item">
-            <span className="summary-label">Total Issues:</span>
-            <span className="summary-value">{totalIssues}</span>
+        {selectedTab === "home" && (
+          <div className="dashboard-summary">
+            <div className="summary-item">
+              <span className="summary-label">Total Issues:</span>
+              <span className="summary-value">{totalIssues}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Pending:</span>
+              <span className="summary-value">{pendingIssues}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">In Progress:</span>
+              <span className="summary-value">{inProgressIssues}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Resolved:</span>
+              <span className="summary-value">{resolvedIssues}</span>
+            </div>
           </div>
-          <div className="summary-item">
-            <span className="summary-label">Pending:</span>
-            <span className="summary-value">{pendingIssues}</span>
+        )}
+
+        {selectedTab === "management" && (
+          <div className="management-section">
+            {/* Filters */}
+            <div className="filter-container">
+              <label>
+                Filter by Issue Category:
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                  <option value="">All</option>
+                  <option value="Missing_Marks">Missing Marks</option>
+                  <option value="wrong grading">Wrong Grading</option>
+                  <option value="wrong marks">Wrong Marks</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+
+              <label>
+                Filter by Status:
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                  <option value="">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="in progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </label>
+
+              <label>
+                Filter by Lecturer:
+                <input
+                  type="text"
+                  value={filterLecturer}
+                  onChange={(e) => setFilterLecturer(e.target.value)}
+                  placeholder="Lecturer's name"
+                />
+              </label>
+            </div>
+
+            {/* Issues Table */}
+            <div className="issues-table-container">
+              <h2 className="section-title">Registrar Issue Management</h2>
+              {filteredIssues.length === 0 ? (
+                <p>No issues found.</p>
+              ) : (
+                <table className="issues-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Course Code</th>
+                      <th>Issue Category</th>
+                      <th>Description</th>
+                      <th>Status</th>
+                      <th>Assigned Lecturer</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredIssues.map((issue) => (
+                      <tr key={issue.id}>
+                        <td>{issue.id}</td>
+                        <td>{issue.courseCode}</td>
+                        <td>{issue.issueCategory}</td>
+                        <td>{issue.description}</td>
+                        <td>{issue.status}</td>
+                        <td>{issue.assignedLecturer || "Not Assigned"}</td>
+                        <td>
+                          <select
+                            onChange={(e) =>
+                              handleAssign(issue.id, e.target.value)
+                            }
+                          >
+                            <option value="">Select Lecturer</option>
+                            {lecturers.map((lecturer) => (
+                              <option key={lecturer.id} value={lecturer.id}>
+                                {lecturer.name}
+                              </option>
+                            ))}
+                          </select>
+                          {issue.status !== "resolved" && (
+                            <button
+                              className="resolve-btn"
+                              onClick={() => handleResolve(issue.id)}
+                            >
+                              Resolve
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
-          <div className="summary-item">
-            <span className="summary-label">In Progress:</span>
-            <span className="summary-value">{inProgressIssues}</span>
-          </div>
-          <div className="summary-item">
-            <span className="summary-label">Resolved:</span>
-            <span className="summary-value">{resolvedIssues}</span>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="filter-container">
-          <label>
-            Filter by Issue Category:
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="">All</option>
-              <option value="Missing_Marks">Missing Marks</option>
-              <option value="wrong grading">Wrong Grading</option>
-              <option value="wrong marks">Wrong Marks</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
-
-          <label>
-            Filter by Status:
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="in progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-            </select>
-          </label>
-
-          <label>
-            Filter by Lecturer:
-            <input
-              type="text"
-              value={filterLecturer}
-              onChange={(e) => setFilterLecturer(e.target.value)}
-              placeholder="Lecturer's name"
-            />
-          </label>
-        </div>
-
-        {/* Issues Table */}
-        <div className="issues-table-container">
-          <h2 className="section-title">Registrar Issue Management</h2>
-          {filteredIssues.length === 0 ? (
-            <p>No issues found.</p>
-          ) : (
-            <table className="issues-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Course Code</th>
-                  <th>Issue Category</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Assigned Lecturer</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredIssues.map((issue) => (
-                  <tr key={issue.id}>
-                    <td>{issue.id}</td>
-                    <td>{issue.courseCode}</td>
-                    <td>{issue.issueCategory}</td>
-                    <td>{issue.description}</td>
-                    <td>{issue.status}</td>
-                    <td>{issue.assignedLecturer || "Not Assigned"}</td>
-                    <td>
-                      <select
-                        onChange={(e) =>
-                          handleAssign(issue.id, e.target.value)
-                        }
-                      >
-                        <option value="">Select Lecturer</option>
-                        {lecturers.map((lecturer) => (
-                          <option key={lecturer.id} value={lecturer.id}>
-                            {lecturer.name}
-                          </option>
-                        ))}
-                      </select>
-                      {issue.status !== "resolved" && (
-                        <button
-                          className="resolve-btn"
-                          onClick={() => handleResolve(issue.id)}
-                        >
-                          Resolve
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        )}
       </main>
     </div>
   );

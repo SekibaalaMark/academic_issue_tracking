@@ -1,10 +1,9 @@
-/* src/pages/AcademicRegistrar.css */
-
 /* Overall Layout */
 .academic-registrar-dashboard {
   display: flex;
   min-height: 100vh;
   background-color: #f9f9f9;
+  font-family: 'Poppins', sans-serif;
 }
 
 /* Sidebar */
@@ -32,10 +31,17 @@
   padding: 10px 0;
   cursor: pointer;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background-color 0.3s;
 }
 
 .sidebar-nav li:hover {
   background-color: #006400; /* Darker green on hover */
+}
+
+/* Active sidebar item */
+.sidebar-nav li.active {
+  background-color: #004d00;
+  font-weight: bold;
 }
 
 /* Main Content */
@@ -55,6 +61,7 @@
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .summary-item {
@@ -63,11 +70,13 @@
   border-radius: 5px;
   text-align: center;
   flex: 1;
+  min-width: 120px;
 }
 
 .summary-label {
   font-weight: bold;
   color: #008000;
+  display: block;
 }
 
 .summary-value {
@@ -81,18 +90,24 @@
   gap: 20px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-container label {
   font-weight: bold;
   color: #333;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
 }
 
 .filter-container select,
 .filter-container input {
   padding: 5px;
+  margin-top: 5px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 0.9rem;
 }
 
 /* Issues Table */
@@ -116,10 +131,15 @@
   text-align: left;
 }
 
+.issues-table th {
+  background-color: #f0f0f0;
+}
+
 .issues-table tr:hover {
   background-color: #f1f1f1;
 }
 
+/* Resolve Button */
 .resolve-btn {
   padding: 6px 10px;
   border: none;
@@ -129,8 +149,34 @@
   cursor: pointer;
   margin-left: 5px;
   font-size: 14px;
+  transition: background-color 0.3s;
 }
 
 .resolve-btn:hover {
   background-color: #006400;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .academic-registrar-dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .main-content {
+    padding: 10px;
+  }
+
+  .dashboard-summary {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .summary-item {
+    min-width: auto;
+    flex: none;
+  }
 }
