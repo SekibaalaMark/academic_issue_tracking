@@ -98,7 +98,7 @@ const Register = () => {
       console.log("Sending registration data:", payload);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/registration/", 
+        "https://academic-6ea365e4b745.herokuapp.com/api/registration/", 
         payload
       );
 
@@ -149,10 +149,11 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/verify-email/", 
+        "https://academic-6ea365e4b745.herokuapp.com/api/verify-email/", 
         {
           email: verificationEmail,
           code: verificationCode
+          
         }
       );
 
@@ -176,7 +177,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/resend-verification-code/", 
+        "https://academic-6ea365e4b745.herokuapp.com/api/resend-verification-code/", 
         {
           email: verificationEmail
         }

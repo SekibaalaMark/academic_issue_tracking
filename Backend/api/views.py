@@ -34,6 +34,7 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import render, redirect
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
+from .utils import *
 User = CustomUser
 
 
@@ -207,7 +208,47 @@ def filter_issues(request):
 
 
 
+class StudentCreateIssueView(viewsets.ModelViewSet):
+    serializer_class = CreateIssueSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        # Check if user is a student
+        if self.request.user.role != 'student':
+            raise PermissionDenied("Only students can raise issues.")
+            
+        # Save with the current user as the student
+        issue = serializer.save(student=self.request.user)
+        print(f"Issue created with ID: {issue.id}")
+        
+        # Send email notification to the registrar
+        email_sent = send_issue_notification_email(issue)
+        print(f"Email notification sent: {email_sent}")
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        
+        # Include email notification status in response
+        response_data = {
+            'success': True, 
+            'message': 'Issue submitted successfully', 
+            'data': serializer.data
+        }
+        
+        return Response(
+            response_data,
+            status=status.HTTP_201_CREATED, 
+            headers=headers
+        )
 
+
+
+
+
+'''
 class StudentCreateIssueView(viewsets.ModelViewSet):
     serializer_class = CreateIssueSerializer
     permission_classes = [IsAuthenticated]
@@ -231,7 +272,7 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED, 
             headers=headers
         )
-
+'''
 
 
 class UserRegistrationView(APIView):

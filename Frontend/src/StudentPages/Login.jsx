@@ -20,7 +20,7 @@ const Login = () => {
     
     try {
       // Using axios for the API call
-      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
+      const response = await axios.post("https://academic-6ea365e4b745.herokuapp.com/api/login/", {
         username,
         password,
       });
