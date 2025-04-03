@@ -1,10 +1,8 @@
-// src/pages/AcademicRegistrar.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
 
-// Define API endpoints (adjust as needed)
 const ENDPOINTS = {
   issues: "http://127.0.0.1:8000/api/registrar-issues-management/",
   lecturers: "http://127.0.0.1:8000/api/lecturers/",
@@ -100,7 +98,7 @@ const AcademicRegistrar = () => {
     }
   };
 
-  // Navigation in sidebar (e.g., Logout, Notifications, etc.)
+  // Navigation in sidebar (e.g., Logout)
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     navigate("/login");
@@ -124,7 +122,6 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
-          <li onClick={() => navigate("/notifications")}>Notifications</li>
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
@@ -219,9 +216,7 @@ const AcademicRegistrar = () => {
                         <td>{issue.assignedLecturer || "Not Assigned"}</td>
                         <td>
                           <select
-                            onChange={(e) =>
-                              handleAssign(issue.id, e.target.value)
-                            }
+                            onChange={(e) => handleAssign(issue.id, e.target.value)}
                           >
                             <option value="">Select Lecturer</option>
                             {lecturers.map((lecturer) => (
