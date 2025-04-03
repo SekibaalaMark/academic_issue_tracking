@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
 
 const ENDPOINTS = {
-  issues: "http://127.0.0.1:8000/api/registrar-issues-management/",
-  lecturers: "http://127.0.0.1:8000/api/lecturers/",
+  issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
+  lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
 };
 
 const AcademicRegistrar = () => {
