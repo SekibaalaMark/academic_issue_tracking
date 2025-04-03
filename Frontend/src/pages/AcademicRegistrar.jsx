@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
 
-// Define endpoints for registrar monitoring and lecturers (adjust as needed)
+
 const ENDPOINTS = {
   issues: "http://127.0.0.1:8000/api/registrar-issues-management/",
   lecturers: "http://127.0.0.1:8000/api/lecturers/",
@@ -106,8 +106,7 @@ const AcademicRegistrar = () => {
       <aside className="sidebar">
         <h2 className="sidebar-title">Registrar Dashboard</h2>
         <ul className="sidebar-nav">
-          <li onClick={() => navigate("/")}>Home</li>
-          <li onClick={() => navigate("/notifications")}>Notifications</li>
+          <li onClick={() => navigate("/AcademicRegistrar")}>Home</li>
           <li onClick={() => navigate("/login")}>Logout</li>
         </ul>
       </aside>

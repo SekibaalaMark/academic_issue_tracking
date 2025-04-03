@@ -132,7 +132,6 @@ const Students = () => {
         <ul className="sidebar-nav">
           <li onClick={() => navigate("/")}>Home</li>
           <li onClick={() => navigate("#issue-form")}>Submit Issue</li>
-          <li onClick={() => navigate("/notifications")}>Notifications</li>
           <li onClick={() => navigate("/login")}>Logout</li>
         </ul>
       </aside>
