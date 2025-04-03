@@ -10,8 +10,9 @@ import RegisterForm from "./StudentPages/RegisterForm.jsx";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 
 import  Logout from "./components/Logout"; // Import  Logout from "./StudentComponents/Logout";
-import { Container } from "@mui/material";
-import StudentDashboard from "./pages/student-dashboard.jsx";
+import { Container } from "@mui/material";        
+import Students from "./pages/Students.jsx";
+import "./App.css"; // Import your CSS file for styling
 import AcademicRegistrar from "./pages/AcademicRegistrar.jsx";
 // import LecturerDashboard from "./pages/LecturerDashboard.jsx"; // Added LecturerDashboard
 
@@ -57,14 +58,14 @@ const AppContent = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/CoverPage" element={<CoverPage />} />
-        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/Students" element={<Students />} />
         <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
 
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
-          <Route path="/student-dashboard" element={<StudentDashboard />} />
+          
 
           {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
           
