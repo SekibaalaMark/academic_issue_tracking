@@ -3,13 +3,15 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+  width:100vh;
+  background: linear-gradient( #f0f4f8, #d9e2ec);
 }
 
 .login-container {
-  width: 50%; /* Set the width to half the page */
-  padding: 40px; /* Increase padding for better spacing */
-  border-radius: 10px;
+  width: 100%; /* Set the width to half the page */
+  padding: 50px; /* Increase padding for better spacing */
+  border-radius: 20px;
+  position: relative;
   background-color: #ffffff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.5s ease-in-out;
@@ -84,10 +86,13 @@
   display: flex;
   align-items: center;
 }
-
+.input-icon-container {
+  position: relative;
+  width:100%
+}
 .input-icon {
   position: absolute;
-  right: 0.75rem;
+  left:12px;
   pointer-events: none;
   opacity: 0.5;
   transition: opacity 0.3s ease-in-out;

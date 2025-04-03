@@ -3,24 +3,40 @@ import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext";
 
 import CoverPage from "./StudentPages/CoverPage.jsx";
-import RoleSelectionPage from "./StudentPages/RoleSelectionPage.jsx";
+
 import Login from "./StudentPages/Login.jsx";
 import RegisterForm from "./StudentPages/RegisterForm.jsx";
 
-// import StudentDashboard from "./ui/StudentDashboard/StudentDashboard.jsx";
-
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
-import StudentComplaints from "./ui/StudentComplaints/StudentComplaints.jsx";
-// Import EmailForm
-import Logout from "./StudentComponents/Logout.jsx"; // Corrected the import path
-import { Container, CircularProgress } from "@mui/material";
+
+import  Logout from "./components/Logout"; // Import  Logout from "./StudentComponents/Logout";
+import { Container } from "@mui/material";
+import StudentDashboard from "./pages/student-dashboard.jsx";
+import AcademicRegistrar from "./pages/AcademicRegistrar.jsx";
+// import LecturerDashboard from "./pages/LecturerDashboard.jsx"; // Added LecturerDashboard
 
 const ProtectedLayout = () => {
   const { user } = useAuth();
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const userRole = localStorage.getItem("userRole");
 
+  // Redirect based on role if authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // If already authenticated, redirect to respective dashboard
+  if (isAuthenticated) {
+    switch (userRole) {
+      case "student":
+        return <Navigate to="/student-dashboard" replace />;
+      case "lecturer":
+        return <Navigate to="/lecturers" replace />;
+      case "academicregistrar":
+        return <Navigate to="/AcademicRegistrar" replace />;
+      default:
+        return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <Outlet />;
@@ -36,38 +52,27 @@ const AppContent = () => {
     >
       <Routes>
         <Route path="" element={<CoverPage />} />
-        <Route path="/role-selection" element={<RoleSelectionPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/student-complaints" element={<StudentComplaints />} />
-        <Route path="/logout" element={<Logout />} /> {/* Added logout route */}
-        <Route path="/CoverPage" element={<CoverPage />} />{" "}
-        <Route path="/dashboard" element={<ProtectedLayout />}></Route>
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/CoverPage" element={<CoverPage />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
+
+        {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedLayout />}>
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
+
+          {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
+          
+        </Route>
       </Routes>
     </Container>
   );
 };
-
-// function App() {
-//   return (
-//     <Routes>
-//       <Route path="/" element={<Home />} />  {/* Home route accessible via / */}
-//       <Route path="/home" element={<Home />} />  {/* Home route also accessible via /home */}
-//       <Route path="/login" element={<Login />} />
-//       <Route path="/students" element={<Students />} />
-//       <Route path="/lecturer" element={<Lecturer />} />
-//       <Route path="/academicregistrar" element={<AcademicRegistrar />} />
-//       <Route path="/dashboard" element={<Dashboard />} />
-//       <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
-//       <Route path="/issuedetails" element={<IssueDetails />} />
-//       <Route path="/register" element={<Register />} />
-//       <Route path="/updateprofile" element={<UpdateProfile />} />
-//       <Route path="/issuestable" element={<IssuesTable />} />
-//     </Routes>
-
-//   );
-// };
 
 const App = () => {
   return (

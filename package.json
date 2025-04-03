@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "next-navigation": "^1.0.6",
+    "react-router-dom": "^7.4.1"
+  }
+}

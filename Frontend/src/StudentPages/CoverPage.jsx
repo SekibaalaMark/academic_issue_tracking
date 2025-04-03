@@ -4,9 +4,13 @@ import { Button, Container, Typography, Box } from "@mui/material";
 
 const CoverPage = () => {
   const navigate = useNavigate();
-  const handleStart = () => {
-    console.log("Get Started button clicked"); // Debugging line
-    navigate("/role-selection"); // Navigate to RoleSelectionPage
+
+  const handleLogin = () => {
+    navigate("/login"); // Navigate to Login page
+  };
+
+  const handleRegister = () => {
+    navigate("/register"); // Navigate to Register page
   };
 
   return (
@@ -87,7 +91,23 @@ const CoverPage = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleStart}
+          onClick={handleLogin}
+          size="large"
+          sx={{
+            mt: { xs: 2, sm: 3 },
+            px: { xs: 3, sm: 4 },
+            py: 1.5,
+            fontSize: "1.1rem",
+            mr: 2, // Add margin to the right for spacing
+          }}
+        >
+          Login
+        </Button>
+
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleRegister}
           size="large"
           sx={{
             mt: { xs: 2, sm: 3 },
@@ -96,7 +116,7 @@ const CoverPage = () => {
             fontSize: "1.1rem",
           }}
         >
-          Get Started
+          Register
         </Button>
       </Container>
     </Box>
