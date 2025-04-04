@@ -107,50 +107,6 @@ class AssignIssueViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
-
-
-'''
-class AssignIssueViewSet(viewsets.ModelViewSet):
-    queryset = Issue.objects.all()
-    permission_classes = [IsAuthenticated]
-    serializer_class = AssignIssueSerializer
-
-    def partial_update(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')
-        try:
-            issue = Issue.objects.get(pk=pk)
-        except Issue.DoesNotExist:
-            return Response({"detail": "Issue not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        if request.user.role != 'registrar':
-            return Response({"detail": "Only registrars can assign issues to lecturers."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Print request data for debugging
-        print(f"Request data: {request.data}")
-        
-        serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
-        if serializer.is_valid():
-            # Save with explicit commit
-            updated_issue = serializer.save()
-            # Verify the update happened
-            print(f"Updated issue lecturer: {updated_issue.lecturer}")
-            
-            # Refresh from DB to confirm changes were saved
-            issue.refresh_from_db()
-            print(f"Issue after refresh: {issue.lecturer}")
-            
-            return Response(serializer.data)
-        else:
-            print(f"Serializer errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''
-
-
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset=CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -204,7 +160,7 @@ def filter_issues(request):
 
 
 
-class StudentCreateIssueView(viewsets.ModelViewSet):
+class StudentRaiseIssueView(viewsets.ModelViewSet):
     serializer_class = CreateIssueSerializer
     permission_classes = [IsAuthenticated]
     
@@ -248,7 +204,7 @@ class UserRegistrationView(APIView):
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
-            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
+            validated_data.pop('password_confirmation')
             
             user = CustomUser(**validated_data)
             user.set_password(password)
@@ -339,12 +295,12 @@ def resend_verification_code(request):
         try:
             user = CustomUser.objects.get(email = user_email)
         except CustomUser.DoesNotExist:
-            return Response({'Error':'No user found...'})
+            return Response({'Error':'wrong email entered!'})
         
         result = VerificationCode.resend_verification_code(user = user)
         if result:
-            return Response({'Message':f'Successful.....'},status=status.HTTP_200_OK)
-        return Response({'Error':'Failure...........--'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Message':f'Verification code has been sent again Successfully...'},status=status.HTTP_200_OK)
+        return Response({'Error':'Sending verification code has Failed. Please try again'},status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
   
     
@@ -360,8 +316,7 @@ def login(request):
         
         user = authenticate(username=username, password=password)
         if user is not None:
-            #return Response({'success': False, 'message': 'Only Students are allowed to login from here!'}, status=status.HTTP_401_UNAUTHORIZED)
-            # Generate tokens
+        # Generate tokens
             refresh = RefreshToken.for_user(user)
             
             return Response({

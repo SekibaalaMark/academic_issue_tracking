@@ -113,7 +113,7 @@ class VerificationCode(models.Model):
     is_code_verified = models.BooleanField(default=False)
     
     def is_verification_code_expired(self):
-        expiration_time = self.created_at + timezone.timedelta(minutes=15)
+        expiration_time = self.created_at + timezone.timedelta(minutes=20)
         return timezone.now() > expiration_time
         
     @classmethod
