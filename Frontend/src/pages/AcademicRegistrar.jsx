@@ -5,7 +5,7 @@ import "./AcademicRegistrar.css";
 
 const ENDPOINTS = {
   issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
-  // lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
+  lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
 };
 
 const AcademicRegistrar = () => {
@@ -22,20 +22,18 @@ const AcademicRegistrar = () => {
     // Fetch registrar issues
     axios
       .get(ENDPOINTS.issues, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { Authorization: `Token ${authToken}` },
       })
       .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Error fetching issues:", err));
 
-    // The lecturers API is not created yet so this call is commented out
-    /*
+    // Fetch lecturers
     axios
       .get(ENDPOINTS.lecturers, {
-        headers: { Authorization: `Bearer ${authToken}` },
+        headers: { Authorization: `Token ${authToken}` },
       })
       .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Error fetching lecturers:", err));
-    */
   }, [authToken]);
 
   // Calculate summary counts
@@ -61,7 +59,7 @@ const AcademicRegistrar = () => {
       .patch(
         `${ENDPOINTS.issues}${issueId}/assign`,
         { assigned_to: lecturerId },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        { headers: { Authorization: `Token ${authToken}` } }
       )
       .then(() => {
         setIssues((prevIssues) =>
@@ -86,7 +84,7 @@ const AcademicRegistrar = () => {
         .patch(
           `${ENDPOINTS.issues}${issueId}/resolve`,
           { status: "resolved" },
-          { headers: { Authorization: `Bearer ${authToken}` } }
+          { headers: { Authorization: `Token ${authToken}` } }
         )
         .then(() => {
           setIssues((prevIssues) =>
