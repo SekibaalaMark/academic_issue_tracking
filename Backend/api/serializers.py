@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from . models import *
 from rest_framework import serializers
 
-STUDENT_IDENTIFICATION_NUMBERS=[0,111,222,333,444,555,1000,2000,3000]
+STUDENT_IDENTIFICATION_NUMBERS=[0,111,222,333,444,555,1000,2000,3000,777]
 REGISTRA_IDS =[20,30,40,50,60,90,80,90]
 LECTURE_IDS =[11,22,33,44,55]
 
