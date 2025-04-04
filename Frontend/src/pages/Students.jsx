@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "./AuthContext";
+
 import "./Students.css";
 
 const ENDPOINTS = {
@@ -49,7 +49,7 @@ const Students = () => {
         
         // Redirect based on role
         if (response.data.role === "academic_registrar") {
-          navigate("/academic-registrar");
+          navigate("/AcademicRegistrar");
           return;
         }
         
@@ -149,4 +149,6 @@ const Students = () => {
   if (userRole !== "student") {
     return null; // Already redirected by useEffect
   }   
-} 
+};
+
+export default Students;
