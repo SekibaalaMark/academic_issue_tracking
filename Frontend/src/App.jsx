@@ -11,6 +11,8 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import UpdateProfile from './pages/UpdateProfile';
 import IssuesTable from './components/IssuesTable';
+import LoginForm from './components/LoginForm/LoginForm';
+
 
 function App() {
   return (
@@ -26,6 +28,9 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/updateprofile" element={<UpdateProfile />} />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/form" element={<LoginForm />} />
+        <Route path="/issues" element={<IssuesTable />} />
       </Routes>
     </Router>
   );
