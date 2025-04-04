@@ -7,6 +7,8 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  table-layout: fixed; /* Prevents content overflow */
+  overflow-x: auto;
 `;
 
 const Th = styled.th`
@@ -21,21 +23,55 @@ const Td = styled.td`
   text-align: center;
 `;
 
+const Tr = styled.tr`
+  &:hover {
+    background-color: #f9f9f9;
+  }
+`;
+
 const FilterContainer = styled.div`
   margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap; /* Ensures the controls wrap on smaller screens */
 `;
 
 const Button = styled.button`
   margin: 0 0.5px;
-  padding: 5px 10px;
+  padding: 6px 12px; /* Added more padding */
   background-color: #007bff;
   color: white;
   border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const Pagination = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+`;
+
+const PageButton = styled.button`
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background-color: #f2f2f2;
   border-radius: 3px;
   cursor: pointer;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #ddd;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 `;
 
@@ -46,7 +82,10 @@ function AcademicRegistrar() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
 
-  // Fetch all issues
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5); // Number of issues to show per page
+
+  // Fetch all issues and lecturers
   useEffect(() => {
     axios
       .get("http://localhost:5000/issues")
@@ -58,7 +97,6 @@ function AcademicRegistrar() {
         setIssues([]);
       });
 
-    // Fetch lecturers
     axios
       .get("http://localhost:5000/lecturers")
       .then((res) => {
@@ -76,10 +114,15 @@ function AcademicRegistrar() {
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
       ? issue.assignedLecturer &&
-        issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase())
+        issue.assignedLecturer.toLowerCase().includes(filterLecturer.trim().toLowerCase())
       : true;
     return matchType && matchStatus && matchLecturer;
   });
+
+  // Pagination logic
+  const indexOfLastIssue = currentPage * itemsPerPage;
+  const indexOfFirstIssue = indexOfLastIssue - itemsPerPage;
+  const currentIssues = filteredIssues.slice(indexOfFirstIssue, indexOfLastIssue);
 
   // Handle assigning an issue to a lecturer
   const handleAssign = (issueId, lecturerId) => {
@@ -170,9 +213,9 @@ function AcademicRegistrar() {
           </tr>
         </thead>
         <tbody>
-          {filteredIssues.length > 0 ? (
-            filteredIssues.map((issue) => (
-              <tr key={issue.id}>
+          {currentIssues.length > 0 ? (
+            currentIssues.map((issue) => (
+              <Tr key={issue.id}>
                 <Td>{issue.id}</Td>
                 <Td>{issue.courseCode}</Td>
                 <Td>{issue.issueType}</Td>
@@ -192,7 +235,7 @@ function AcademicRegistrar() {
                     <Button onClick={() => handleResolve(issue.id)}>Resolve</Button>
                   )}
                 </Td>
-              </tr>
+              </Tr>
             ))
           ) : (
             <tr>
@@ -201,6 +244,23 @@ function AcademicRegistrar() {
           )}
         </tbody>
       </Table>
+
+      {/* Pagination */}
+      <Pagination>
+        <PageButton
+          onClick={() => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </PageButton>
+        <span>Page {currentPage}</span>
+        <PageButton
+          onClick={() => setCurrentPage((prevPage) => Math.min(prevPage + 1, Math.ceil(filteredIssues.length / itemsPerPage)))}
+          disabled={currentPage === Math.ceil(filteredIssues.length / itemsPerPage)}
+        >
+          Next
+        </PageButton>
+      </Pagination>
     </div>
   );
 }
