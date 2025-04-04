@@ -166,10 +166,6 @@ class ProgrammeViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def filter_issues(request):
-    """
-    Filter issues based on various criteria including status, category, and user role.
-    Registrars and lecturers will only see issues assigned to them.
-    """
     # Get filter parameters from request
     status = request.GET.get('status', None)
     category = request.GET.get('category', None)
@@ -243,36 +239,6 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED, 
             headers=headers
         )
-
-
-
-
-
-'''
-class StudentCreateIssueView(viewsets.ModelViewSet):
-    serializer_class = CreateIssueSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        # Check if user is a student
-        if self.request.user.role != 'student':
-            raise PermissionDenied("Only students can raise issues.")
-        
-        # Save with the current user as the student
-        serializer.save(student=self.request.user)
-        print(f"Issue created with ID: {serializer.instance.id}")
-    
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            {'success': True, 'message': 'Issue submitted successfully', 'data': serializer.data},
-            status=status.HTTP_201_CREATED, 
-            headers=headers
-        )
-'''
 
 
 class UserRegistrationView(APIView):
@@ -455,7 +421,7 @@ class LecturerIssueManangementView(viewsets.ModelViewSet):
         return updated_issue
             
     def perform_destroy(self, instance):
-        self.send_email_on_update(instance,"deleted")
+        self.send_email_on_update(instance,"deleted",instance.status)
         instance.delete()
     
 class StudentIssueReadOnlyViewset(viewsets.ReadOnlyModelViewSet):

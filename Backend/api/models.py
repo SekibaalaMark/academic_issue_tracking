@@ -94,11 +94,9 @@ class Issue(models.Model):
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES)
     description = models.TextField()
     attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
-    #assigned_to = models.ForeignKey(CustomUser,related_name='lecture_issues',on_delete=models.CASCADE,limit_choices_to={'role':'Lecturer'},null=True,blank=True)
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
     department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
     status = models.CharField(max_length=100,choices=STATUS_CHOICES,default='pending')
-    #token = models.CharField(max_length=70)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
