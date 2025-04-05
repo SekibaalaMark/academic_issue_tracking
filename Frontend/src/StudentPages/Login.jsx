@@ -10,52 +10,63 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
-    
+
     try {
-      const response = await axios.post("https://academic-6ea365e4b745.herokuapp.com/api/login/", {
-        username,
-        password,
-      });
-      
+      const response = await axios.post(
+        "https://academic-6ea365e4b745.herokuapp.com/api/login/",
+        {
+          username,
+          password,
+        }
+      );
+
       console.log("Full Login Response:", response.data);
-      
+
       if (response.data) {
         localStorage.setItem("loginResponse", JSON.stringify(response.data));
-        
-        const token = response.data.tokens?.access || response.data.token || response.data.access;
-        const refreshToken = response.data.tokens?.refresh || response.data.refresh || "";
+
+        const token =
+          response.data.tokens?.access ||
+          response.data.token ||
+          response.data.access;
+        const refreshToken =
+          response.data.tokens?.refresh || response.data.refresh || "";
         const userRole = response.data.user?.role || response.data.role || "";
         const userId = response.data.user?.id || response.data.id || "";
-        const storedUsername = response.data.user?.username || response.data.username || username;
-        
+        const storedUsername =
+          response.data.user?.username || response.data.username || username;
+
         if (token) localStorage.setItem("accessToken", token);
         if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         if (userRole) localStorage.setItem("userRole", userRole);
         if (userId) localStorage.setItem("userId", userId);
         if (storedUsername) localStorage.setItem("username", storedUsername);
-        
+
         localStorage.setItem("isAuthenticated", "true");
-        
+
         if (rememberMe) {
           localStorage.setItem("rememberedUsername", username);
         } else {
           localStorage.removeItem("rememberedUsername");
         }
-        
+
         navigateBasedOnRole(userRole);
       } else {
         setErrorMessage("Login successful but received empty response");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setErrorMessage(err.response?.data?.detail || "Invalid username or password. Please try again.");
+      setErrorMessage(
+        err.response?.data?.detail ||
+          "Invalid username or password. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -65,15 +76,19 @@ const Login = () => {
     console.log("Navigating based on role:", role);
     switch (role?.toLowerCase()) {
       case "student":
+        console.log("Redirecting to student dashboard");
         navigate("/Students");
         break;
       case "lecturer":
+        console.log("Redirecting to lecturer dashboard");
         navigate("/lecturers");
         break;
       case "registrar":
+        console.log("Redirecting to registrar dashboard");
         navigate("/AcademicRegistrar");
         break;
       default:
+        console.log("No matching role, redirecting to default dashboard");
         navigate("/dashboard");
     }
   };
@@ -84,11 +99,11 @@ const Login = () => {
       setUsername(rememberedUsername);
       setRememberMe(true);
     }
-    
+
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
     const userRole = localStorage.getItem("userRole");
     console.log("User Role:", userRole);
-    
+
     if (isAuthenticated) {
       navigateBasedOnRole(userRole);
     }
@@ -100,7 +115,9 @@ const Login = () => {
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Login</h1>
           <div className="input-wrapper">
-            <label htmlFor="username" className="form-label">Username</label>
+            <label htmlFor="username" className="form-label">
+              Username
+            </label>
             <div className="input-icon-container">
               <input
                 type="text"
@@ -115,7 +132,9 @@ const Login = () => {
             </div>
           </div>
           <div className="input-wrapper">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">
+              Password
+            </label>
             <div className="input-icon-container">
               <input
                 type="password"
@@ -138,14 +157,18 @@ const Login = () => {
               />
               Remember me
             </label>
-            <a href="/forgot-password" className="forgot-password-link">Forgot Password?</a>
+            <a href="/forgot-password" className="forgot-password-link">
+              Forgot Password?
+            </a>
           </div>
           {errorMessage && <p className="error-message">{errorMessage}</p>}
           <button type="submit" className="login-btn" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </button>
           <div className="redirect-text">
-            <p>Don't have an account? <a href="/register">Register</a></p>
+            <p>
+              Don't have an account? <a href="/register">Register</a>
+            </p>
           </div>
         </form>
       </div>

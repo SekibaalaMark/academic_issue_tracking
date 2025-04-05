@@ -1,6 +1,7 @@
 import React from "react";
 import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 
 import CoverPage from "./StudentPages/CoverPage.jsx";
@@ -10,11 +11,13 @@ import RegisterForm from "./StudentPages/RegisterForm.jsx";
 
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 
-import  Logout from "./components/Logout"; // Import  Logout from "./StudentComponents/Logout";
+import Logout from "./components/Logout";
+// import Dashboard from "./components/Dashboard.jsx";// Import  Logout from "./StudentComponents/Logout";
 
 import { Container } from "@mui/material";        
 import Students from "./pages/Students.jsx";
-import "./App.css";   
+import "./App.css"; 
+ 
 
 
 
@@ -63,22 +66,16 @@ const AppContent = () => {
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/CoverPage" element={<CoverPage />} />
-        <Route path="/Students" element={<Students />} />
+        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        {/* <Route path="/CoverPage" element={<CoverPage />} /> */}
+        <Route path="/students" element={<Students />} />
         <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
 
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
-
-          
-
-          
-
-
           {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
-          
         </Route>
       </Routes>
     </Container>
