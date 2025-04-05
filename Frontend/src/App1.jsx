@@ -13,7 +13,7 @@ import Lecturer from "./pages/Lecturer.jsx";
 import ForgotPassword from "./features/authentication/ForgotPassword.jsx";
 
 import  Logout from "./components/Logout"; // Import  Logout from "./StudentComponents/Logout";
-
+import IssueDetails from "./pages/IssueDetails.jsx";
 import { Container } from "@mui/material";        
 import Students from "./pages/Students.jsx";
 import "./App.css";   
@@ -68,7 +68,8 @@ const AppContent = () => {
         <Route path="/CoverPage" element={<CoverPage />} />
         <Route path="/Students" element={<Students />} />
         <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
-
+        <Route path="/IssueDetails" element={<IssueDetails />} />
+        <Route path="/lecturer" element={<Lecturer />} />
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}

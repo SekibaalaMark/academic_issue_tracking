@@ -3,9 +3,9 @@ import { FaHome, FaBell, FaSignOutAlt, FaBars } from 'react-icons/fa';
 
 const Lecturer = () => {
   const [issues, setIssues] = useState([
-    { id: 1, title: 'Issue with Course Material', status: 'Pending', resolution: '' },
-    { id: 2, title: 'Student Query on Assignment', status: 'Pending', resolution: '' },
-    { id: 3, title: 'Course Registration Issue', status: 'In Progress', resolution: '' },
+    { id: 1, title: 'Missing marks', status: 'Pending', resolution: '' },
+    { id: 2, title: 'request for appeal', status: 'Pending', resolution: '' },
+    { id: 3, title: 'Corrections', status: 'In Progress', resolution: '' },
   ]);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
