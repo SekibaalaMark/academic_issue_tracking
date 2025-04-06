@@ -23,7 +23,14 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Handle form submission (e.g., API call)
+
+    // Password match validation
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    // API placeholder (to be replaced later)
     console.log("Submitted data:", formData);
   };
 
@@ -78,7 +85,6 @@ const Register = () => {
           required
         />
 
-
         <label>User Type*</label>
         <select 
           name="userType" 
@@ -118,8 +124,6 @@ const Register = () => {
           onChange={handleChange}
           required
         />
-
-        
 
         <button type="submit">Register</button>
 
