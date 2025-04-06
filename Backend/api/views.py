@@ -694,6 +694,22 @@ class LecturerProfileView(APIView):
                          'email':user.email,
                          'role':user.role,
                          'staff_id':user.staff_id_or_student_no})
+    
+
+
+
+class RegistrarProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='registar':
+            return Response({"detail": "Only registrars can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'staff_id':user.staff_id_or_student_no})
 
 
 

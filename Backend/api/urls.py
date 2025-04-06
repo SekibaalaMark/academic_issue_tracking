@@ -33,6 +33,7 @@ urlpatterns = [
     path('lecturer/issues/summary/',LecturerDashboardCountView.as_view(),name="student-issues-dashboard"),
     path('student-profile/',StudentProfileView.as_view(),name='student-profle'),
     path('lecturer-profile/',LecturerProfileView.as_view(),name='lecturer-profle'),
+    path('registrar-profile/',LecturerProfileView.as_view(),name='registrar-profle'),
 
     path("token/",TokenObtainPairView.as_view(),name="get_token"),
     path('token/refresh',TokenRefreshView.as_view(),name="refresh_token"),
