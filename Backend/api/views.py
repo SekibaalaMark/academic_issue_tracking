@@ -668,6 +668,23 @@ class StudentDashboardCountView(APIView):
 
 
 
+class StudentProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='student':
+            return Response({"detail": "Only Students can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'student number':user.staff_id_or_student_no})
+
+
+
+
+
 class LecturerDashboardCountView(APIView):
     permission_classes = [IsAuthenticated]
     
