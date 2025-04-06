@@ -24,12 +24,13 @@ function App() {
         <Route path="/academicregistrar" element={<AcademicRegistrar />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
-        <Route path="/issuedetails" element={<IssueDetails />} />
+        <Route path="/issue/:Id" element={<IssueDetails />} />
         <Route path="/home" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/updateprofile" element={<UpdateProfile />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/form" element={<LoginForm />} />
+        
         <Route path="/lecturerissues" element={<LecturerIssues />} />
         {/* Add more routes as needed */}
         <Route path="/issues" element={<IssuesTable />} />
