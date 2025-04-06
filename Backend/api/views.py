@@ -682,6 +682,20 @@ class StudentProfileView(APIView):
                          'student number':user.staff_id_or_student_no})
 
 
+class LecturerProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='lecturer':
+            return Response({"detail": "Only lecturers can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'staff_id':user.staff_id_or_student_no})
+
+
 
 
 
