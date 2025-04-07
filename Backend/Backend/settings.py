@@ -93,6 +93,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Backend.wsgi.application'
 
 # Database
+# 
 # Replace the DATABASES configuration with this:
 DATABASES = {
     'default': {

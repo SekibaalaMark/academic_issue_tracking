@@ -10,9 +10,10 @@
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background-color: #008000; /* Green background */
+  background-color: #fff; /* Neutral white background */
   padding: 20px;
-  color: #fff;
+  color: #333; /* Dark text for contrast */
+  border-right: 1px solid #ddd;
 }
 
 .sidebar-title {
@@ -20,7 +21,7 @@
   margin-bottom: 20px;
   text-align: center;
   font-weight: bold;
-  color: #fff;
+  color: #333;
 }
 
 .sidebar-nav {
@@ -32,12 +33,13 @@
 .sidebar-nav li {
   padding: 10px 0;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: #333;
+  transition: background-color 0.3s;
 }
 
 .sidebar-nav li:hover {
-  background-color: #006400; /* Darker green on hover */
+  background-color: #f0f0f0; /* Light gray on hover */
 }
 
 /* Main content */
@@ -61,7 +63,7 @@
 }
 
 .summary-item {
-  background-color: #e0ffe0; /* Light green background */
+  background-color: #f0f0f0; /* Neutral light gray background */
   padding: 10px 15px;
   border-radius: 5px;
   text-align: center;
@@ -70,7 +72,8 @@
 
 .summary-label {
   font-weight: bold;
-  color: #008000;
+  color: #555;
+  display: block;
 }
 
 .summary-value {
@@ -123,15 +126,16 @@
 
 .btn-submit {
   padding: 10px 20px;
-  background-color: #008000; /* Green theme */
+  background-color: #333; /* Neutral dark for button */
   color: #fff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background 0.3s ease-in-out;
 }
 
 .btn-submit:hover {
-  background-color: #006400; /* Darker green */
+  background-color: #222;
 }
 
 /* Issues Table */

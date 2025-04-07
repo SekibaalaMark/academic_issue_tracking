@@ -12,10 +12,7 @@ router.register(r'lecturer-issue-management',LecturerIssueManangementView,basena
 router.register(r'student-issues',StudentIssueReadOnlyViewset,basename='student-issues-read')
 router.register(r'registrar-issues-management',RegistrarIssuesMonitorViewSet,basename='registrar-issues-manager')
 router.register(r'assignlecturer',AssignIssueViewSet,basename='assign-lecturer')
-router.register(r'raise-issue',StudentCreateIssueView,basename='student-raise-issue')
-
-#urls
-# Add these to your existing urls.py file
+router.register(r'raise-issue',StudentRaiseIssueView,basename='student-raise-issue')
 
 
 
@@ -34,6 +31,9 @@ urlpatterns = [
     path('registrar/issues/summary/',RegistrarDashboardCountView.as_view(),name="registrar-issues-dashboard"),
     path('student/issues/summary/',StudentDashboardCountView.as_view(),name="student-issues-dashboard"),
     path('lecturer/issues/summary/',LecturerDashboardCountView.as_view(),name="student-issues-dashboard"),
+    path('student-profile/',StudentProfileView.as_view(),name='student-profle'),
+    path('lecturer-profile/',LecturerProfileView.as_view(),name='lecturer-profle'),
+    path('registrar-profile/',LecturerProfileView.as_view(),name='registrar-profle'),
 
     path("token/",TokenObtainPairView.as_view(),name="get_token"),
     path('token/refresh',TokenRefreshView.as_view(),name="refresh_token"),
