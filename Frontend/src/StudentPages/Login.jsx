@@ -28,6 +28,7 @@ const Login = () => {
       );
 
       console.log("Full Login Response:", response.data);
+      console.log("Full Login Response:", response);
 
       if (response.data) {
         localStorage.setItem("loginResponse", JSON.stringify(response.data));
@@ -38,7 +39,9 @@ const Login = () => {
           response.data.access;
         const refreshToken =
           response.data.tokens?.refresh || response.data.refresh || "";
-        const userRole = response.data.user?.role || response.data.role || "";
+        const userRole = response.data.data.user?.role || response.data.data.role || "";
+
+        console.log("userRole:", userRole);
         const userId = response.data.user?.id || response.data.id || "";
         const storedUsername =
           response.data.user?.username || response.data.username || username;
@@ -77,7 +80,7 @@ const Login = () => {
     switch (role?.toLowerCase()) {
       case "student":
         console.log("Redirecting to student dashboard");
-        navigate("/Students");
+        navigate("/students");
         break;
       case "lecturer":
         console.log("Redirecting to lecturer dashboard");
@@ -93,21 +96,21 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    const rememberedUsername = localStorage.getItem("rememberedUsername");
-    if (rememberedUsername) {
-      setUsername(rememberedUsername);
-      setRememberMe(true);
-    }
+  // useEffect(() => {
+  //   const rememberedUsername = localStorage.getItem("rememberedUsername");
+  //   if (rememberedUsername) {
+  //     setUsername(rememberedUsername);
+  //     setRememberMe(true);
+  //   }
 
-    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-    const userRole = localStorage.getItem("userRole");
-    console.log("User Role:", userRole);
+  //   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  //   const userRole = localStorage.getItem("userRole");
+  //   console.log("User Role:", userRole);
 
-    if (isAuthenticated) {
-      navigateBasedOnRole(userRole);
-    }
-  }, [navigate]);
+  //   if (isAuthenticated) {
+  //     navigateBasedOnRole(userRole);
+  //   }
+  // }, [navigate]);
 
   return (
     <div className="container">

@@ -15,9 +15,9 @@ const ENDPOINTS = {
 };
 
 const Students = () => {
-  <ErrorBoundary errorMessage="There was an error loading the dashboard. Please try again.">
-    <Dashboard />
-  </ErrorBoundary>;
+  // <ErrorBoundary errorMessage="There was an error loading the dashboard. Please try again.">
+  //   <Dashboard />
+  // </ErrorBoundary>;
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -40,37 +40,45 @@ const Students = () => {
 
   // Check authentication and user role on component mount
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    console.log("User:", user);
+    // if (!user) {
+    //   navigate("/login");
+    //   return;
+  
 
     const fetchUserRole = async () => {
-      try {
-        const response = await axios.get(ENDPOINTS.userProfile, {
-          headers: { Authorization: `Token ${user.token}` },
-        });
+      if (user) {
+        const token = user.token;
+        try {
+          const response = await axios.get(ENDPOINTS.userProfile, {
+            headers: { Authorization: `Token ${user.token}` },
+          });
 
-        setUserRole(response.data.role);
+          setUserRole(response.data.role);
 
-        // Redirect based on role
-        if (response.data.role === "academic_registrar") {
-          navigate("/AcademicRegistrar");
-          return;
-        }
+          // Redirect based on role
+          if (response.data.role === "academic_registrar") {
+            navigate("/AcademicRegistrar");
+            return;
+          }
 
-        // Only fetch student data if user is actually a student
-        if (response.data.role === "student") {
-          await fetchStudentData();
+          // Only fetch student data if user is actually a student
+          if (response.data.role === "student") {
+            await fetchStudentData();
+          }
+        } catch (err) {
+          console.error("Error fetching user role:", err);
+          if (err.response?.status === 401) {
+            logout();
+          }
+        } finally {
+          setLoading(false);
+          //   }else {
+          // console.error("User  is not authenticated.");
+          // navigate("/login"); // Redirect to login if user is not authenticated
+          // }      setLoading(false);
         }
-      } catch (err) {
-        console.error("Error fetching user role:", err);
-        if (err.response?.status === 401) {
-          logout();
-        }
-      } finally {
-        setLoading(false);
-      }
+      }  
     };
 
     const fetchStudentData = async () => {
@@ -99,11 +107,15 @@ const Students = () => {
   }, [user, navigate, logout]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
+    const { target } = e; 
+     // Store e.target in a variable
+  if (!target) return; // Earl
+    const { name, value, files } = target;
+    setFormData((prevFormData) => ({
+    ...prevFormData,
+    
       [name]: files ? files[0] : value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
