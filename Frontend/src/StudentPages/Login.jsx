@@ -10,167 +10,101 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
     setIsLoading(true);
-    
+
     try {
-      // Using axios for the API call
-      const response = await axios.post("https://academic-6ea365e4b745.herokuapp.com/api/login/", {
-        username,
-        password,
-      });
-      
-      console.log("Login response:", response.data);
-      
-      // Check the response structure and handle accordingly
+      const response = await axios.post(
+        "https://academic-6ea365e4b745.herokuapp.com/api/login/",
+        {
+          username,
+          password,
+        }
+      );
+
+      console.log("Full Login Response:", response.data);
+
       if (response.data) {
-        // Store the entire response for debugging
         localStorage.setItem("loginResponse", JSON.stringify(response.data));
-        
-        // Handle token - could be in different formats
-        if (response.data.tokens) {
-          localStorage.setItem("accessToken", response.data.tokens.access);
-          localStorage.setItem("refreshToken", response.data.tokens.refresh);
-        } else if (response.data.token) {
-          localStorage.setItem("accessToken", response.data.token);
-        } else if (response.data.access) {
-          localStorage.setItem("accessToken", response.data.access);
-          localStorage.setItem("refreshToken", response.data.refresh || "");
-        }
-        
-        // Handle user data - could be in different formats
-        if (response.data.user) {
-          localStorage.setItem("userRole", response.data.user.role);
-          localStorage.setItem("userId", response.data.user.id);
-          localStorage.setItem("username", response.data.user.username);
-        } else {
-          // If user data is at the top level
-          localStorage.setItem("userRole", response.data.role || "");
-          localStorage.setItem("userId", response.data.id || "");
-          localStorage.setItem("username", response.data.username || username);
-        }
-        
+
+        const token =
+          response.data.tokens?.access ||
+          response.data.token ||
+          response.data.access;
+        const refreshToken =
+          response.data.tokens?.refresh || response.data.refresh || "";
+        const userRole = response.data.user?.role || response.data.role || "";
+        const userId = response.data.user?.id || response.data.id || "";
+        const storedUsername =
+          response.data.user?.username || response.data.username || username;
+
+        if (token) localStorage.setItem("accessToken", token);
+        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+        if (userRole) localStorage.setItem("userRole", userRole);
+        if (userId) localStorage.setItem("userId", userId);
+        if (storedUsername) localStorage.setItem("username", storedUsername);
+
         localStorage.setItem("isAuthenticated", "true");
-        
-        // Remember me functionality
+
         if (rememberMe) {
           localStorage.setItem("rememberedUsername", username);
         } else {
           localStorage.removeItem("rememberedUsername");
         }
-        
-        // Get the user role for navigation
-        const userRole = response.data.user?.role || response.data.role || "";
-        
-        // Navigate based on role
-        switch (userRole) {
-          case "student":
-            navigate("/students");
-            break;
-          case "lecturer":
-            navigate("/lecturers");
-            break;
-          case "registrar":
-            navigate("/academic-registrar");
-            break;
-          default:
-            // If we can't determine the role, try to extract it from the token
-            try {
-              const token = response.data.tokens?.access || response.data.token || response.data.access;
-              if (token) {
-                // Decode JWT token to get user info
-                const tokenParts = token.split('.');
-                if (tokenParts.length === 3) {
-                  const payload = JSON.parse(atob(tokenParts[1]));
-                  if (payload.role) {
-                    navigateBasedOnRole(payload.role);
-                  } else {
-                    navigate("/dashboard");
-                  }
-                } else {
-                  navigate("/dashboard");
-                }
-              } else {
-                navigate("/dashboard");
-              }
-            } catch (error) {
-              console.error("Error decoding token:", error);
-              navigate("/dashboard");
-            }
-        }
+
+        navigateBasedOnRole(userRole);
       } else {
-        // Handle empty response
         setErrorMessage("Login successful but received empty response");
       }
     } catch (err) {
       console.error("Login error:", err);
-      
-      // Handle different types of error responses
-      if (err.response && err.response.data) {
-        if (typeof err.response.data === 'string') {
-          setErrorMessage(err.response.data);
-        } else if (err.response.data.detail) {
-          setErrorMessage(err.response.data.detail);
-        } else if (err.response.data.message) {
-          setErrorMessage(err.response.data.message);
-        } else if (err.response.data.error) {
-          setErrorMessage(err.response.data.error);
-        } else if (err.response.data.non_field_errors) {
-          setErrorMessage(err.response.data.non_field_errors.join(', '));
-        } else {
-          // Handle nested error objects
-          const errorMessages = [];
-          Object.entries(err.response.data).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              errorMessages.push(`${key}: ${value.join(', ')}`);
-            } else if (typeof value === 'string') {
-              errorMessages.push(`${key}: ${value}`);
-            }
-          });
-          setErrorMessage(errorMessages.join('; ') || "Login failed");
-        }
-      } else {
-        setErrorMessage("Invalid username or password. Please try again.");
-      }
+      setErrorMessage(
+        err.response?.data?.detail ||
+          "Invalid username or password. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Helper function to navigate based on role
   const navigateBasedOnRole = (role) => {
-    switch (role) {
+    console.log("Navigating based on role:", role);
+    switch (role?.toLowerCase()) {
       case "student":
-        navigate("/students");
+        console.log("Redirecting to student dashboard");
+        navigate("/Students");
         break;
       case "lecturer":
+        console.log("Redirecting to lecturer dashboard");
         navigate("/lecturers");
         break;
       case "registrar":
-        navigate("/academic-registrar");
+        console.log("Redirecting to registrar dashboard");
+        navigate("/AcademicRegistrar");
         break;
       default:
+        console.log("No matching role, redirecting to default dashboard");
         navigate("/dashboard");
     }
   };
 
-  // Check for remembered username on component mount
   useEffect(() => {
     const rememberedUsername = localStorage.getItem("rememberedUsername");
     if (rememberedUsername) {
       setUsername(rememberedUsername);
       setRememberMe(true);
     }
-    
-    // Check if user is already authenticated
+
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    const userRole = localStorage.getItem("userRole");
+    console.log("User Role:", userRole);
+
     if (isAuthenticated) {
-      const userRole = localStorage.getItem("userRole");
       navigateBasedOnRole(userRole);
     }
   }, [navigate]);
@@ -193,7 +127,6 @@ const Login = () => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                style={{ backgroundColor: "lightyellow" }}
               />
               <FaUserCircle className="input-icon" />
             </div>
@@ -211,7 +144,6 @@ const Login = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ backgroundColor: "lightyellow" }}
               />
               <FaLock className="input-icon" />
             </div>
