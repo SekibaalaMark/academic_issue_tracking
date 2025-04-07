@@ -74,21 +74,13 @@ class AssignIssueViewSet(viewsets.ModelViewSet):
         if request.user.role != 'registrar':
             return Response({"detail": "Only registrars can assign issues to lecturers."}, 
                            status=status.HTTP_403_FORBIDDEN)
-        
-        # Print request data for debugging
-        print(f"Request data: {request.data}")
                 
         serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
         if serializer.is_valid():
-            # Save with explicit commit
             updated_issue = serializer.save()
-            
-            # Verify the update happened
-            print(f"Updated issue lecturer: {updated_issue.lecturer}")
                         
             # Refresh from DB to confirm changes were saved
             issue.refresh_from_db()
-            print(f"Issue after refresh: {issue.lecturer}")
             
             # Send email notification to the assigned lecturer
             email_sent = send_issue_assignment_email(issue)
@@ -171,11 +163,9 @@ class StudentRaiseIssueView(viewsets.ModelViewSet):
             
         # Save with the current user as the student
         issue = serializer.save(student=self.request.user)
-        print(f"Issue created with ID: {issue.id}")
         
         # Send email notification to the registrar
         email_sent = send_issue_notification_email(issue)
-        print(f"Email notification sent: {email_sent}")
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -719,29 +709,26 @@ class LecturerDashboardCountView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Step 1: Verify the user is a lecturer
         if request.user.role != 'lecturer':
             return Response(
                 {"detail": "Only lecturers can access this dashboard."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Step 2: Get all issues assigned to this lecturer
         lecturer_issues = Issue.objects.filter(lecturer=request.user)
         
-        # Step 3: Count issues by status
+        #Count issues by status
         total_assigned = lecturer_issues.count()
         in_progress_count = lecturer_issues.filter(status='in_progress').count()
         resolved_count = lecturer_issues.filter(status='resolved').count()
         
-        # Step 4: Prepare the response data
+        
         dashboard_data = {
             'total_assigned': total_assigned,
             'in_progress_count': in_progress_count,
             'resolved_count': resolved_count
         }
         
-        # Step 5: Return the response
         return Response({
             'success': True,
             'dashboard': dashboard_data
@@ -749,31 +736,24 @@ class LecturerDashboardCountView(APIView):
     
 
 
-
-
 class RegistrarDashboardCountView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Step 1: Verify the user is a registrar
         if request.user.role != 'registrar':
             return Response(
                 {"detail": "Only registrars can access this dashboard."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Step 2: Get all issues assigned to this registrar
         registrar_issues = Issue.objects.filter(registrar=request.user)
         
-        # Step 3: Count total issues
         total_issues = registrar_issues.count()
         
-        # Step 4: Count issues by status
         pending_count = registrar_issues.filter(status='pending').count()
         in_progress_count = registrar_issues.filter(status='in_progress').count()
         resolved_count = registrar_issues.filter(status='resolved').count()
         
-        # Step 5: Prepare the response data
         dashboard_data = {
             'total_issues': total_issues,
             'pending_count': pending_count,
@@ -781,7 +761,6 @@ class RegistrarDashboardCountView(APIView):
             'resolved_count': resolved_count
         }
         
-        # Step 6: Return the response
         return Response({
             'success': True,
             'dashboard': dashboard_data
