@@ -29,7 +29,7 @@ const Dashboard = () => {
         <Header /> {/* Top Header */}
         <div className="issues-section">
           <h2>Student Issues</h2>
-          {loading ? <p>Loading issues...</p> : <IssuesTable issues={issues} />}
+          {loading ? <p>Loading issues...</p> : <IssueTable issues={issues} />}
         </div>
         
       </div>

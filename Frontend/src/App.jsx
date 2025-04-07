@@ -13,12 +13,13 @@ import UpdateProfile from './pages/UpdateProfile';
 import IssuesTable from './components/IssuesTable';
 import LoginForm from './components/LoginForm/LoginForm';
 import LecturerIssues from './pages/LecturerIssues';
-
+import  Profile from'./pages/Profile';
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/students" element={<Students />} />
         <Route path="/lecturer" element={<Lecturer />} />
         <Route path="/academicregistrar" element={<AcademicRegistrar />} />

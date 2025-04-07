@@ -52,6 +52,13 @@ const Lecturer = () => {
     navigate(`/issue/${id}`);
   };
 
+  // Handle logout functionality
+  const handleLogout = () => {
+    // Clear any authentication data
+    localStorage.removeItem("authToken");  // or sessionStorage.removeItem("authToken")
+    navigate("/login");  // Redirect to the login page
+  };
+
   return (
     <div style={{ display: "flex", fontFamily: "Arial, sans-serif" }}>
       {/* Sidebar */}
@@ -91,7 +98,16 @@ const Lecturer = () => {
             <FaBell size={20} />
             {sidebarOpen && <span style={{ marginLeft: "10px" }}>Notifications</span>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", padding: "10px", cursor: "pointer" }}>
+          {/* Logout Button */}
+          <div
+            onClick={handleLogout}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "10px",
+              cursor: "pointer",
+            }}
+          >
             <FaSignOutAlt size={20} />
             {sidebarOpen && <span style={{ marginLeft: "10px" }}>Logout</span>}
           </div>
