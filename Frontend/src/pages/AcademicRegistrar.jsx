@@ -2,44 +2,54 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
-import { AuthContext } from "@/context/authContext"; // Import AuthContext
+import { AuthContext } from "@/context/authContext";
 
+// API base URL
+const API_BASE_URL = "https://academic-6ea365e4b745.herokuapp.com/api";
+
+// API endpoints
 const ENDPOINTS = {
-  issues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
-  lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
+  issues: `${API_BASE_URL}/registrar-issues-management/`,
+  lecturers: `${API_BASE_URL}/lecturers/`,
+  users: `${API_BASE_URL}/users/`,
 };
 
 const AcademicRegistrar = () => {
-  const { user, logout } = useContext(AuthContext); // Use AuthContext
+  const { user, logout } = useContext(AuthContext);
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-  const [selectedTab, setSelectedTab] = useState("home"); // "home" or "management"
+  const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // Create axios instance with authentication
+  const createAuthAxios = () => {
+    const token = localStorage.getItem("accessToken");
+    return axios.create({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
 
   // Check authentication and fetch data
   useEffect(() => {
     console.log("AcademicRegistrar component mounted");
 
-    const fetchData = async () => {
-      // Get token from localStorage
+    const checkAuthAndRedirect = () => {
       const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        console.log("No token found, redirecting to login");
-        setError("Authentication token missing. Please login again.");
-        setLoading(false);
-        navigate("/login");
-        return;
-      }
-
-      // Get user role from localStorage
       const userRole = localStorage.getItem("userRole");
+      const isAuthenticated = localStorage.getItem("isAuthenticated");
+
+      if (!token || !isAuthenticated) {
+        console.log("Not authenticated, redirecting to login");
+        navigate("/login");
+        return false;
+      }
 
       // Check if user is actually a registrar
       if (
@@ -60,31 +70,64 @@ const AcademicRegistrar = () => {
         } else {
           navigate("/dashboard");
         }
+        return false;
+      }
+      return true;
+    };
+
+    const fetchData = async () => {
+      // First check authentication and role
+      if (!checkAuthAndRedirect()) {
         return;
       }
+
+      const authAxios = createAuthAxios();
 
       try {
         // Fetch registrar issues
         console.log("Fetching registrar issues");
-        const issuesResponse = await axios.get(ENDPOINTS.issues, {
-          headers: { Authorization: `Bearer ${token}` }, // Use Bearer prefix
-        });
-
+        const issuesResponse = await authAxios.get(ENDPOINTS.issues);
         console.log("Issues response:", issuesResponse.data);
         setIssues(
           Array.isArray(issuesResponse.data) ? issuesResponse.data : []
         );
 
-        // Fetch lecturers
-        console.log("Fetching lecturers");
-        const lecturersResponse = await axios.get(ENDPOINTS.lecturers, {
-          headers: { Authorization: `Bearer ${token}` }, // Use Bearer prefix
-        });
+        // Fetch lecturers from the users endpoint with role filter
+        try {
+          console.log("Fetching lecturers");
+          const lecturersResponse = await authAxios.get(
+            `${ENDPOINTS.users}?role=lecturer`
+          );
+          console.log("Lecturers response:", lecturersResponse.data);
 
-        console.log("Lecturers response:", lecturersResponse.data);
-        setLecturers(
-          Array.isArray(lecturersResponse.data) ? lecturersResponse.data : []
-        );
+          // Transform the data to match the expected format
+          const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
+            id: lecturer.id,
+            name: `${lecturer.first_name} ${lecturer.last_name}`,
+          }));
+
+          setLecturers(formattedLecturers);
+        } catch (lecturerErr) {
+          console.error("Error fetching lecturers:", lecturerErr);
+          // Try alternative endpoint if the first one fails
+          try {
+            const alternativeLecturersResponse = await authAxios.get(
+              ENDPOINTS.lecturers
+            );
+            console.log(
+              "Alternative lecturers response:",
+              alternativeLecturersResponse.data
+            );
+            setLecturers(
+              Array.isArray(alternativeLecturersResponse.data)
+                ? alternativeLecturersResponse.data
+                : []
+            );
+          } catch (altErr) {
+            console.error("Error fetching from alternative endpoint:", altErr);
+            setLecturers([]);
+          }
+        }
 
         setLoading(false);
       } catch (err) {
@@ -92,24 +135,11 @@ const AcademicRegistrar = () => {
         console.error("Response data:", err.response?.data);
         console.error("Response status:", err.response?.status);
 
-        setError("Failed to load data. Please try again.");
-
         if (err.response?.status === 401) {
           console.log("Unauthorized access, logging out");
-          // Clear localStorage
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("isAuthenticated");
-          localStorage.removeItem("userRole");
-          localStorage.removeItem("username");
-
-          // Use context logout if available
-          if (logout) {
-            logout();
-          }
-
-          navigate("/login");
+          handleLogout();
         } else {
+          setError(`Failed to load data: ${err.message || "Unknown error"}`);
           setLoading(false);
         }
       }
@@ -144,90 +174,80 @@ const AcademicRegistrar = () => {
   });
 
   // Assign an issue to a lecturer
-  const handleAssign = (issueId, lecturerId) => {
+  const handleAssign = async (issueId, lecturerId) => {
     if (!lecturerId) return; // Don't proceed if no lecturer is selected
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("Authentication token missing. Please login again.");
-      navigate("/login");
-      return;
-    }
+    try {
+      const authAxios = createAuthAxios();
+      console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
 
-    console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
-    axios
-      .patch(
+      const response = await authAxios.patch(
         `${ENDPOINTS.issues}${issueId}/assign`,
-        { assigned_to: lecturerId },
-        { headers: { Authorization: `Bearer ${token}` } } // Use Bearer prefix
-      )
-      .then((response) => {
-        console.log("Assign response:", response.data);
-        setIssues((prevIssues) =>
-          prevIssues.map((issue) =>
-            issue.id === issueId
-              ? {
-                  ...issue,
-                  assignedLecturer: lecturers.find((l) => l.id === lecturerId)
-                    ?.name,
-                  status: "in progress", // Update status if your API does this
-                }
-              : issue
-          )
-        );
-        alert("Issue assigned successfully!");
-      })
-      .catch((err) => {
-        console.error("Error assigning issue:", err);
-        alert(
-          "Error assigning issue: " +
-            (err.response?.data?.message || err.message)
-        );
-      });
+        { assigned_to: lecturerId }
+      );
+
+      console.log("Assign response:", response.data);
+
+      // Update the local state with the new assignment
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) =>
+          issue.id === issueId
+            ? {
+                ...issue,
+                assignedLecturer: lecturers.find((l) => l.id === lecturerId)
+                  ?.name,
+                status: "in progress", // Update status if your API does this
+              }
+            : issue
+        )
+      );
+
+      alert("Issue assigned successfully!");
+    } catch (err) {
+      console.error("Error assigning issue:", err);
+      alert(
+        "Error assigning issue: " + (err.response?.data?.message || err.message)
+      );
+    }
   };
 
   // Resolve an issue
-  const handleResolve = (issueId) => {
+  const handleResolve = async (issueId) => {
     if (
       window.confirm("Are you sure you want to mark this issue as resolved?")
     ) {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        alert("Authentication token missing. Please login again.");
-        navigate("/login");
-        return;
-      }
+      try {
+        const authAxios = createAuthAxios();
+        console.log(`Resolving issue ${issueId}`);
 
-      console.log(`Resolving issue ${issueId}`);
-      axios
-        .patch(
+        const response = await authAxios.patch(
           `${ENDPOINTS.issues}${issueId}/resolve`,
-          { status: "resolved" },
-          { headers: { Authorization: `Bearer ${token}` } } // Use Bearer prefix
-        )
-        .then((response) => {
-          console.log("Resolve response:", response.data);
-          setIssues((prevIssues) =>
-            prevIssues.map((issue) =>
-              issue.id === issueId ? { ...issue, status: "resolved" } : issue
-            )
-          );
-          alert("Issue marked as resolved.");
-        })
-        .catch((err) => {
-          console.error("Error resolving issue:", err);
-          alert(
-            "Error resolving issue: " +
-              (err.response?.data?.message || err.message)
-          );
-        });
+          { status: "resolved" }
+        );
+
+        console.log("Resolve response:", response.data);
+
+        // Update the local state with the resolved status
+        setIssues((prevIssues) =>
+          prevIssues.map((issue) =>
+            issue.id === issueId ? { ...issue, status: "resolved" } : issue
+          )
+        );
+
+        alert("Issue marked as resolved.");
+      } catch (err) {
+        console.error("Error resolving issue:", err);
+        alert(
+          "Error resolving issue: " +
+            (err.response?.data?.message || err.message)
+        );
+      }
     }
   };
 
   // Handle logout
   const handleLogout = () => {
     console.log("Logging out");
-
     // Clear localStorage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
