@@ -7,22 +7,27 @@ export const AuthContext = createContext(null);
 
 // Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
 export const AuthProvider = ({ children }) => {
-  const [user, setUser ] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // State for error handling
   const navigate = useNavigate(); // Initialize useNavigate for redirection
 
   useEffect(() => {
-    const fetchUserData  = async () => { // Corrected function name
+    const fetchUserData = async () => {
+      // Corrected function name
       try {
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("accessToken");
         if (token) {
-          const response = await axios.get("http://127.0.0.1:8000/api/user/", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setUser (response.data); // Set user data from response
+          const response = await axios.post(
+            "https://academic-6ea365e4b745.herokuapp.com/api/token/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("User data fetched:", response.data); // Log the user data
+          setUser(response.data); // Set user data from response
         } else {
           console.error("No token found, user may need to log in.");
         }
@@ -45,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = (userData) => {
-    setUser (userData);
+    setUser(userData);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("authToken", userData.token); // Store token if available
@@ -54,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
-    setUser (null);
+    setUser(null);
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
     localStorage.removeItem("authToken"); // Clear token on logout
