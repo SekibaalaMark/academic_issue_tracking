@@ -1,17 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "./Login.css";
+import { AuthContext } from "@/context/authContext"; // Import AuthContext
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(
+    localStorage.getItem("rememberedUsername") || ""
+  );
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
+  const [rememberMe, setRememberMe] = useState(
+    !!localStorage.getItem("rememberedUsername")
+  );
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext); // Use the login function from AuthContext
+
+  // Define navigateBasedOnRole with useCallback to avoid dependency issues
+  const navigateBasedOnRole = useCallback(
+    (role) => {
+      if (!role) return navigate("/dashboard");
+
+      switch (role.toLowerCase()) {
+        case "student":
+          return navigate("/students");
+        case "lecturer":
+          return navigate("/lecturers");
+        case "registrar":
+        case "academic_registrar":
+          return navigate("/AcademicRegistrar");
+        default:
+          return navigate("/dashboard");
+      }
+    },
+    [navigate]
+  );
+
+  // If already logged in, redirect once
+  useEffect(() => {
+    const isAuth = localStorage.getItem("isAuthenticated") === "true";
+    const role = localStorage.getItem("userRole");
+    if (isAuth && role) {
+      navigateBasedOnRole(role);
+    }
+  }, [navigateBasedOnRole]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,102 +55,99 @@ const Login = () => {
     try {
       const response = await axios.post(
         "https://academic-6ea365e4b745.herokuapp.com/api/login/",
-        {
-          username,
-          password,
-        }
+        { username, password }
       );
 
-      console.log("Full Login Response:", response.data);
-      console.log("Full Login Response:", response);
+      const data = response.data;
+      console.log("Login response:", data); // Debug log
 
-      if (response.data) {
-        localStorage.setItem("loginResponse", JSON.stringify(response.data));
+      // More robust token extraction
+      let token, refresh, userRole;
 
-        const token =
-          response.data.tokens?.access ||
-          response.data.token ||
-          response.data.access;
-        const refreshToken =
-          response.data.tokens?.refresh || response.data.refresh || "";
-        const userRole = response.data.data.user?.role || response.data.data.role || "";
-
-        console.log("userRole:", userRole);
-        const userId = response.data.user?.id || response.data.id || "";
-        const storedUsername =
-          response.data.user?.username || response.data.username || username;
-
-        if (token) localStorage.setItem("accessToken", token);
-        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
-        if (userRole) localStorage.setItem("userRole", userRole);
-        if (userId) localStorage.setItem("userId", userId);
-        if (storedUsername) localStorage.setItem("username", storedUsername);
-
-        localStorage.setItem("isAuthenticated", "true");
-
-        if (rememberMe) {
-          localStorage.setItem("rememberedUsername", username);
-        } else {
-          localStorage.removeItem("rememberedUsername");
-        }
-
-        navigateBasedOnRole(userRole);
+      // Try different possible response structures
+      if (data.tokens) {
+        token = data.tokens.access;
+        refresh = data.tokens.refresh;
       } else {
-        setErrorMessage("Login successful but received empty response");
+        token = data.token || data.access;
+        refresh = data.refresh;
       }
+
+      // Try different possible user role locations
+      if (data.data && data.data.user) {
+        userRole = data.data.user.role;
+      } else if (data.data) {
+        userRole = data.data.role;
+      } else if (data.user) {
+        userRole = data.user.role;
+      } else {
+        userRole = data.role;
+      }
+
+      if (!token) {
+        throw new Error("Authentication failed: No token received");
+      }
+
+      if (!userRole) {
+        throw new Error("Authentication failed: User role not found");
+      }
+
+      // Important: Update the AuthContext with user info
+      await login({
+        token,
+        refreshToken: refresh,
+        username,
+        role: userRole,
+      });
+
+      // Persist
+      localStorage.setItem("accessToken", token);
+      if (refresh) localStorage.setItem("refreshToken", refresh);
+      localStorage.setItem("userRole", userRole);
+      localStorage.setItem("isAuthenticated", "true");
+
+      if (rememberMe) {
+        localStorage.setItem("rememberedUsername", username);
+      } else {
+        localStorage.removeItem("rememberedUsername");
+      }
+
+      console.log("Login successful, navigating to:", userRole);
+      navigateBasedOnRole(userRole);
     } catch (err) {
       console.error("Login error:", err);
-      setErrorMessage(
-        err.response?.data?.detail ||
-          "Invalid username or password. Please try again."
-      );
+
+      // More comprehensive error handling
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const errorData = err.response.data;
+        setErrorMessage(
+          errorData.detail ||
+            errorData.message ||
+            errorData.error ||
+            "Invalid credentials. Please try again."
+        );
+      } else if (err.request) {
+        // The request was made but no response was received
+        setErrorMessage(
+          "No response from server. Please check your internet connection."
+        );
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setErrorMessage(err.message || "An unexpected error occurred.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
-
-  const navigateBasedOnRole = (role) => {
-    console.log("Navigating based on role:", role);
-    switch (role?.toLowerCase()) {
-      case "student":
-        console.log("Redirecting to student dashboard");
-        navigate("/students");
-        break;
-      case "lecturer":
-        console.log("Redirecting to lecturer dashboard");
-        navigate("/lecturers");
-        break;
-      case "registrar":
-        console.log("Redirecting to registrar dashboard");
-        navigate("/AcademicRegistrar");
-        break;
-      default:
-        console.log("No matching role, redirecting to default dashboard");
-        navigate("/dashboard");
-    }
-  };
-
-  // useEffect(() => {
-  //   const rememberedUsername = localStorage.getItem("rememberedUsername");
-  //   if (rememberedUsername) {
-  //     setUsername(rememberedUsername);
-  //     setRememberMe(true);
-  //   }
-
-  //   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-  //   const userRole = localStorage.getItem("userRole");
-  //   console.log("User Role:", userRole);
-
-  //   if (isAuthenticated) {
-  //     navigateBasedOnRole(userRole);
-  //   }
-  // }, [navigate]);
 
   return (
     <div className="container">
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Login</h1>
+          {/* Username */}
           <div className="input-wrapper">
             <label htmlFor="username" className="form-label">
               Username
@@ -134,6 +165,7 @@ const Login = () => {
               <FaUserCircle className="input-icon" />
             </div>
           </div>
+          {/* Password */}
           <div className="input-wrapper">
             <label htmlFor="password" className="form-label">
               Password
@@ -151,6 +183,7 @@ const Login = () => {
               <FaLock className="input-icon" />
             </div>
           </div>
+          {/* Remember me */}
           <div className="remember-me">
             <label>
               <input
@@ -164,7 +197,9 @@ const Login = () => {
               Forgot Password?
             </a>
           </div>
+          {/* Error */}
           {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {/* Submit */}
           <button type="submit" className="login-btn" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </button>
