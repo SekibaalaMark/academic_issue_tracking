@@ -1,48 +1,164 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AcademicRegistrar.css";
+import { AuthContext } from "@/context/authContext";
 
+// API base URL
+const API_BASE_URL = "https://academic-6ea365e4b745.herokuapp.com/api";
+
+// API endpoints
 const ENDPOINTS = {
-  issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
-  // lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
+  issues: `${API_BASE_URL}/registrar-issues-management/`,
+  lecturers: `${API_BASE_URL}/lecturers/`,
+  users: `${API_BASE_URL}/users/`,
 };
 
 const AcademicRegistrar = () => {
+  const { user, logout } = useContext(AuthContext);
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-  const [selectedTab, setSelectedTab] = useState("home"); // "home" or "management"
-  const authToken = localStorage.getItem("authToken");
+  const [selectedTab, setSelectedTab] = useState("home");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Fetch registrar issues
-    axios
-      .get(ENDPOINTS.issues, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
-      .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching issues:", err));
+  // Create axios instance with authentication
+  const createAuthAxios = () => {
+    const token = localStorage.getItem("accessToken");
+    return axios.create({
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
 
-    // The lecturers API is not created yet so this call is commented out
-    /*
-    axios
-      .get(ENDPOINTS.lecturers, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      })
-      .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching lecturers:", err));
-    */
-  }, [authToken]);
+  // Check authentication and fetch data
+  useEffect(() => {
+    console.log("AcademicRegistrar component mounted");
+
+    const checkAuthAndRedirect = () => {
+      const token = localStorage.getItem("accessToken");
+      const userRole = localStorage.getItem("userRole");
+      const isAuthenticated = localStorage.getItem("isAuthenticated");
+
+      if (!token || !isAuthenticated) {
+        console.log("Not authenticated, redirecting to login");
+        navigate("/login");
+        return false;
+      }
+
+      // Check if user is actually a registrar
+      if (
+        userRole &&
+        userRole !== "academic_registrar" &&
+        userRole !== "registrar" &&
+        userRole !== "academicregistrar"
+      ) {
+        console.log(
+          "User is not a registrar, redirecting based on role:",
+          userRole
+        );
+
+        if (userRole === "student") {
+          navigate("/students");
+        } else if (userRole === "lecturer") {
+          navigate("/lecturers");
+        } else {
+          navigate("/dashboard");
+        }
+        return false;
+      }
+      return true;
+    };
+
+    const fetchData = async () => {
+      // First check authentication and role
+      if (!checkAuthAndRedirect()) {
+        return;
+      }
+
+      const authAxios = createAuthAxios();
+
+      try {
+        // Fetch registrar issues
+        console.log("Fetching registrar issues");
+        const issuesResponse = await authAxios.get(ENDPOINTS.issues);
+        console.log("Issues response:", issuesResponse.data);
+        setIssues(
+          Array.isArray(issuesResponse.data) ? issuesResponse.data : []
+        );
+
+        // Fetch lecturers from the users endpoint with role filter
+        try {
+          console.log("Fetching lecturers");
+          const lecturersResponse = await authAxios.get(
+            `${ENDPOINTS.users}?role=lecturer`
+          );
+          console.log("Lecturers response:", lecturersResponse.data);
+
+          // Transform the data to match the expected format
+          const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
+            id: lecturer.id,
+            name: `${lecturer.first_name} ${lecturer.last_name}`,
+          }));
+
+          setLecturers(formattedLecturers);
+        } catch (lecturerErr) {
+          console.error("Error fetching lecturers:", lecturerErr);
+          // Try alternative endpoint if the first one fails
+          try {
+            const alternativeLecturersResponse = await authAxios.get(
+              ENDPOINTS.lecturers
+            );
+            console.log(
+              "Alternative lecturers response:",
+              alternativeLecturersResponse.data
+            );
+            setLecturers(
+              Array.isArray(alternativeLecturersResponse.data)
+                ? alternativeLecturersResponse.data
+                : []
+            );
+          } catch (altErr) {
+            console.error("Error fetching from alternative endpoint:", altErr);
+            setLecturers([]);
+          }
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Error in AcademicRegistrar:", err);
+        console.error("Response data:", err.response?.data);
+        console.error("Response status:", err.response?.status);
+
+        if (err.response?.status === 401) {
+          console.log("Unauthorized access, logging out");
+          handleLogout();
+        } else {
+          setError(`Failed to load data: ${err.message || "Unknown error"}`);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [navigate, logout, user]);
 
   // Calculate summary counts
   const totalIssues = issues.length;
-  const pendingIssues = issues.filter((issue) => issue.status === "pending").length;
-  const inProgressIssues = issues.filter((issue) => issue.status === "in progress").length;
-  const resolvedIssues = issues.filter((issue) => issue.status === "resolved").length;
+  const pendingIssues = issues.filter(
+    (issue) => issue.status === "pending"
+  ).length;
+  const inProgressIssues = issues.filter(
+    (issue) => issue.status === "in progress"
+  ).length;
+  const resolvedIssues = issues.filter(
+    (issue) => issue.status === "resolved"
+  ).length;
 
   // Filter issues for management view
   const filteredIssues = issues.filter((issue) => {
@@ -50,61 +166,135 @@ const AcademicRegistrar = () => {
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
       ? issue.assignedLecturer &&
-        issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase())
+        issue.assignedLecturer
+          .toLowerCase()
+          .includes(filterLecturer.toLowerCase())
       : true;
     return matchType && matchStatus && matchLecturer;
   });
 
   // Assign an issue to a lecturer
-  const handleAssign = (issueId, lecturerId) => {
-    axios
-      .patch(
-        `${ENDPOINTS.issues}${issueId}/assign`,
-        { assigned_to: lecturerId },
-        { headers: { Authorization: `Bearer ${authToken}` } }
-      )
-      .then(() => {
-        setIssues((prevIssues) =>
-          prevIssues.map((issue) =>
-            issue.id === issueId
-              ? {
-                  ...issue,
-                  assignedLecturer: lecturers.find((l) => l.id === lecturerId)?.name,
-                }
-              : issue
-          )
-        );
-        alert("Issue assigned successfully!");
-      })
-      .catch((err) => alert("Error assigning issue."));
-  };
+  const handleAssign = async (issueId, lecturerId) => {
+    if (!lecturerId) return; // Don't proceed if no lecturer is selected
 
-  // Resolve an issue
-  const handleResolve = (issueId) => {
-    if (window.confirm("Are you sure you want to mark this issue as resolved?")) {
-      axios
-        .patch(
-          `${ENDPOINTS.issues}${issueId}/resolve`,
-          { status: "resolved" },
-          { headers: { Authorization: `Bearer ${authToken}` } }
+    try {
+      const authAxios = createAuthAxios();
+      console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
+
+      const response = await authAxios.patch(
+        `${ENDPOINTS.issues}${issueId}/assign`,
+        { assigned_to: lecturerId }
+      );
+
+      console.log("Assign response:", response.data);
+
+      // Update the local state with the new assignment
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) =>
+          issue.id === issueId
+            ? {
+                ...issue,
+                assignedLecturer: lecturers.find((l) => l.id === lecturerId)
+                  ?.name,
+                status: "in progress", // Update status if your API does this
+              }
+            : issue
         )
-        .then(() => {
-          setIssues((prevIssues) =>
-            prevIssues.map((issue) =>
-              issue.id === issueId ? { ...issue, status: "resolved" } : issue
-            )
-          );
-          alert("Issue marked as resolved.");
-        })
-        .catch(() => alert("Error resolving issue."));
+      );
+
+      alert("Issue assigned successfully!");
+    } catch (err) {
+      console.error("Error assigning issue:", err);
+      alert(
+        "Error assigning issue: " + (err.response?.data?.message || err.message)
+      );
     }
   };
 
-  // Navigation in sidebar (e.g., Logout)
+  // Resolve an issue
+  const handleResolve = async (issueId) => {
+    if (
+      window.confirm("Are you sure you want to mark this issue as resolved?")
+    ) {
+      try {
+        const authAxios = createAuthAxios();
+        console.log(`Resolving issue ${issueId}`);
+
+        const response = await authAxios.patch(
+          `${ENDPOINTS.issues}${issueId}/resolve`,
+          { status: "resolved" }
+        );
+
+        console.log("Resolve response:", response.data);
+
+        // Update the local state with the resolved status
+        setIssues((prevIssues) =>
+          prevIssues.map((issue) =>
+            issue.id === issueId ? { ...issue, status: "resolved" } : issue
+          )
+        );
+
+        alert("Issue marked as resolved.");
+      } catch (err) {
+        console.error("Error resolving issue:", err);
+        alert(
+          "Error resolving issue: " +
+            (err.response?.data?.message || err.message)
+        );
+      }
+    }
+  };
+
+  // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    console.log("Logging out");
+    // Clear localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("username");
+
+    // Use context logout if available
+    if (logout) {
+      logout();
+    }
+
     navigate("/login");
   };
+
+  // Handle retry
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    window.location.reload();
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Loading Academic Registrar Dashboard...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="error-container">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <div style={{ marginTop: "20px" }}>
+          <button onClick={handleRetry} style={{ marginRight: "10px" }}>
+            Retry
+          </button>
+          <button onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="academic-registrar-dashboard">
@@ -131,6 +321,11 @@ const AcademicRegistrar = () => {
       {/* Main Content */}
       <main className="main-content">
         <h1 className="page-title">Academic Registrar Dashboard</h1>
+        <div className="user-welcome">
+          <p>
+            Welcome, {localStorage.getItem("username") || "Academic Registrar"}
+          </p>
+        </div>
 
         {selectedTab === "home" && (
           <div className="dashboard-summary">
@@ -159,7 +354,10 @@ const AcademicRegistrar = () => {
             <div className="filter-container">
               <label>
                 Filter by Issue Category:
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
                   <option value="">All</option>
                   <option value="Missing_Marks">Missing Marks</option>
                   <option value="wrong grading">Wrong Grading</option>
@@ -167,17 +365,18 @@ const AcademicRegistrar = () => {
                   <option value="other">Other</option>
                 </select>
               </label>
-
               <label>
                 Filter by Status:
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
                   <option value="">All</option>
                   <option value="pending">Pending</option>
                   <option value="in progress">In Progress</option>
                   <option value="resolved">Resolved</option>
                 </select>
               </label>
-
               <label>
                 Filter by Lecturer:
                 <input
@@ -188,7 +387,6 @@ const AcademicRegistrar = () => {
                 />
               </label>
             </div>
-
             {/* Issues Table */}
             <div className="issues-table-container">
               <h2 className="section-title">Registrar Issue Management</h2>
@@ -218,7 +416,10 @@ const AcademicRegistrar = () => {
                         <td>{issue.assignedLecturer || "Not Assigned"}</td>
                         <td>
                           <select
-                            onChange={(e) => handleAssign(issue.id, e.target.value)}
+                            onChange={(e) =>
+                              handleAssign(issue.id, e.target.value)
+                            }
+                            value=""
                           >
                             <option value="">Select Lecturer</option>
                             {lecturers.map((lecturer) => (

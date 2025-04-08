@@ -1,6 +1,7 @@
 import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import LogoutButton from "../components/LogoutButton";
+
+import { AuthProvider, useAuth } from "@/context/authContext";
+// import LogoutButton from "./components/LogoutButton";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);

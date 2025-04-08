@@ -6,13 +6,11 @@ const CoverPage = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    // Navigate to the Login page
-    navigate("/login");
+    navigate("/login"); // Navigate to Login page
   };
 
   const handleRegister = () => {
-    // Navigate to the Register page
-    navigate("/register");
+    navigate("/register"); // Navigate to Register page
   };
 
   return (
@@ -40,7 +38,7 @@ const CoverPage = () => {
         }}
       />
 
-      {/* Overlay for better text readability */}
+      {/* Optional overlay for better text readability */}
       <Box
         sx={{
           position: "absolute",
@@ -48,7 +46,7 @@ const CoverPage = () => {
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: "rgba(0,0,0,0.5)", // Dark overlay for text readability
           zIndex: 1,
         }}
       />
@@ -63,7 +61,7 @@ const CoverPage = () => {
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 2,
-          color: "white",
+          color: "white", // Text color
         }}
       >
         <Typography
@@ -100,7 +98,7 @@ const CoverPage = () => {
             px: { xs: 3, sm: 4 },
             py: 1.5,
             fontSize: "1.1rem",
-            mr: 2,
+            mr: 2, // Add margin to the right for spacing
           }}
         >
           Login

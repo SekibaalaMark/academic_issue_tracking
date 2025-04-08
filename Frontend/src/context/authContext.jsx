@@ -1,26 +1,35 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // ✅ Correct named import
-import { useNavigate } from "react-router-dom";
+import axios from "axios"; // Import axios for API calls
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
+// Create the auth context and export it
 export const AuthContext = createContext(null);
 
+// Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null); // State for error handling
+  const navigate = useNavigate(); // Initialize useNavigate for redirection
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // Corrected function name
       try {
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("accessToken");
         if (token) {
-          const response = await axios.get(
-            "https://academic-6ea365e4b745.herokuapp.com/api/user/",
-            { headers: { Authorization: `Bearer ${token}` } }
+          const response = await axios.post(
+            "https://academic-6ea365e4b745.herokuapp.com/api/token/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
-          setUser(response.data);
+          console.log("User data fetched:", response.data); // Log the user data
+          setUser(response.data); // Set user data from response
+        } else {
+          console.error("No token found, user may need to log in.");
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
@@ -30,62 +39,57 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    if (localStorage.getItem("isAuthenticated") === "true") {
-      fetchUserData();
+    // Check if user is authenticated on component mount
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    if (isAuthenticated) {
+      fetchUserData(); // Call the corrected function
     } else {
-      setLoading(false);
+      setLoading(false); // If not authenticated, just set loading to false
     }
-  }, [navigate]);
+  }, []);
 
+  // Login function
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
-
-    if (userData.token) {
-      localStorage.setItem("authToken", userData.token);
-      try {
-        const decoded = jwtDecode(userData.token); // ✅ use named function
-        localStorage.setItem("userRole", decoded.role || "user");
-      } catch (err) {
-        console.error("Token decoding error:", err);
-      }
-    }
-
-    const role = (userData.user?.role || userData.role || "").toLowerCase();
-    switch (role) {
-      case "student":
-        navigate("/students");
-        break;
-      case "lecturer":
-        navigate("/lecturers");
-        break;
-      case "registrar":
-        navigate("/academic-registrar");
-        break;
-      default:
-        navigate("/dashboard");
-    }
+    localStorage.setItem("authToken", userData.token); // Store token if available
+    navigate("/dashboard"); // Redirect to dashboard after login
   };
 
+  // Logout function
   const logout = () => {
     setUser(null);
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    navigate("/login");
+    localStorage.removeItem("authToken"); // Clear token on logout
+    navigate("/login"); // Redirect to login page after logout
   };
 
+  // Register function
   const register = (userData) => {
+    // You might want to add more logic here
     login(userData);
   };
 
+  // Auth context value
+  const value = {
+    user,
+    login,
+    logout,
+    register,
+    loading,
+    error, // Include error in context value
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loading, error }}>
+    <AuthContext.Provider value={value}>
       {!loading ? children : <div>Loading...</div>}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Hook for child components to get the auth object and re-render when it changes
+export const useAuth = () => {
+  return useContext(AuthContext);
+};

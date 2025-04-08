@@ -23,7 +23,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   // Valid IDs based on the serializer
-  const STUDENT_IDENTIFICATION_NUMBERS = [0, 111, 222, 333, 444, 555, 1000, 2000, 3000];
+  const STUDENT_IDENTIFICATION_NUMBERS = [0, 111, 222, 333, 444, 555, 1000, 2000, 3000,3545];
   const REGISTRAR_IDS = [20, 30, 40, 50, 60];
   const LECTURER_IDS = [11, 22, 33, 44, 55];
 

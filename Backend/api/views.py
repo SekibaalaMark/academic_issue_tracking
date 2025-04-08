@@ -74,21 +74,13 @@ class AssignIssueViewSet(viewsets.ModelViewSet):
         if request.user.role != 'registrar':
             return Response({"detail": "Only registrars can assign issues to lecturers."}, 
                            status=status.HTTP_403_FORBIDDEN)
-        
-        # Print request data for debugging
-        print(f"Request data: {request.data}")
                 
         serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
         if serializer.is_valid():
-            # Save with explicit commit
             updated_issue = serializer.save()
-            
-            # Verify the update happened
-            print(f"Updated issue lecturer: {updated_issue.lecturer}")
                         
             # Refresh from DB to confirm changes were saved
             issue.refresh_from_db()
-            print(f"Issue after refresh: {issue.lecturer}")
             
             # Send email notification to the assigned lecturer
             email_sent = send_issue_assignment_email(issue)
@@ -107,50 +99,6 @@ class AssignIssueViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
-
-
-'''
-class AssignIssueViewSet(viewsets.ModelViewSet):
-    queryset = Issue.objects.all()
-    permission_classes = [IsAuthenticated]
-    serializer_class = AssignIssueSerializer
-
-    def partial_update(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')
-        try:
-            issue = Issue.objects.get(pk=pk)
-        except Issue.DoesNotExist:
-            return Response({"detail": "Issue not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        if request.user.role != 'registrar':
-            return Response({"detail": "Only registrars can assign issues to lecturers."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Print request data for debugging
-        print(f"Request data: {request.data}")
-        
-        serializer = AssignIssueSerializer(issue, data=request.data, partial=True)
-        if serializer.is_valid():
-            # Save with explicit commit
-            updated_issue = serializer.save()
-            # Verify the update happened
-            print(f"Updated issue lecturer: {updated_issue.lecturer}")
-            
-            # Refresh from DB to confirm changes were saved
-            issue.refresh_from_db()
-            print(f"Issue after refresh: {issue.lecturer}")
-            
-            return Response(serializer.data)
-        else:
-            print(f"Serializer errors: {serializer.errors}")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''
-
-
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset=CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -166,10 +114,6 @@ class ProgrammeViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def filter_issues(request):
-    """
-    Filter issues based on various criteria including status, category, and user role.
-    Registrars and lecturers will only see issues assigned to them.
-    """
     # Get filter parameters from request
     status = request.GET.get('status', None)
     category = request.GET.get('category', None)
@@ -208,7 +152,7 @@ def filter_issues(request):
 
 
 
-class StudentCreateIssueView(viewsets.ModelViewSet):
+class StudentRaiseIssueView(viewsets.ModelViewSet):
     serializer_class = CreateIssueSerializer
     permission_classes = [IsAuthenticated]
     
@@ -219,11 +163,9 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
             
         # Save with the current user as the student
         issue = serializer.save(student=self.request.user)
-        print(f"Issue created with ID: {issue.id}")
         
         # Send email notification to the registrar
         email_sent = send_issue_notification_email(issue)
-        print(f"Email notification sent: {email_sent}")
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -245,36 +187,6 @@ class StudentCreateIssueView(viewsets.ModelViewSet):
         )
 
 
-
-
-
-'''
-class StudentCreateIssueView(viewsets.ModelViewSet):
-    serializer_class = CreateIssueSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        # Check if user is a student
-        if self.request.user.role != 'student':
-            raise PermissionDenied("Only students can raise issues.")
-        
-        # Save with the current user as the student
-        serializer.save(student=self.request.user)
-        print(f"Issue created with ID: {serializer.instance.id}")
-    
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            {'success': True, 'message': 'Issue submitted successfully', 'data': serializer.data},
-            status=status.HTTP_201_CREATED, 
-            headers=headers
-        )
-'''
-
-
 class UserRegistrationView(APIView):
     def post(self,request):
         data = request.data 
@@ -282,7 +194,7 @@ class UserRegistrationView(APIView):
         if serializer.is_valid():
             validated_data = serializer.validated_data
             password = validated_data.pop('password')
-            validated_data.pop('password_confirmation')  #This removes the password_confirmation before creating a user to avoid errors
+            validated_data.pop('password_confirmation')
             
             user = CustomUser(**validated_data)
             user.set_password(password)
@@ -373,12 +285,12 @@ def resend_verification_code(request):
         try:
             user = CustomUser.objects.get(email = user_email)
         except CustomUser.DoesNotExist:
-            return Response({'Error':'No user found...'})
+            return Response({'Error':'wrong email entered!'})
         
         result = VerificationCode.resend_verification_code(user = user)
         if result:
-            return Response({'Message':f'Successful.....'},status=status.HTTP_200_OK)
-        return Response({'Error':'Failure...........--'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'Message':f'Verification code has been sent again Successfully...'},status=status.HTTP_200_OK)
+        return Response({'Error':'Sending verification code has Failed. Please try again'},status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors,status = status.HTTP_400_BAD_REQUEST)
   
     
@@ -394,8 +306,7 @@ def login(request):
         
         user = authenticate(username=username, password=password)
         if user is not None:
-            #return Response({'success': False, 'message': 'Only Students are allowed to login from here!'}, status=status.HTTP_401_UNAUTHORIZED)
-            # Generate tokens
+        # Generate tokens
             refresh = RefreshToken.for_user(user)
             
             return Response({
@@ -455,7 +366,7 @@ class LecturerIssueManangementView(viewsets.ModelViewSet):
         return updated_issue
             
     def perform_destroy(self, instance):
-        self.send_email_on_update(instance,"deleted")
+        self.send_email_on_update(instance,"deleted",instance.status)
         instance.delete()
     
 class StudentIssueReadOnlyViewset(viewsets.ReadOnlyModelViewSet):
@@ -747,33 +658,77 @@ class StudentDashboardCountView(APIView):
 
 
 
+class StudentProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='student':
+            return Response({"detail": "Only Students can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'student number':user.staff_id_or_student_no})
+
+
+class LecturerProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='lecturer':
+            return Response({"detail": "Only lecturers can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'staff_id':user.staff_id_or_student_no})
+    
+
+
+
+class RegistrarProfileView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if request.user.role !='registar':
+            return Response({"detail": "Only registrars can access this view."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user = request.user 
+        return Response({'username':user.username,
+                         'email':user.email,
+                         'role':user.role,
+                         'staff_id':user.staff_id_or_student_no})
+
+
+
+
+
 class LecturerDashboardCountView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Step 1: Verify the user is a lecturer
         if request.user.role != 'lecturer':
             return Response(
                 {"detail": "Only lecturers can access this dashboard."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Step 2: Get all issues assigned to this lecturer
         lecturer_issues = Issue.objects.filter(lecturer=request.user)
         
-        # Step 3: Count issues by status
+        #Count issues by status
         total_assigned = lecturer_issues.count()
         in_progress_count = lecturer_issues.filter(status='in_progress').count()
         resolved_count = lecturer_issues.filter(status='resolved').count()
         
-        # Step 4: Prepare the response data
+        
         dashboard_data = {
             'total_assigned': total_assigned,
             'in_progress_count': in_progress_count,
             'resolved_count': resolved_count
         }
         
-        # Step 5: Return the response
         return Response({
             'success': True,
             'dashboard': dashboard_data
@@ -781,31 +736,24 @@ class LecturerDashboardCountView(APIView):
     
 
 
-
-
 class RegistrarDashboardCountView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Step 1: Verify the user is a registrar
         if request.user.role != 'registrar':
             return Response(
                 {"detail": "Only registrars can access this dashboard."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Step 2: Get all issues assigned to this registrar
         registrar_issues = Issue.objects.filter(registrar=request.user)
         
-        # Step 3: Count total issues
         total_issues = registrar_issues.count()
         
-        # Step 4: Count issues by status
         pending_count = registrar_issues.filter(status='pending').count()
         in_progress_count = registrar_issues.filter(status='in_progress').count()
         resolved_count = registrar_issues.filter(status='resolved').count()
         
-        # Step 5: Prepare the response data
         dashboard_data = {
             'total_issues': total_issues,
             'pending_count': pending_count,
@@ -813,7 +761,6 @@ class RegistrarDashboardCountView(APIView):
             'resolved_count': resolved_count
         }
         
-        # Step 6: Return the response
         return Response({
             'success': True,
             'dashboard': dashboard_data
