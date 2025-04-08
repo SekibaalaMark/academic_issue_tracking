@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Students from './pages/Students';
 import Lecturer from './pages/Lecturer';
@@ -18,7 +18,7 @@ import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
-    <Router>
+    
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
@@ -38,8 +38,12 @@ function App() {
         {/* Add more routes as needed */}
         <Route path="/issues" element={<IssuesTable />} />
       </Routes>
-    </Router>
+    
   );
 }
 
 export default App;
+
+
+
+
