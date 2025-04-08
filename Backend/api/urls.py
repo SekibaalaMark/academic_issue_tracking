@@ -34,6 +34,9 @@ urlpatterns = [
     path('student-profile/',StudentProfileView.as_view(),name='student-profle'),
     path('lecturer-profile/',LecturerProfileView.as_view(),name='lecturer-profle'),
     path('registrar-profile/',LecturerProfileView.as_view(),name='registrar-profle'),
+    path('registrar-dashboard/',RegistrarDashboardCountView.as_view(),name='registrar-dashboard'),
+    path('student-dashboard/',StudentDashboardCountView.as_view(),name='student-dashboard'),
+    path('lecturer-dashboard/',LecturerDashboardCountView.as_view(),name='lecturer-dashboard'),
 
     path("token/",TokenObtainPairView.as_view(),name="get_token"),
     path('token/refresh',TokenRefreshView.as_view(),name="refresh_token"),
