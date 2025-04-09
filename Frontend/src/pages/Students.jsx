@@ -12,6 +12,14 @@ const ENDPOINTS = {
   userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
 };
 
+// Department choices
+const DEPT_CHOICES = [
+  { value: "computer_science", label: "Computer Science Department" },
+  { value: "networks", label: "Networks Department" },
+  { value: "information_systems", label: "Information Systems" },
+  { value: "information_technology", label: "Information Technology" },
+];
+
 const Students = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -24,7 +32,7 @@ const Students = () => {
     year_of_study: "year_1",
     category: "Missing_Marks",
     description: "",
-    department: "",
+    department: "computer_science", // Default to first department
     attachment: null,
   });
   const [error, setError] = useState("");
@@ -32,32 +40,29 @@ const Students = () => {
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Function to fetch student data
   const fetchStudentData = async (token) => {
     try {
-      const [deptRes, issuesRes] = await Promise.all([
-        axios.get(ENDPOINTS.departments, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-        axios.get(ENDPOINTS.studentIssues, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-      ]);
-      setDepartments(deptRes.data);
+      const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
+        headers: { Authorization: `Token ${token}` },
+      });
       setIssues(issuesRes.data);
-      if (deptRes.data.length > 0) {
-        setFormData((prev) => ({ ...prev, department: deptRes.data[0].id }));
-      }
     } catch (err) {
       console.error("Error fetching student data:", err);
     }
   };
 
+  // Helper function to get department name from value
+  const getDepartmentName = (deptValue) => {
+    const dept = DEPT_CHOICES.find((d) => d.value === deptValue);
+    return dept ? dept.label : deptValue;
+  };
+
   // Check authentication and user role on component mount
   useEffect(() => {
     console.log("Students component mounted, user:", user);
-
     const fetchUserRole = async () => {
       if (!user || !user.token) {
         console.log("No user or token found, redirecting to login");
@@ -66,17 +71,14 @@ const Students = () => {
         setAuthChecked(true);
         return;
       }
-
       try {
         console.log("Fetching user profile with token:", user.token);
         const response = await axios.get(ENDPOINTS.userProfile, {
           headers: { Authorization: `Token ${user.token}` },
         });
         console.log("User profile response:", response.data);
-
         const role = response.data.role;
         setUserRole(role);
-
         // Redirect based on role
         if (role === "academic_registrar" || role === "registrar") {
           console.log("User is registrar, redirecting");
@@ -91,7 +93,6 @@ const Students = () => {
           navigate("/dashboard");
           return;
         }
-
         // Only fetch student data if user is actually a student
         console.log("User is student, fetching student data");
         await fetchStudentData(user.token);
@@ -99,7 +100,6 @@ const Students = () => {
         console.error("Error fetching user role:", err);
         console.error("Response data:", err.response?.data);
         console.error("Response status:", err.response?.status);
-
         if (err.response?.status === 401) {
           console.log("Unauthorized access, logging out");
           logout();
@@ -110,7 +110,6 @@ const Students = () => {
         setAuthChecked(true);
       }
     };
-
     fetchUserRole();
   }, [user, navigate, logout]);
 
@@ -128,36 +127,80 @@ const Students = () => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
+    setSubmitting(true);
+    console.log("Form data being submitted:", formData);
+    // Validate form data
+    if (
+      !formData.course_name ||
+      !formData.course_code ||
+      !formData.description
+    ) {
+      setError("Please fill in all required fields");
+      setSubmitting(false);
+      return;
+    }
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== "") {
         data.append(key, value);
+        console.log(`Adding to FormData: ${key} = ${value}`);
       }
     });
     try {
-      await axios.post(ENDPOINTS.raiseIssue, data, {
+      console.log("Sending request to:", ENDPOINTS.raiseIssue);
+      console.log("With token:", user.token);
+      const response = await axios.post(ENDPOINTS.raiseIssue, data, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Token ${user.token}`,
         },
       });
+      console.log("Issue submission response:", response);
       setSuccessMsg("Issue raised successfully.");
-      // Refresh issues list
-      const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
-        headers: { Authorization: `Token ${user.token}` },
-      });
-      setIssues(issuesRes.data);
-      // Reset form (keep department selection)
+
+      // Reset form after successful submission
       setFormData({
-        ...formData,
         course_name: "",
         course_code: "",
+        year_of_study: "year_1",
+        category: "Missing_Marks",
         description: "",
+        department: "computer_science",
         attachment: null,
       });
+
+      // Refresh issues list
+      await fetchStudentData(user.token);
+
+      // Optionally switch to My Issues tab after successful submission
+      setTimeout(() => {
+        setSelectedTab("myIssues");
+      }, 2000);
     } catch (err) {
-      setError("Failed to raise issue. Please try again.");
+      console.error("Error details:", err);
+      console.error("Response status:", err.response?.status);
+      console.error("Response data:", err.response?.data);
+      // More specific error message based on the error
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError("Authentication failed. Please log in again.");
+        } else if (err.response.status === 400) {
+          setError(`Validation error: ${JSON.stringify(err.response.data)}`);
+        } else {
+          setError(
+            `Server error (${err.response.status}): ${err.response.data.message || "Unknown error"}`
+          );
+        }
+      } else if (err.request) {
+        setError(
+          "No response received from server. Please check your connection."
+        );
+      } else {
+        setError(`Error: ${err.message}`);
+      }
       console.error("Error submitting issue:", err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -184,7 +227,6 @@ const Students = () => {
     return null;
   }
 
-  // JSX for the student dashboard
   return (
     <div className="students-container">
       <header className="dashboard-header">
@@ -288,6 +330,7 @@ const Students = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter course name"
+                    disabled={submitting}
                   />
                 </div>
                 <div className="form-group">
@@ -300,6 +343,7 @@ const Students = () => {
                     onChange={handleChange}
                     required
                     placeholder="e.g., CS101"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -311,6 +355,7 @@ const Students = () => {
                     name="year_of_study"
                     value={formData.year_of_study}
                     onChange={handleChange}
+                    disabled={submitting}
                   >
                     <option value="year_1">Year 1</option>
                     <option value="year_2">Year 2</option>
@@ -325,6 +370,7 @@ const Students = () => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
+                    disabled={submitting}
                   >
                     <option value="Missing_Marks">Missing Marks</option>
                     <option value="Wrong_Marks">Wrong Marks</option>
@@ -340,12 +386,22 @@ const Students = () => {
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
+                  required
+                  disabled={submitting}
                 >
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </option>
-                  ))}
+                  <option value="" disabled>
+                    Select a department
+                  </option>
+                  <option value="computer_science">
+                    Computer Science Department
+                  </option>
+                  <option value="networks">Networks Department</option>
+                  <option value="information_systems">
+                    Information Systems
+                  </option>
+                  <option value="information_technology">
+                    Information Technology
+                  </option>
                 </select>
               </div>
               <div className="form-group">
@@ -358,6 +414,7 @@ const Students = () => {
                   required
                   rows="4"
                   placeholder="Describe your issue in detail..."
+                  disabled={submitting}
                 ></textarea>
               </div>
               <div className="form-group">
@@ -367,6 +424,7 @@ const Students = () => {
                   id="attachment"
                   name="attachment"
                   onChange={handleChange}
+                  disabled={submitting}
                 />
                 <small>Upload any relevant documents (PDF, JPG, PNG)</small>
               </div>
@@ -420,11 +478,35 @@ const Students = () => {
                         <strong>Year:</strong>{" "}
                         {issue.year_of_study.replace("_", " ")}
                       </p>
-                      <p className="issue-department">
+                      <div className="form-group">
+                        <label htmlFor="department">Department</label>
+                        <select
+                          id="department"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleChange}
+                          required
+                        >
+                          <option value="" disabled>
+                            Select a department
+                          </option>
+                          <option value="computer_science">
+                            Computer Science Department
+                          </option>
+                          <option value="networks">Networks Department</option>
+                          <option value="information_systems">
+                            Information Systems
+                          </option>
+                          <option value="information_technology">
+                            Information Technology
+                          </option>
+                        </select>
+                      </div>
+                      {/* <p className="issue-department">
                         <strong>Department:</strong>{" "}
                         {departments.find((d) => d.id === issue.department)
                           ?.name || "Unknown"}
-                      </p>
+                      </p> */}
                     </div>
                     <div className="issue-description">
                       <strong>Description:</strong>
