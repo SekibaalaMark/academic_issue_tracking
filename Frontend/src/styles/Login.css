@@ -1,0 +1,143 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width:100vh;
+  background: linear-gradient( #f0f4f8, #d9e2ec);
+}
+
+.login-container {
+  width: 100%; /* Set the width to half the page */
+  padding: 50px; /* Increase padding for better spacing */
+  border-radius: 20px;
+  position: relative;
+  background-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-input {
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 100%;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.form-input:focus {
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+.login-btn {
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.login-btn:hover {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.redirect-text {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.redirect-text a {
+  text-decoration: none;
+  font-weight: bold;
+  color: #007bff;
+  transition: color 0.3s ease-in-out;
+}
+
+.redirect-text a:hover {
+  color: #0056b3;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-icon-container {
+  position: relative;
+  width:100%
+}
+.input-icon {
+  position: absolute;
+  left:12px;
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.form-input:focus + .input-icon {
+  opacity: 1;
+}
+
+.error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .login-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-header p {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .login-btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .redirect-text {
+    font-size: 0.8rem;
+  }
+}

@@ -1,8 +1,29 @@
+/* src/index.css */
+
+/* Reset and full-screen layout */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Set up the root element to use the full viewport */
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Global Base Styles */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
+  
+  /* Default color scheme */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
@@ -13,6 +34,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global Link Styles */
 a {
   font-weight: 500;
   color: #646cff;
@@ -22,31 +44,7 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-body {
-  
-  font-family: 'Poppins',sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  display:flex;
-  justify-content: center;
-  min-height: 100vh;
-  /* background:url('./components/Assets/sign image.jpg')no-repeat; */
-  background-size: cover;
-  background-position: center;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+/* Global Button Styles */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -66,6 +64,63 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Full-screen layout for body content */
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 320px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Typography */
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  :root {
+    font-size: 90%;
+  }
+  h1 {
+    font-size: 2.8em;
+  }
+  button {
+    padding: 0.5em 1em;
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 85%;
+  }
+  h1 {
+    font-size: 2.4em;
+  }
+  body {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 80%;
+  }
+  h1 {
+    font-size: 2em;
+  }
+  button {
+    padding: 0.5em 0.8em;
+    font-size: 0.9em;
+  }
+}
+  
+/* Light mode adjustments */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -76,5 +131,18 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #ffffff;
+    background-color: #242424;
+  }
+  a:hover {
+    color: #535bf2;
+  }
+  button {
+    background-color: #1a1a1a;
   }
 }

@@ -1,0 +1,5 @@
+<!-- Icon for the Dashboard link in the Navbar -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-label="Dashboard Icon" role="img">
+  <title>Dashboard Icon</title>
+  <path d="M3 13h8V3H3v10zm10 8h8v-6h-8v6zM3 21h8v-6H3v6zm10-8h8V3h-8v10z"/>
+</svg>
