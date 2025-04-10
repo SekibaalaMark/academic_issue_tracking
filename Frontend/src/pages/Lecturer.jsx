@@ -7,6 +7,7 @@ const Lecturer = () => {
   const [issues, setIssues] = useState([]); // Initialize as an empty array
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [error, setError] = useState(null); // To store any fetch errors
+  const [showNotifications, setShowNotifications] = useState(false); // New: toggle notifications
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,11 +24,12 @@ const Lecturer = () => {
     getIssues();
   }, []);
 
-  // Ensure issues state is always an array
   const totalIssues = issues?.length || 0;
   const pendingIssues = issues.filter((issue) => issue.status === "Pending").length;
   const inProgressIssues = issues.filter((issue) => issue.status === "In Progress").length;
   const resolvedIssues = issues.filter((issue) => issue.status === "Resolved").length;
+
+  const unreadNotifications = issues.filter((issue) => issue.status === "Pending"); // New
 
   const handleResolutionChange = (id, resolution) => {
     setIssues((prevIssues) =>
@@ -94,10 +96,64 @@ const Lecturer = () => {
             <FaHome size={20} />
             {sidebarOpen && <span style={{ marginLeft: "10px" }}>Home</span>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", padding: "10px", cursor: "pointer" }}>
-            <FaBell size={20} />
-            {sidebarOpen && <span style={{ marginLeft: "10px" }}>Notifications</span>}
+
+          {/* Notifications Button with dropdown */}
+          <div style={{ position: "relative", width: "100%" }}>
+            <div
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "10px",
+                cursor: "pointer",
+              }}
+            >
+              <FaBell size={20} />
+              {sidebarOpen && <span style={{ marginLeft: "10px" }}>Notifications</span>}
+            </div>
+
+            {showNotifications && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50px",
+                  left: sidebarOpen ? "10px" : "60px",
+                  width: sidebarOpen ? "180px" : "240px",
+                  backgroundColor: "white",
+                  color: "#000",
+                  borderRadius: "5px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  zIndex: 1000,
+                  padding: "10px",
+                  fontSize: "14px",
+                }}
+              >
+                {unreadNotifications.length === 0 ? (
+                  <p>No unread issues.</p>
+                ) : (
+                  <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+                    {unreadNotifications.map((issue) => (
+                      <li
+                        key={issue.id}
+                        style={{
+                          padding: "5px 0",
+                          borderBottom: "1px solid #ccc",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          navigate(`/issue/${issue.id}`);
+                          setShowNotifications(false);
+                        }}
+                      >
+                        {issue.title}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
+
           {/* Logout Button */}
           <div
             onClick={handleLogout}
@@ -205,7 +261,6 @@ const Lecturer = () => {
                           >
                             {issue.status === "Resolved" ? "Resolved" : "Mark as Resolved"}
                           </button>
-                          {/* View Details Button */}
                           <button
                             onClick={() => handleViewDetails(issue.id)}
                             style={{
