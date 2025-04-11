@@ -1,0 +1,149 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+  font-family: "Roboto", sans-serif;
+}
+
+.dashboard-container h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 20px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.dashboard-container ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dashboard-container ul li {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.dashboard-container ul li:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-container ul li a {
+  text-decoration: none;
+  color: #007bff;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.dashboard-container ul li a:hover {
+  text-decoration: underline;
+}
+
+.issues-section {
+  margin-top: 40px;
+  text-align: left;
+}
+
+.issues-section h2 {
+  font-size: 2rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.issues-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.issues-section ul li {
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.issues-section ul li:hover {
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.issues-section p {
+  color: #777;
+  font-size: 1.1rem;
+}
+
+.issues-section .error {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container h1 {
+    font-size: 2rem;
+  }
+
+  .dashboard-container ul {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .dashboard-container ul li {
+    width: 100%;
+  }
+
+  .issues-section h2 {
+    font-size: 1.75rem;
+  }
+
+  .issues-section ul li {
+    padding: 10px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 10px;
+  }
+
+  .dashboard-container h1 {
+    font-size: 1.75rem;
+  }
+
+  .dashboard-container ul li {
+    padding: 15px;
+  }
+
+  .issues-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .issues-section ul li {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,23 @@
+.dashboard-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #ddd;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+  }
+  
+  .bell-icon {
+    font-size: 24px;
+    cursor: pointer;
+    margin-top: 5px;
+  }
+  
+  /* Mobile View */
+  @media (max-width: 768px) {
+    .dashboard-header h2 {
+      font-size: 18px;
+    }
+  }
+  

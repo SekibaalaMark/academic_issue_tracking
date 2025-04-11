@@ -1,0 +1,136 @@
+/* Container for the complaint form */
+.complaint-container {
+  width: 50%;
+  margin: auto;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  font-family: "Poppins", sans-serif;
+  max-width: 100%;
+}
+
+/* Center align headings and footer */
+h2,
+footer {
+  text-align: center;
+  color: #444;
+}
+
+/* Form layout */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Add spacing between form elements */
+}
+
+/* Label styling */
+label {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Input, select, and textarea styling */
+select,
+input,
+textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s ease;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+select:hover,
+input:hover,
+textarea:hover {
+  border-color: #4caf50;
+}
+
+/* Buttons container */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+/* Button styling */
+button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  color: white;
+  font-weight: 500;
+  transition: opacity 0.3s ease;
+}
+
+button:first-child {
+  background: #4caf50; /* Green for submit */
+  margin-right: 5px;
+}
+
+button:last-child {
+  background: #f44336; /* Red for cancel */
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Small button styling */
+.small-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  margin: 0.5rem;
+}
+
+.small-button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .complaint-container {
+    width: 90%; /* Adjust width for tablets and smaller screens */
+    padding: 1rem;
+  }
+
+  form {
+    gap: 10px; /* Reduce spacing between form elements */
+  }
+
+  button {
+    font-size: 0.9rem; /* Adjust button font size */
+  }
+}
+
+@media (max-width: 480px) {
+  .complaint-container {
+    width: 100%; /* Full width for mobile devices */
+    padding: 0.8rem;
+  }
+
+  h2 {
+    font-size: 1.5rem; /* Adjust heading size for smaller screens */
+  }
+
+  select,
+  input,
+  textarea {
+    font-size: 0.9rem; /* Adjust input font size */
+  }
+
+  .small-button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  button {
+    font-size: 0.8rem; /* Adjust button font size */
+    padding: 8px;
+  }
+}

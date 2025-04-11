@@ -1,0 +1,22 @@
+.formCenter {
+  padding: 20px;
+  margin-bottom: 2rem;
+  width: clamp(300px, 50%, 600px);
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+.redirectText {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.redirectText a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.redirectText a:hover {
+  text-decoration: underline;
+}
