@@ -1,30 +1,119 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext"; // Adjust the import path as necessary
+import styled from "styled-components"; // from donatah branch
 import "./AcademicRegistrar.css";
-import { AuthContext } from "@/context/authContext";
 
-// API base URL
-const API_BASE_URL = "https://academic-6ea365e4b745.herokuapp.com/api";
-
-// API endpoints
 const ENDPOINTS = {
-  issues: `${API_BASE_URL}/registrar-issues-management/`,
-  lecturers: `${API_BASE_URL}/lecturers/`,
-  users: `${API_BASE_URL}/users/`,
+  issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
+  lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
 };
 
+// Styled Components from donatah
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  table-layout: fixed;
+  overflow-x: auto;
+`;
+
+const Th = styled.th`
+  border: 1px solid #ddd;
+  padding: 8px;
+  background-color: rgb(248, 197, 197);
+`;
+
+const Td = styled.td`
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+`;
+
+const Tr = styled.tr`
+  &:hover {
+    background-color: #f9f9f9;
+  }
+`;
+
+const Pagination = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+`;
+
+const PageButton = styled.button`
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background-color: #f2f2f2;
+  border-radius: 3px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #ddd;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+const Button = styled.button`
+  margin: 0 0.5px;
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
 const AcademicRegistrar = () => {
-  const { user, logout } = useContext(AuthContext);
+
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
+
+
+  const authToken = localStorage.getItem("authToken");
+  const navigate = useNavigate();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+
+  useEffect(() => {
+    axios
+      .get(ENDPOINTS.issues, {
+        headers: { Authorization: `Token ${authToken}` },
+      })
+      .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error fetching issues:", err));
+
+    axios
+      .get(ENDPOINTS.lecturers, {
+        headers: { Authorization: `Token ${authToken}` },
+      })
+      .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error("Error fetching lecturers:", err));
+  }, [authToken]);
+
+  /* const totalIssues = issues.length;
+  const pendingIssues = issues.filter((i) => i.status === "pending").length;
+  const inProgressIssues = issues.filter((i) => i.status === "in progress").length;
+  const resolvedIssues = issues.filter((i) => i.status === "resolved").length;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); */
 
   // Create axios instance with authentication
   const createAuthAxios = () => {
@@ -161,17 +250,21 @@ const AcademicRegistrar = () => {
   ).length;
 
   // Filter issues for management view
+
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueCategory === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
+
       ? issue.assignedLecturer &&
         issue.assignedLecturer
           .toLowerCase()
           .includes(filterLecturer.toLowerCase())
+
       : true;
     return matchType && matchStatus && matchLecturer;
   });
+
 
   // Assign an issue to a lecturer
   const handleAssign = async (issueId, lecturerId) => {
@@ -314,9 +407,11 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
+
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
+
 
       {/* Main Content */}
       <main className="main-content">
@@ -345,10 +440,12 @@ const AcademicRegistrar = () => {
               <span className="summary-label">Resolved:</span>
               <span className="summary-value">{resolvedIssues}</span>
             </div>
+
           </div>
         )}
 
         {selectedTab === "management" && (
+
           <div className="management-section">
             {/* Filters */}
             <div className="filter-container">
@@ -358,6 +455,7 @@ const AcademicRegistrar = () => {
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
+
                   <option value="">All</option>
                   <option value="Missing_Marks">Missing Marks</option>
                   <option value="wrong grading">Wrong Grading</option>
@@ -365,18 +463,24 @@ const AcademicRegistrar = () => {
                   <option value="other">Other</option>
                 </select>
               </label>
+
               <label>
                 Filter by Status:
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
+
                   <option value="">All</option>
                   <option value="pending">Pending</option>
                   <option value="in progress">In Progress</option>
                   <option value="resolved">Resolved</option>
                 </select>
               </label>
+
+
+
+
               <label>
                 Filter by Lecturer:
                 <input
@@ -387,6 +491,7 @@ const AcademicRegistrar = () => {
                 />
               </label>
             </div>
+
             {/* Issues Table */}
             <div className="issues-table-container">
               <h2 className="section-title">Registrar Issue Management</h2>
@@ -444,6 +549,7 @@ const AcademicRegistrar = () => {
               )}
             </div>
           </div>
+
         )}
       </main>
     </div>

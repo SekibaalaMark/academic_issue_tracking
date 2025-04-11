@@ -1,0 +1,44 @@
+.issues-table {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .issues-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .issues-table th,
+  .issues-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .issues-table th {
+    background: #edc2c2;
+  }
+  
+  .issues-table td.pending {
+    color: red;
+    font-weight: bold;
+  }
+  
+  .issues-table td.resolved {
+    color: green;
+    font-weight: bold;
+  }
+  
+  /* Mobile View */
+  @media (max-width: 768px) {
+    .issues-table table {
+      font-size: 14px;
+    }
+  
+    .issues-table th,
+    .issues-table td {
+      padding: 5px;
+    }
+  }
+  

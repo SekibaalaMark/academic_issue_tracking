@@ -127,7 +127,6 @@ const Students = () => {
         setAuthChecked(true);
       }
     };
-
     fetchUserRole();
   }, [user, navigate, logout]);
 
@@ -212,6 +211,7 @@ const Students = () => {
           </button>
         </div>
       </header>
+
       {/* Navigation Tabs */}
       <nav className="tabs">
         <button
@@ -477,6 +477,7 @@ const Students = () => {
             </form>
           </section>
         )}
+
         {/* My Issues Tab Content */}
         {selectedTab === "myIssues" && (
           <section className="tab-content">
