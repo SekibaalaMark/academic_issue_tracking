@@ -5,176 +5,260 @@ import "./Students.css";
 import { AuthContext } from "@/context/authContext";
 
 const ENDPOINTS = {
-  departments: "https://academic-6ea365e4b745.herokuapp.com/api/departments/",
   studentIssues:
     "https://academic-6ea365e4b745.herokuapp.com/api/student-issues/",
   raiseIssue: "https://academic-6ea365e4b745.herokuapp.com/api/raise-issue/",
-  userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
-  studentProfile: "https://academic-6ea365e4b745.herokuapp.com/api/student/profile/",
+  registrars: "https://academic-6ea365e4b745.herokuapp.com/api/registrars/",
+  programmes: "https://academic-6ea365e4b745.herokuapp.com/api/programmes/",
+};
+
+// Department choices
+const DEPT_CHOICES = [
+  { value: "computer_science", label: "Computer Science Department" },
+  { value: "networks", label: "Networks Department" },
+  { value: "information_systems", label: "Information Systems" },
+  { value: "information_technology", label: "Information Technology" },
+];
+
+// Category choices - corrected format based on API error
+const CATEGORY_CHOICES = [
+  { value: "missing_marks", label: "Missing Marks" },
+  { value: "wrong_marks", label: "Wrong Marks" },
+  // { value: "registration", label: "Registration Issue" },
+  { value: "other", label: "Other" },
+];
+
+// Fallback data in case API is down
+const FALLBACK_DATA = {
+  registrars: [
+    { id: "emmanuel", username: "emmanuel", name: "Emmanuel" },
+    { id: "admin", username: "admin", name: "Admin" },
+  ],
+  programmes: [
+    { id: "bsc_cs", name: "Bachelor of Science in Computer Science" },
+    { id: "bsc_it", name: "Bachelor of Science in Information Technology" },
+    { id: "bsc_is", name: "Bachelor of Science in Information Systems" },
+  ],
 };
 
 const Students = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(null);
-  const [departments, setDepartments] = useState([]);
   const [issues, setIssues] = useState([]);
-  const [profileData, setProfileData] = useState(null);
+  const [registrars, setRegistrars] = useState(FALLBACK_DATA.registrars);
+  const [programmes, setProgrammes] = useState(FALLBACK_DATA.programmes);
   const [formData, setFormData] = useState({
     course_name: "",
     course_code: "",
     year_of_study: "year_1",
-    category: "Missing_Marks",
+    category: "missing_marks",
     description: "",
-    department: "",
+    department: "computer_science",
     attachment: null,
+    registrar: "", // Will be set after fetching registrars
+    programme: "", // Will be set after fetching programmes
   });
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [profileError, setProfileError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Function to fetch student data
-  const fetchStudentData = async (token) => {
-    try {
-      const [deptRes, issuesRes] = await Promise.all([
-        axios.get(ENDPOINTS.departments, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-        axios.get(ENDPOINTS.studentIssues, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-      ]);
-      setDepartments(deptRes.data);
-      setIssues(issuesRes.data);
-      if (deptRes.data.length > 0) {
-        setFormData((prev) => ({ ...prev, department: deptRes.data[0].id }));
-      }
-    } catch (err) {
-      console.error("Error fetching student data:", err);
-    }
-  };
-
-  // Function to fetch student profile
-  const fetchStudentProfile = async (token) => {
-    setProfileLoading(true);
-    try {
-      const response = await axios.get(ENDPOINTS.studentProfile, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      console.log("Student profile response:", response.data);
-      setProfileData(response.data);
-      setProfileError("");
-    } catch (err) {
-      console.error("Error fetching student profile:", err);
-      setProfileError("Failed to load profile data. Please try again later.");
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  // Check authentication and user role on component mount
-  useEffect(() => {
-    console.log("Students component mounted, user:", user);
-    const fetchUserRole = async () => {
-      if (!user || !user.token) {
-        console.log("No user or token found, redirecting to login");
-        navigate("/login");
-        setLoading(false);
-        setAuthChecked(true);
-        return;
-      }
-      try {
-        console.log("Fetching user profile with token:", user.token);
-        const response = await axios.get(ENDPOINTS.userProfile, {
-          headers: { Authorization: `Token ${user.token}` },
-        });
-        console.log("User profile response:", response.data);
-        const role = response.data.role;
-        setUserRole(role);
-        // Redirect based on role
-        if (role === "academic_registrar" || role === "registrar") {
-          console.log("User is registrar, redirecting");
-          navigate("/AcademicRegistrar");
-          return;
-        } else if (role === "lecturer") {
-          console.log("User is lecturer, redirecting");
-          navigate("/lecturers");
-          return;
-        } else if (role !== "student") {
-          console.log("Unknown role, redirecting to dashboard");
-          navigate("/dashboard");
-          return;
-        }
-        // Only fetch student data if user is actually a student
-        console.log("User is student, fetching student data");
-        await fetchStudentData(user.token);
-        await fetchStudentProfile(user.token);
-      } catch (err) {
-        console.error("Error fetching user role:", err);
-        console.error("Response data:", err.response?.data);
-        console.error("Response status:", err.response?.status);
-        if (err.response?.status === 401) {
-          console.log("Unauthorized access, logging out");
-          logout();
-          navigate("/login");
-        }
-      } finally {
-        setLoading(false);
-        setAuthChecked(true);
-      }
-    };
-
-    fetchUserRole();
-  }, [user, navigate, logout]);
-
+  // Add the missing handleChange function
   const handleChange = (e) => {
-    const { target } = e;
-    if (!target) return;
-    const { name, value, files } = target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: files ? files[0] : value,
-    }));
+    const { name, value, files } = e.target;
+
+    if (name === "attachment" && files && files[0]) {
+      setFormData({
+        ...formData,
+        attachment: files[0],
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    if (user && user.token) {
+      // Fetch registrars, programmes, and issues
+      const fetchData = async () => {
+        try {
+          // Try to fetch registrars
+          try {
+            const registrarsRes = await axios.get(ENDPOINTS.registrars, {
+              headers: { Authorization: `Bearer ${user.token}` },
+            });
+            if (registrarsRes.data && registrarsRes.data.length > 0) {
+              console.log("Available registrars:", registrarsRes.data);
+              setRegistrars(registrarsRes.data);
+              // Set to the first available registrar
+              setFormData((prev) => ({
+                ...prev,
+                registrar: registrarsRes.data[0].username,
+              }));
+            }
+          } catch (err) {
+            console.warn("Could not fetch registrars, using fallback data");
+            // Set default registrar from fallback data
+            setFormData((prev) => ({
+              ...prev,
+              registrar: FALLBACK_DATA.registrars[0].username,
+            }));
+          }
+
+          // Try to fetch programmes
+          try {
+            const programmesRes = await axios.get(ENDPOINTS.programmes, {
+              headers: { Authorization: `Bearer ${user.token}` },
+            });
+            if (programmesRes.data && programmesRes.data.length > 0) {
+              console.log("Available programmes:", programmesRes.data);
+              setProgrammes(programmesRes.data);
+              // Set to the first available programme
+              setFormData((prev) => ({
+                ...prev,
+                programme: programmesRes.data[0].id,
+              }));
+            }
+          } catch (err) {
+            console.warn("Could not fetch programmes, using fallback data");
+            // Set default programme from fallback data
+            setFormData((prev) => ({
+              ...prev,
+              programme: FALLBACK_DATA.programmes[0].id,
+            }));
+          }
+
+          // Fetch student issues
+          try {
+            const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
+              headers: { Authorization: `Bearer ${user.token}` },
+            });
+            setIssues(issuesRes.data);
+          } catch (err) {
+            console.error("Error fetching issues:", err);
+            setIssues([]);
+          }
+        } catch (err) {
+          console.error("Error fetching data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    } else {
+      navigate("/login");
+    }
+  }, [user, navigate]); // Keep dependencies minimal to avoid infinite loops
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
+    setSubmitting(true);
+
+    // Validate form data
+    if (
+      !formData.course_name ||
+      !formData.course_code ||
+      !formData.description ||
+      !formData.registrar ||
+      !formData.programme
+    ) {
+      setError("Please fill in all required fields");
+      setSubmitting(false);
+      return;
+    }
+
+    // Validate registrar exists
+    const registrarExists = registrars.some(
+      (r) => r.username === formData.registrar
+    );
+    if (!registrarExists) {
+      setError(
+        `Registrar with username '${formData.registrar}' does not exist.`
+      );
+      setSubmitting(false);
+      return;
+    }
+
+    // Validate programme exists
+    const programmeExists = programmes.some((p) => p.id === formData.programme);
+    if (!programmeExists) {
+      setError(`Programme '${formData.programme}' does not exist.`);
+      setSubmitting(false);
+      return;
+    }
+
     const data = new FormData();
+    // Add all form fields to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== "") {
         data.append(key, value);
+        console.log(`Adding to FormData: ${key} = ${value}`);
       }
     });
+
     try {
-      await axios.post(ENDPOINTS.raiseIssue, data, {
+      console.log("Submitting with registrar:", formData.registrar);
+      console.log("Submitting with programme:", formData.programme);
+      const response = await axios.post(ENDPOINTS.raiseIssue, data, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Token ${user.token}`,
+          Authorization: `Bearer ${user.token}`,
         },
       });
+      console.log("Issue submission response:", response);
       setSuccessMsg("Issue raised successfully.");
-      // Refresh issues list
-      const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
-        headers: { Authorization: `Token ${user.token}` },
-      });
-      setIssues(issuesRes.data);
-      // Reset form (keep department selection)
+
+      // Reset form after successful submission
       setFormData({
-        ...formData,
         course_name: "",
         course_code: "",
+        year_of_study: "year_1",
+        category: "missing_marks",
         description: "",
+        department: "computer_science",
         attachment: null,
+        registrar: registrars[0]?.username || "",
+        programme: programmes[0]?.id || "",
       });
+
+      // Refresh issues list
+      try {
+        const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        setIssues(issuesRes.data);
+      } catch (err) {
+        console.error("Error refreshing issues:", err);
+      }
+
+      // Switch to My Issues tab after a short delay
+      setTimeout(() => {
+        setSelectedTab("myIssues");
+      }, 2000);
     } catch (err) {
-      setError("Failed to raise issue. Please try again.");
       console.error("Error submitting issue:", err);
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        console.log("API error response:", errorData);
+        // Format error message more clearly
+        let errorMessage = "Validation errors:";
+        Object.entries(errorData).forEach(([field, errors]) => {
+          errorMessage += `\n- ${field}: ${errors.join(", ")}`;
+        });
+        setError(errorMessage);
+      } else {
+        setError(`Error: ${err.message || "Unknown error occurred"}`);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -188,19 +272,6 @@ const Students = () => {
     );
   }
 
-  // If authentication check is complete and no user, redirect to login
-  if (authChecked && !user) {
-    console.log("Auth checked, no user found, redirecting to login");
-    navigate("/login");
-    return null;
-  }
-
-  // If user role is not student and auth check is complete, return null (already redirected)
-  if (authChecked && userRole && userRole !== "student") {
-    console.log("User role is not student, already redirected");
-    return null;
-  }
-
   return (
     <div className="students-container">
       <header className="dashboard-header">
@@ -212,6 +283,7 @@ const Students = () => {
           </button>
         </div>
       </header>
+
       {/* Navigation Tabs */}
       <nav className="tabs">
         <button
@@ -371,7 +443,7 @@ const Students = () => {
             <form onSubmit={handleSubmit} className="issue-form">
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="course_name">Course Name</label>
+                  <label htmlFor="course_name">Course Name*</label>
                   <input
                     type="text"
                     id="course_name"
@@ -380,10 +452,11 @@ const Students = () => {
                     onChange={handleChange}
                     required
                     placeholder="Enter course name"
+                    disabled={submitting}
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="course_code">Course Code</label>
+                  <label htmlFor="course_code">Course Code*</label>
                   <input
                     type="text"
                     id="course_code"
@@ -392,17 +465,19 @@ const Students = () => {
                     onChange={handleChange}
                     required
                     placeholder="e.g., CS101"
+                    disabled={submitting}
                   />
                 </div>
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="year_of_study">Year of Study</label>
+                  <label htmlFor="year_of_study">Year of Study*</label>
                   <select
                     id="year_of_study"
                     name="year_of_study"
                     value={formData.year_of_study}
                     onChange={handleChange}
+                    disabled={submitting}
                   >
                     <option value="year_1">Year 1</option>
                     <option value="year_2">Year 2</option>
@@ -411,37 +486,83 @@ const Students = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="category">Issue Category</label>
+                  <label htmlFor="category">Issue Category*</label>
                   <select
                     id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
+                    disabled={submitting}
                   >
-                    <option value="Missing_Marks">Missing Marks</option>
-                    <option value="Wrong_Marks">Wrong Marks</option>
-                    <option value="Registration">Registration Issue</option>
-                    <option value="Other">Other</option>
+                    {CATEGORY_CHOICES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
+
               <div className="form-group">
-                <label htmlFor="department">Department</label>
+                <label htmlFor="department">Department*</label>
                 <select
                   id="department"
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
+                  required
+                  disabled={submitting}
                 >
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.name}
+                  {DEPT_CHOICES.map((dept) => (
+                    <option key={dept.value} value={dept.value}>
+                      {dept.label}
                     </option>
                   ))}
                 </select>
               </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="registrar">Academic Registrar*</label>
+                  <select
+                    id="registrar"
+                    name="registrar"
+                    value={formData.registrar}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                  >
+                    {registrars.map((reg) => (
+                      <option
+                        key={reg.id || reg.username}
+                        value={reg.username || reg.id}
+                      >
+                        {reg.name || reg.username}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="programme">Programme*</label>
+                  <select
+                    id="programme"
+                    name="programme"
+                    value={formData.programme}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                  >
+                    {programmes.map((prog) => (
+                      <option key={prog.id} value={prog.id}>
+                        {prog.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div className="form-group">
-                <label htmlFor="description">Description</label>
+                <label htmlFor="description">Description*</label>
                 <textarea
                   id="description"
                   name="description"
@@ -450,33 +571,85 @@ const Students = () => {
                   required
                   rows="4"
                   placeholder="Describe your issue in detail..."
+                  disabled={submitting}
                 ></textarea>
               </div>
+
               <div className="form-group">
-                <label htmlFor="attachment">Attachment (Optional)</label>
+                <label htmlFor="attachment">
+                  Attachment (Optional - JPG/PNG only)
+                </label>
                 <input
                   type="file"
                   id="attachment"
                   name="attachment"
                   onChange={handleChange}
+                  accept="image/jpeg,image/png,image/gif,image/jpg"
+                  disabled={submitting}
                 />
-                <small>Upload any relevant documents (PDF, JPG, PNG)</small>
+                <small>Upload any relevant images (JPG, PNG only)</small>
               </div>
+
               <div className="form-actions">
-                <button type="submit" className="submit-btn">
-                  Submit Issue
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Submit Issue"}
                 </button>
                 <button
                   type="button"
                   className="cancel-btn"
                   onClick={() => setSelectedTab("home")}
+                  disabled={submitting}
                 >
                   Cancel
                 </button>
               </div>
             </form>
+            {/* Add the debug section here, right after the form */}
+            {process.env.NODE_ENV === "development" && (
+              <div
+                className="debug-info"
+                style={{
+                  marginTop: "20px",
+                  padding: "10px",
+                  border: "1px solid #ccc",
+                  borderRadius: "5px",
+                }}
+              >
+                <h4>Debug Information</h4>
+                <p>
+                  <strong>Available Registrars:</strong>
+                </p>
+                <ul>
+                  {registrars.map((reg) => (
+                    <li key={reg.id || reg.username}>
+                      {reg.username} - {reg.name || "No name"}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  <strong>Available Programmes:</strong>
+                </p>
+                <ul>
+                  {programmes.map((prog) => (
+                    <li key={prog.id}>
+                      {prog.id} - {prog.name}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  <strong>Current Form Data:</strong>
+                </p>
+                <pre>{JSON.stringify(formData, null, 2)}</pre>
+              </div>
+            )}
           </section>
         )}
+
+
         {/* My Issues Tab Content */}
         {selectedTab === "myIssues" && (
           <section className="tab-content">
@@ -514,35 +687,27 @@ const Students = () => {
                       </p>
                       <p className="issue-department">
                         <strong>Department:</strong>{" "}
-                        {departments.find((d) => d.id === issue.department)
-                          ?.name || "Unknown"}
+                        {issue.department.replace("_", " ")}
                       </p>
-                    </div>
-                    <div className="issue-description">
-                      <strong>Description:</strong>
-                      <p>{issue.description}</p>
-                    </div>
-                    {issue.feedback && (
-                      <div className="issue-feedback">
-                        <strong>Feedback:</strong>
-                        <p>{issue.feedback}</p>
-                      </div>
-                    )}
-                    <div className="issue-footer">
-                      <span className="issue-date">
-                        Submitted:{" "}
-                        {new Date(issue.created_at).toLocaleDateString()}
-                      </span>
+                      <p className="issue-description">
+                        <strong>Description:</strong> {issue.description}
+                      </p>
                       {issue.attachment && (
-                        <a
-                          href={issue.attachment}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="attachment-link"
-                        >
-                          View Attachment
-                        </a>
+                        <div className="issue-attachment">
+                          <strong>Attachment:</strong>
+                          <a
+                            href={issue.attachment}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View Attachment
+                          </a>
+                        </div>
                       )}
+                      <p className="issue-date">
+                        <strong>Date Submitted:</strong>{" "}
+                        {new Date(issue.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -551,9 +716,6 @@ const Students = () => {
           </section>
         )}
       </main>
-      <footer className="dashboard-footer">
-        <p>&copy; {new Date().getFullYear()} Academic Issue Tracking System</p>
-      </footer>
     </div>
   );
 };
