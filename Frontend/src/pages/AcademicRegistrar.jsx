@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 import { AuthContext } from "@/context/authContext";
+
+// import { UserContext } from "../context/UserContext"; // Adjust the import path as necessary
+
 import styled from "styled-components"; // from donatah branch
 import "./AcademicRegistrar.css";
 
