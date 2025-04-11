@@ -1,18 +1,14 @@
 
+// src/main.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import "./index.css"; // Changed from "@/index.css" to "./index.css"
+import App from "./App1";
+import "@/index.css";
 
-// Create the root only once
-const root = ReactDOM.createRoot(document.getElementById("root"));
+ReactDOM.createRoot(document.getElementById("root")).render(
 
-// Render the app with BrowserRouter
-root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);  

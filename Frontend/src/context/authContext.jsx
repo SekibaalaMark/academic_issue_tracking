@@ -18,7 +18,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem("accessToken");
         if (token) {
-          const response = await axios.get(
+
+          const response = await axios.post(
+
             "https://academic-6ea365e4b745.herokuapp.com/api/token/",
             {
               headers: {
