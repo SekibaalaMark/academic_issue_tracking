@@ -10,6 +10,7 @@ const ENDPOINTS = {
     "https://academic-6ea365e4b745.herokuapp.com/api/student-issues/",
   raiseIssue: "https://academic-6ea365e4b745.herokuapp.com/api/raise-issue/",
   userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
+  studentProfile: "https://academic-6ea365e4b745.herokuapp.com/api/student/profile/",
 };
 
 const Students = () => {
@@ -18,6 +19,7 @@ const Students = () => {
   const [userRole, setUserRole] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [issues, setIssues] = useState([]);
+  const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({
     course_name: "",
     course_code: "",
@@ -32,6 +34,8 @@ const Students = () => {
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState("");
 
   // Function to fetch student data
   const fetchStudentData = async (token) => {
@@ -54,10 +58,27 @@ const Students = () => {
     }
   };
 
+  // Function to fetch student profile
+  const fetchStudentProfile = async (token) => {
+    setProfileLoading(true);
+    try {
+      const response = await axios.get(ENDPOINTS.studentProfile, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      console.log("Student profile response:", response.data);
+      setProfileData(response.data);
+      setProfileError("");
+    } catch (err) {
+      console.error("Error fetching student profile:", err);
+      setProfileError("Failed to load profile data. Please try again later.");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   // Check authentication and user role on component mount
   useEffect(() => {
     console.log("Students component mounted, user:", user);
-
     const fetchUserRole = async () => {
       if (!user || !user.token) {
         console.log("No user or token found, redirecting to login");
@@ -66,17 +87,14 @@ const Students = () => {
         setAuthChecked(true);
         return;
       }
-
       try {
         console.log("Fetching user profile with token:", user.token);
         const response = await axios.get(ENDPOINTS.userProfile, {
           headers: { Authorization: `Token ${user.token}` },
         });
         console.log("User profile response:", response.data);
-
         const role = response.data.role;
         setUserRole(role);
-
         // Redirect based on role
         if (role === "academic_registrar" || role === "registrar") {
           console.log("User is registrar, redirecting");
@@ -91,15 +109,14 @@ const Students = () => {
           navigate("/dashboard");
           return;
         }
-
-         //Only fetch student data if user is actually a student
+        // Only fetch student data if user is actually a student
         console.log("User is student, fetching student data");
         await fetchStudentData(user.token);
+        await fetchStudentProfile(user.token);
       } catch (err) {
         console.error("Error fetching user role:", err);
         console.error("Response data:", err.response?.data);
         console.error("Response status:", err.response?.status);
-
         if (err.response?.status === 401) {
           console.log("Unauthorized access, logging out");
           logout();
@@ -184,7 +201,6 @@ const Students = () => {
     return null;
   }
 
-  // JSX for the student dashboard
   return (
     <div className="students-container">
       <header className="dashboard-header">
@@ -203,6 +219,12 @@ const Students = () => {
           onClick={() => setSelectedTab("home")}
         >
           Home
+        </button>
+        <button
+          className={`tab-button ${selectedTab === "profile" ? "active" : ""}`}
+          onClick={() => setSelectedTab("profile")}
+        >
+          My Profile
         </button>
         <button
           className={`tab-button ${selectedTab === "raiseIssue" ? "active" : ""}`}
@@ -262,6 +284,76 @@ const Students = () => {
             </div>
           </section>
         )}
+
+        {/* Profile Tab Content */}
+        {selectedTab === "profile" && (
+          <section className="tab-content">
+            <h2>My Profile</h2>
+            {profileLoading ? (
+              <div className="loading-spinner">Loading profile...</div>
+            ) : profileError ? (
+              <div className="error-message">{profileError}</div>
+            ) : profileData ? (
+              <div className="profile-card">
+                <div className="profile-header">
+                  <div className="profile-avatar">
+                    <span>{profileData.username ? profileData.username[0].toUpperCase() : 'S'}</span>
+                  </div>
+                  <div className="profile-title">
+                    <h3>{profileData.username}</h3>
+                    <span className="role-badge">{profileData.role}</span>
+                  </div>
+                </div>
+                
+                <div className="profile-details">
+                  <div className="detail-item">
+                    <span className="detail-label">Email:</span>
+                    <span className="detail-value">{profileData.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Student Number:</span>
+                    <span className="detail-value">{profileData['student number']}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Account Status:</span>
+                    <span className="detail-value status-active">Active</span>
+                  </div>
+                </div>
+                
+                <div className="profile-summary">
+                  <h4>Issues Summary</h4>
+                  <div className="summary-stats">
+                    <div className="summary-stat">
+                      <span className="stat-value">{issues.length}</span>
+                      <span className="stat-label">Total Issues</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "pending").length}
+                      </span>
+                      <span className="stat-label">Pending</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "in_progress").length}
+                      </span>
+                      <span className="stat-label">In Progress</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "resolved").length}
+                      </span>
+                      <span className="stat-label">Resolved</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="no-profile">Profile information not available</div>
+            )}
+          </section>
+        )}
+
         {/* Raise Issue Tab Content */}
         {selectedTab === "raiseIssue" && (
           <section className="tab-content">
@@ -408,7 +500,7 @@ const Students = () => {
                         {issue.course_name} ({issue.course_code})
                       </h3>
                       <span className={`status-badge ${issue.status}`}>
-                        {issue.status}
+                        {issue.status.replace("_", " ")}
                       </span>
                     </div>
                     <div className="issue-details">
@@ -433,7 +525,6 @@ const Students = () => {
                     {issue.feedback && (
                       <div className="issue-feedback">
                         <strong>Feedback:</strong>
-
                         <p>{issue.feedback}</p>
                       </div>
                     )}
@@ -460,7 +551,6 @@ const Students = () => {
           </section>
         )}
       </main>
-
       <footer className="dashboard-footer">
         <p>&copy; {new Date().getFullYear()} Academic Issue Tracking System</p>
       </footer>

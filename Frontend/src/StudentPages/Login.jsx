@@ -22,7 +22,6 @@ const Login = () => {
   const navigateBasedOnRole = useCallback(
     (role) => {
       if (!role) return navigate("/dashboard");
-
       switch (role.toLowerCase()) {
         case "student":
           return navigate("/students");
@@ -51,19 +50,17 @@ const Login = () => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
-
     try {
       const response = await axios.post(
         "https://academic-6ea365e4b745.herokuapp.com/api/login/",
         { username, password }
       );
-
       const data = response.data;
       console.log("Login response:", data); // Debug log
 
       // More robust token extraction
       let token, refresh, userRole;
-
+      
       // Try different possible response structures
       if (data.tokens) {
         token = data.tokens.access;
@@ -72,7 +69,7 @@ const Login = () => {
         token = data.token || data.access;
         refresh = data.refresh;
       }
-
+      
       // Try different possible user role locations
       if (data.data && data.data.user) {
         userRole = data.data.user.role;
@@ -87,7 +84,7 @@ const Login = () => {
       if (!token) {
         throw new Error("Authentication failed: No token received");
       }
-
+      
       if (!userRole) {
         throw new Error("Authentication failed: User role not found");
       }
@@ -105,7 +102,7 @@ const Login = () => {
       if (refresh) localStorage.setItem("refreshToken", refresh);
       localStorage.setItem("userRole", userRole);
       localStorage.setItem("isAuthenticated", "true");
-
+      
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
       } else {
@@ -116,7 +113,7 @@ const Login = () => {
       navigateBasedOnRole(userRole);
     } catch (err) {
       console.error("Login error:", err);
-
+      
       // More comprehensive error handling
       if (err.response) {
         // The request was made and the server responded with a status code
@@ -147,6 +144,7 @@ const Login = () => {
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Login</h1>
+          
           {/* Username */}
           <div className="input-wrapper">
             <label htmlFor="username" className="form-label">
@@ -165,6 +163,7 @@ const Login = () => {
               <FaUserCircle className="input-icon" />
             </div>
           </div>
+          
           {/* Password */}
           <div className="input-wrapper">
             <label htmlFor="password" className="form-label">
@@ -183,26 +182,37 @@ const Login = () => {
               <FaLock className="input-icon" />
             </div>
           </div>
+          
           {/* Remember me */}
           <div className="remember-me">
-            <label>
+            <label className="remember-checkbox">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={() => setRememberMe(!rememberMe)}
               />
-              Remember me
+              <span className="checkbox-text">Remember me</span>
             </label>
             <a href="/forgot-password" className="forgot-password-link">
               Forgot Password?
             </a>
           </div>
+          
           {/* Error */}
           {errorMessage && <p className="error-message">{errorMessage}</p>}
+          
           {/* Submit */}
           <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                <span>Logging in...</span>
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
+          
           <div className="redirect-text">
             <p>
               Don't have an account? <a href="/register">Register</a>
