@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios"; // Import axios for API calls
-import "./Dashboard.css";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication context
+
+import styled from "styled-components";
+import "./AcademicRegistrar.css";
 
 function Dashboard() {
   // Base API URL - replace with your actual backend URL

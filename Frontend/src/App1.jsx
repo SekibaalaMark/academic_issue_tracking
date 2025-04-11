@@ -1,4 +1,3 @@
-import React from "react";
 import { Route, Routes, Navigate, Outlet, useLocation,useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/authContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -70,39 +69,48 @@ const ProtectedLayout = () => {
 const AppContent = () => {
   const location = useLocation();
 
+
   return (
-    <Router>
+    <Container
+      maxWidth="lg"
+      sx={{ mt: 4, mb: 4, padding: 3, borderRadius: 2, boxShadow: 3 }}
+    >
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/lecturer" element={<Lecturer />} />
-        <Route path="/academicregistrar" element={<AcademicRegistrar />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
-        <Route path="/issue/:Id" element={<IssueDetails />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/updateprofile" element={<UpdateProfile />} />
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/form" element={<LoginForm />} />
+        <Route path="" element={<CoverPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterForm />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/logout" element={<Logout />} />
+
         <Route path="/dashboard" element={<Dashboard />} />
-        {/* <Route path="/CoverPage" element={<CoverPage />} /> */}
+        <Route path="/CoverPage" element={<CoverPage />} /> 
         <Route path="/students" element={<Students />} />
         <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
         <Route path="/registrar" element={<AcademicRegistrar />} />
         <Route path="/lecturers" element={<Lecturers />} />
 
+
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
+
+          <Route path="/Students" element={<Students />} />
+
+          {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
+
           
         </Route>
       </Routes>
-    </Router>
+    </Container>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 export default App;
