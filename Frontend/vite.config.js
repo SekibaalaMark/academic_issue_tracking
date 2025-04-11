@@ -10,14 +10,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 5177, // Match your current port
     proxy: {
       // Proxy all API requests to your backend
       "/api": {
-        target: "http://127.0.0.1:8000", // Your backend server
-        changeOrigin: true, // Needed for virtual hosted sites
-        rewrite: (path) => path.replace(/^\/api/, ""), // Remove /api prefix
-        secure: false, // Disable SSL verification (if needed for localhost)
+        target: "https://academic-6ea365e4b745.herokuapp.com", // Updated to your Heroku backend
+        changeOrigin: true,
+        secure: true, // Enable SSL for HTTPS targets
+        rewrite: (path) => path, // Don't rewrite the path since we want to keep /api
       },
     },
   },

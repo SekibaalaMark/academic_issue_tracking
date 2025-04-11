@@ -16,6 +16,7 @@ import Dashboard from "./components/Dashboard.jsx";// Import  Logout from "./Stu
 
 import { Container } from "@mui/material";        
 import Students from "./pages/Students.jsx";
+import Lecturers from "./pages/Lecturers.jsx";
 import "./App.css"; 
  
 
@@ -82,15 +83,16 @@ const AppContent = () => {
         <Route path="/logout" element={<Logout />} />
         <Route path="/dashboard" element={<Dashboard />} />
         {/* <Route path="/CoverPage" element={<CoverPage />} /> */}
-        <Route path="/students" element={<Students />} /> 
+        <Route path="/students" element={<Students />} />
         <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
         <Route path="/registrar" element={<AcademicRegistrar />} />
+        <Route path="/lecturers" element={<Lecturers />} />
 
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
-          {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
+          
         </Route>
       </Routes>
     </Container>
