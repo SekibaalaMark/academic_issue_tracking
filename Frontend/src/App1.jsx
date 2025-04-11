@@ -105,3 +105,4 @@ const AppContent = () => {
     </Router>
   );
 }
+export default App;
