@@ -283,6 +283,7 @@ const Students = () => {
           </button>
         </div>
       </header>
+
       {/* Navigation Tabs */}
       <nav className="tabs">
         <button
@@ -290,6 +291,12 @@ const Students = () => {
           onClick={() => setSelectedTab("home")}
         >
           Home
+        </button>
+        <button
+          className={`tab-button ${selectedTab === "profile" ? "active" : ""}`}
+          onClick={() => setSelectedTab("profile")}
+        >
+          My Profile
         </button>
         <button
           className={`tab-button ${selectedTab === "raiseIssue" ? "active" : ""}`}
@@ -349,6 +356,76 @@ const Students = () => {
             </div>
           </section>
         )}
+
+        {/* Profile Tab Content */}
+        {selectedTab === "profile" && (
+          <section className="tab-content">
+            <h2>My Profile</h2>
+            {profileLoading ? (
+              <div className="loading-spinner">Loading profile...</div>
+            ) : profileError ? (
+              <div className="error-message">{profileError}</div>
+            ) : profileData ? (
+              <div className="profile-card">
+                <div className="profile-header">
+                  <div className="profile-avatar">
+                    <span>{profileData.username ? profileData.username[0].toUpperCase() : 'S'}</span>
+                  </div>
+                  <div className="profile-title">
+                    <h3>{profileData.username}</h3>
+                    <span className="role-badge">{profileData.role}</span>
+                  </div>
+                </div>
+                
+                <div className="profile-details">
+                  <div className="detail-item">
+                    <span className="detail-label">Email:</span>
+                    <span className="detail-value">{profileData.email}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Student Number:</span>
+                    <span className="detail-value">{profileData['student number']}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Account Status:</span>
+                    <span className="detail-value status-active">Active</span>
+                  </div>
+                </div>
+                
+                <div className="profile-summary">
+                  <h4>Issues Summary</h4>
+                  <div className="summary-stats">
+                    <div className="summary-stat">
+                      <span className="stat-value">{issues.length}</span>
+                      <span className="stat-label">Total Issues</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "pending").length}
+                      </span>
+                      <span className="stat-label">Pending</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "in_progress").length}
+                      </span>
+                      <span className="stat-label">In Progress</span>
+                    </div>
+                    <div className="summary-stat">
+                      <span className="stat-value">
+                        {issues.filter((issue) => issue.status === "resolved").length}
+                      </span>
+                      <span className="stat-label">Resolved</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="no-profile">Profile information not available</div>
+            )}
+          </section>
+        )}
+
         {/* Raise Issue Tab Content */}
         {selectedTab === "raiseIssue" && (
           <section className="tab-content">
@@ -572,6 +649,7 @@ const Students = () => {
           </section>
         )}
 
+
         {/* My Issues Tab Content */}
         {selectedTab === "myIssues" && (
           <section className="tab-content">
@@ -595,7 +673,7 @@ const Students = () => {
                         {issue.course_name} ({issue.course_code})
                       </h3>
                       <span className={`status-badge ${issue.status}`}>
-                        {issue.status}
+                        {issue.status.replace("_", " ")}
                       </span>
                     </div>
                     <div className="issue-details">

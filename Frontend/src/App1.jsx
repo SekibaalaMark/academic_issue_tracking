@@ -71,14 +71,21 @@ const AppContent = () => {
   const location = useLocation();
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{ mt: 4, mb: 4, padding: 3, borderRadius: 2, boxShadow: 3 }}
-    >
+    <Router>
       <Routes>
-        <Route path="" element={<CoverPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<RegisterForm />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/students" element={<Students />} />
+        <Route path="/lecturer" element={<Lecturer />} />
+        <Route path="/academicregistrar" element={<AcademicRegistrar />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/issuesubmissionform" element={<IssueSubmissionForm />} />
+        <Route path="/issue/:Id" element={<IssueDetails />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/updateprofile" element={<UpdateProfile />} />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/form" element={<LoginForm />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -95,16 +102,6 @@ const AppContent = () => {
           
         </Route>
       </Routes>
-    </Container>
+    </Router>
   );
-};
-
-const App = () => {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-};
-
-export default App;
+}
