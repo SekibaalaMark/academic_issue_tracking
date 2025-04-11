@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext"; // Adjust the import path as necessary
+import { AuthContext } from "@/context/authContext";
 import styled from "styled-components"; // from donatah branch
 import "./AcademicRegistrar.css";
 
@@ -82,7 +82,8 @@ const AcademicRegistrar = () => {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-  const [selectedTab, setSelectedTab] = useState("home");
+  const [selectedTab, setSelectedTab] = useState("coverPage");
+  const { user, logout } = useContext(UserContext); // Adjust the import path as necessary
 
 
   const authToken = localStorage.getItem("authToken");
