@@ -92,7 +92,7 @@ const Students = () => {
           return;
         }
 
-        // Only fetch student data if user is actually a student
+         //Only fetch student data if user is actually a student
         console.log("User is student, fetching student data");
         await fetchStudentData(user.token);
       } catch (err) {
