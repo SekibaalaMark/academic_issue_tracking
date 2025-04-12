@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Students.css";
 import { AuthContext } from "@/context/authContext";
+import { initDb, runQuery } from "../db/sqlHelper";
 
 const ENDPOINTS = {
   studentIssues:
@@ -24,29 +25,16 @@ const DEPT_CHOICES = [
 const CATEGORY_CHOICES = [
   { value: "missing_marks", label: "Missing Marks" },
   { value: "wrong_marks", label: "Wrong Marks" },
-  // { value: "registration", label: "Registration Issue" },
+  { value: "registration", label: "Registration Issue" },
   { value: "other", label: "Other" },
 ];
-
-// Fallback data in case API is down
-const FALLBACK_DATA = {
-  registrars: [
-    { id: "emmanuel", username: "emmanuel", name: "Emmanuel" },
-    { id: "admin", username: "admin", name: "Admin" },
-  ],
-  programmes: [
-    { id: "bsc_cs", name: "Bachelor of Science in Computer Science" },
-    { id: "bsc_it", name: "Bachelor of Science in Information Technology" },
-    { id: "bsc_is", name: "Bachelor of Science in Information Systems" },
-  ],
-};
 
 const Students = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [issues, setIssues] = useState([]);
-  const [registrars, setRegistrars] = useState(FALLBACK_DATA.registrars);
-  const [programmes, setProgrammes] = useState(FALLBACK_DATA.programmes);
+  const [registrars, setRegistrars] = useState([]);
+  const [programmes, setProgrammes] = useState([]);
   const [formData, setFormData] = useState({
     course_name: "",
     course_code: "",
@@ -63,11 +51,13 @@ const Students = () => {
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileData, setProfileData] = useState(null);
 
-  // Add the missing handleChange function
+  // Handle form input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
     if (name === "attachment" && files && files[0]) {
       setFormData({
         ...formData,
@@ -86,51 +76,58 @@ const Students = () => {
     if (user && user.token) {
       // Fetch registrars, programmes, and issues
       const fetchData = async () => {
+        setLoading(true);
+
         try {
-          // Try to fetch registrars
+          // Fetch registrars
           try {
-            const registrarsRes = await axios.get(ENDPOINTS.registrars, {
-              headers: { Authorization: `Bearer ${user.token}` },
+            const registrarsResponse = await axios.get(ENDPOINTS.registrars, {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
             });
-            if (registrarsRes.data && registrarsRes.data.length > 0) {
-              console.log("Available registrars:", registrarsRes.data);
-              setRegistrars(registrarsRes.data);
-              // Set to the first available registrar
-              setFormData((prev) => ({
-                ...prev,
-                registrar: registrarsRes.data[0].username,
-              }));
+
+            if (registrarsResponse.data.success) {
+              setRegistrars(registrarsResponse.data.data);
             }
-          } catch (err) {
-            console.warn("Could not fetch registrars, using fallback data");
-            // Set default registrar from fallback data
-            setFormData((prev) => ({
-              ...prev,
-              registrar: FALLBACK_DATA.registrars[0].username,
-            }));
+          } catch (error) {
+            console.error("Error fetching registrars:", error);
+            // Fallback data in case API fails
+            setRegistrars([{ value: "Emmanuella", label: "Emmanuella" }]);
           }
 
-          // Try to fetch programmes
+          // Fetch programmes
           try {
-            const programmesRes = await axios.get(ENDPOINTS.programmes, {
-              headers: { Authorization: `Bearer ${user.token}` },
+            const programmesResponse = await axios.get(ENDPOINTS.programmes, {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+              },
             });
-            if (programmesRes.data && programmesRes.data.length > 0) {
-              console.log("Available programmes:", programmesRes.data);
-              setProgrammes(programmesRes.data);
-              // Set to the first available programme
-              setFormData((prev) => ({
-                ...prev,
-                programme: programmesRes.data[0].id,
-              }));
+
+            if (programmesResponse.data.success) {
+              setProgrammes(programmesResponse.data.data);
             }
-          } catch (err) {
-            console.warn("Could not fetch programmes, using fallback data");
-            // Set default programme from fallback data
-            setFormData((prev) => ({
-              ...prev,
-              programme: FALLBACK_DATA.programmes[0].id,
-            }));
+          } catch (error) {
+            console.error("Error fetching programmes:", error);
+            // Fallback data in case API fails
+            setProgrammes([
+              {
+                value: "computer_science",
+                label: "Bachelor of Science in Computer Science",
+              },
+              {
+                value: "software_engineering",
+                label: "Bachelor of Science in Software Engineering",
+              },
+              {
+                value: "BIST",
+                label: "Bachelor Information Systems and Technology",
+              },
+              {
+                value: "BLIS",
+                label: "Bachelor of Library and Information Sciences",
+              },
+            ]);
           }
 
           // Fetch student issues
@@ -177,8 +174,9 @@ const Students = () => {
 
     // Validate registrar exists
     const registrarExists = registrars.some(
-      (r) => r.username === formData.registrar
+      (r) => r.value === formData.registrar
     );
+
     if (!registrarExists) {
       setError(
         `Registrar with username '${formData.registrar}' does not exist.`
@@ -188,7 +186,10 @@ const Students = () => {
     }
 
     // Validate programme exists
-    const programmeExists = programmes.some((p) => p.id === formData.programme);
+    const programmeExists = programmes.some(
+      (p) => p.value === formData.programme
+    );
+
     if (!programmeExists) {
       setError(`Programme '${formData.programme}' does not exist.`);
       setSubmitting(false);
@@ -196,6 +197,7 @@ const Students = () => {
     }
 
     const data = new FormData();
+
     // Add all form fields to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== "") {
@@ -207,12 +209,14 @@ const Students = () => {
     try {
       console.log("Submitting with registrar:", formData.registrar);
       console.log("Submitting with programme:", formData.programme);
+
       const response = await axios.post(ENDPOINTS.raiseIssue, data, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${user.token}`,
         },
       });
+
       console.log("Issue submission response:", response);
       setSuccessMsg("Issue raised successfully.");
 
@@ -225,8 +229,8 @@ const Students = () => {
         description: "",
         department: "computer_science",
         attachment: null,
-        registrar: registrars[0]?.username || "",
-        programme: programmes[0]?.id || "",
+        registrar: registrars[0]?.value || "",
+        programme: programmes[0]?.value || "",
       });
 
       // Refresh issues list
@@ -283,7 +287,6 @@ const Students = () => {
           </button>
         </div>
       </header>
-
       {/* Navigation Tabs */}
       <nav className="tabs">
         <button
@@ -356,7 +359,6 @@ const Students = () => {
             </div>
           </section>
         )}
-
         {/* Profile Tab Content */}
         {selectedTab === "profile" && (
           <section className="tab-content">
@@ -369,14 +371,17 @@ const Students = () => {
               <div className="profile-card">
                 <div className="profile-header">
                   <div className="profile-avatar">
-                    <span>{profileData.username ? profileData.username[0].toUpperCase() : 'S'}</span>
+                    <span>
+                      {profileData.username
+                        ? profileData.username[0].toUpperCase()
+                        : "S"}
+                    </span>
                   </div>
                   <div className="profile-title">
                     <h3>{profileData.username}</h3>
                     <span className="role-badge">{profileData.role}</span>
                   </div>
                 </div>
-                
                 <div className="profile-details">
                   <div className="detail-item">
                     <span className="detail-label">Email:</span>
@@ -384,14 +389,15 @@ const Students = () => {
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Student Number:</span>
-                    <span className="detail-value">{profileData['student number']}</span>
+                    <span className="detail-value">
+                      {profileData["student number"]}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">Account Status:</span>
                     <span className="detail-value status-active">Active</span>
                   </div>
                 </div>
-                
                 <div className="profile-summary">
                   <h4>Issues Summary</h4>
                   <div className="summary-stats">
@@ -401,19 +407,29 @@ const Students = () => {
                     </div>
                     <div className="summary-stat">
                       <span className="stat-value">
-                        {issues.filter((issue) => issue.status === "pending").length}
+                        {
+                          issues.filter((issue) => issue.status === "pending")
+                            .length
+                        }
                       </span>
                       <span className="stat-label">Pending</span>
                     </div>
                     <div className="summary-stat">
                       <span className="stat-value">
-                        {issues.filter((issue) => issue.status === "in_progress").length}
+                        {
+                          issues.filter(
+                            (issue) => issue.status === "in_progress"
+                          ).length
+                        }
                       </span>
                       <span className="stat-label">In Progress</span>
                     </div>
                     <div className="summary-stat">
                       <span className="stat-value">
-                        {issues.filter((issue) => issue.status === "resolved").length}
+                        {
+                          issues.filter((issue) => issue.status === "resolved")
+                            .length
+                        }
                       </span>
                       <span className="stat-label">Resolved</span>
                     </div>
@@ -421,11 +437,12 @@ const Students = () => {
                 </div>
               </div>
             ) : (
-              <div className="no-profile">Profile information not available</div>
+              <div className="no-profile">
+                Profile information not available
+              </div>
             )}
           </section>
         )}
-
         {/* Raise Issue Tab Content */}
         {selectedTab === "raiseIssue" && (
           <section className="tab-content">
@@ -502,7 +519,6 @@ const Students = () => {
                   </select>
                 </div>
               </div>
-
               <div className="form-group">
                 <label htmlFor="department">Department*</label>
                 <select
@@ -520,7 +536,6 @@ const Students = () => {
                   ))}
                 </select>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="registrar">Academic Registrar*</label>
@@ -530,14 +545,12 @@ const Students = () => {
                     value={formData.registrar}
                     onChange={handleChange}
                     required
-                    disabled={submitting}
+                    disabled={loading || submitting}
                   >
+                    <option value="">Select a registrar</option>
                     {registrars.map((reg) => (
-                      <option
-                        key={reg.id || reg.username}
-                        value={reg.username || reg.id}
-                      >
-                        {reg.name || reg.username}
+                      <option key={reg.value} value={reg.value}>
+                        {reg.label}
                       </option>
                     ))}
                   </select>
@@ -550,17 +563,17 @@ const Students = () => {
                     value={formData.programme}
                     onChange={handleChange}
                     required
-                    disabled={submitting}
+                    disabled={loading || submitting}
                   >
+                    <option value="">Select a programme</option>
                     {programmes.map((prog) => (
-                      <option key={prog.id} value={prog.id}>
-                        {prog.name}
+                      <option key={prog.value} value={prog.value}>
+                        {prog.label}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
-
               <div className="form-group">
                 <label htmlFor="description">Description*</label>
                 <textarea
@@ -569,12 +582,11 @@ const Students = () => {
                   value={formData.description}
                   onChange={handleChange}
                   required
-                  rows="4"
+                  rows="6"
                   placeholder="Describe your issue in detail..."
                   disabled={submitting}
                 ></textarea>
               </div>
-
               <div className="form-group">
                 <label htmlFor="attachment">
                   Attachment (Optional - JPG/PNG only)
@@ -589,7 +601,6 @@ const Students = () => {
                 />
                 <small>Upload any relevant images (JPG, PNG only)</small>
               </div>
-
               <div className="form-actions">
                 <button
                   type="submit"
@@ -625,8 +636,8 @@ const Students = () => {
                 </p>
                 <ul>
                   {registrars.map((reg) => (
-                    <li key={reg.id || reg.username}>
-                      {reg.username} - {reg.name || "No name"}
+                    <li key={reg.value || reg.id}>
+                      {reg.label || reg.username} - {reg.name || "No name"}
                     </li>
                   ))}
                 </ul>
@@ -635,8 +646,8 @@ const Students = () => {
                 </p>
                 <ul>
                   {programmes.map((prog) => (
-                    <li key={prog.id}>
-                      {prog.id} - {prog.name}
+                    <li key={prog.value || prog.id}>
+                      {prog.value || prog.id} - {prog.label || prog.name}
                     </li>
                   ))}
                 </ul>
@@ -648,8 +659,6 @@ const Students = () => {
             )}
           </section>
         )}
-
-
         {/* My Issues Tab Content */}
         {selectedTab === "myIssues" && (
           <section className="tab-content">

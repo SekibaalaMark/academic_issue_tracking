@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Lecturers.css"; // You'll need to create this CSS file
 import { AuthContext } from "@/context/authContext";
+import { initDb, runQuery } from "../db/sqlHelper";
+
 
 const ENDPOINTS = {
   lecturerIssues:
