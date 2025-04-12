@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:8000/api/";
+const API_URL = "https://academic-6ea365e4b745.herokuapp.com/api/";
 
 export const fetchData = async () => {
   try {

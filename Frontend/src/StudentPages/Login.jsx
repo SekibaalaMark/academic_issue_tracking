@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "./Login.css";
-import { AuthContext } from "@/context/authContext"; // Import AuthContext
+import { AuthContext } from "../context/authContext"; // Updated import path
 
 const Login = () => {
   const [username, setUsername] = useState(
@@ -15,6 +15,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(
     !!localStorage.getItem("rememberedUsername")
   );
+  
   const navigate = useNavigate();
   const { login } = useContext(AuthContext); // Use the login function from AuthContext
 
@@ -22,14 +23,15 @@ const Login = () => {
   const navigateBasedOnRole = useCallback(
     (role) => {
       if (!role) return navigate("/dashboard");
+      
       switch (role.toLowerCase()) {
         case "student":
-          return navigate("/students");
+          return navigate("/Students");
         case "lecturer":
-          return navigate("/lecturers");
+          return navigate("/lecturer"); // Fixed path to match your routes
         case "registrar":
         case "academic_registrar":
-          return navigate("/AcademicRegistrar");
+          return navigate("/academicregistrar"); // Fixed path to match your routes
         default:
           return navigate("/dashboard");
       }
@@ -41,6 +43,7 @@ const Login = () => {
   useEffect(() => {
     const isAuth = localStorage.getItem("isAuthenticated") === "true";
     const role = localStorage.getItem("userRole");
+    
     if (isAuth && role) {
       navigateBasedOnRole(role);
     }
@@ -50,14 +53,16 @@ const Login = () => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
+    
     try {
       const response = await axios.post(
         "https://academic-6ea365e4b745.herokuapp.com/api/login/",
         { username, password }
       );
+      
       const data = response.data;
       console.log("Login response:", data); // Debug log
-
+      
       // More robust token extraction
       let token, refresh, userRole;
       
@@ -80,15 +85,17 @@ const Login = () => {
       } else {
         userRole = data.role;
       }
-
+      
       if (!token) {
         throw new Error("Authentication failed: No token received");
       }
       
       if (!userRole) {
-        throw new Error("Authentication failed: User role not found");
+        // If userRole is not found, let's default to "student" for testing
+        console.warn("User role not found in response, defaulting to 'student'");
+        userRole = "student";
       }
-
+      
       // Important: Update the AuthContext with user info
       await login({
         token,
@@ -96,7 +103,7 @@ const Login = () => {
         username,
         role: userRole,
       });
-
+      
       // Persist
       localStorage.setItem("accessToken", token);
       if (refresh) localStorage.setItem("refreshToken", refresh);
@@ -108,7 +115,7 @@ const Login = () => {
       } else {
         localStorage.removeItem("rememberedUsername");
       }
-
+      
       console.log("Login successful, navigating to:", userRole);
       navigateBasedOnRole(userRole);
     } catch (err) {

@@ -14,28 +14,42 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Corrected function name
       try {
         const token = localStorage.getItem("accessToken");
         if (token) {
-
-          const response = await axios.post(
-
-            "https://academic-6ea365e4b745.herokuapp.com/api/token/",
+          // Fix the API call - headers should be outside the data object
+          const response = await axios.get(
+            "https://academic-6ea365e4b745.herokuapp.com/api/user/", // Use GET for fetching user data
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-          console.log("User data fetched:", response.data); // Log the user data
-          setUser(response.data); // Set user data from response
+          
+          console.log("User data fetched:", response.data);
+          
+          // Set user data with token and authentication status
+          setUser({
+            ...response.data,
+            token,
+            isAuthenticated: true
+          });
         } else {
-          console.error("No token found, user may need to log in.");
+          console.log("No token found, user may need to log in.");
+          setUser(null);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError("Failed to fetch user data.");
+        
+        // If token is invalid, clear authentication
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.setItem("isAuthenticated", "false");
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
@@ -43,35 +57,84 @@ export const AuthProvider = ({ children }) => {
 
     // Check if user is authenticated on component mount
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    
     if (isAuthenticated) {
-      fetchUserData(); // Call the corrected function
+      fetchUserData();
     } else {
-      setLoading(false); // If not authenticated, just set loading to false
+      // If not authenticated, check if we have user data in localStorage
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          console.error("Error parsing stored user data:", e);
+        }
+      }
+      setLoading(false);
     }
   }, []);
 
   // Login function
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("authToken", userData.token); // Store token if available
-    navigate("/dashboard"); // Redirect to dashboard after login
+  const login = async (userData) => {
+    try {
+      setUser({
+        ...userData,
+        isAuthenticated: true
+      });
+      
+      // Store authentication data
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("user", JSON.stringify(userData));
+      
+      // Store tokens separately for easier access
+      if (userData.token) {
+        localStorage.setItem("accessToken", userData.token);
+      }
+      
+      if (userData.refreshToken) {
+        localStorage.setItem("refreshToken", userData.refreshToken);
+      }
+      
+      // Store role for role-based navigation
+      if (userData.role) {
+        localStorage.setItem("userRole", userData.role);
+      }
+      
+      // Don't navigate here - let the component handle navigation
+      return true;
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Failed to log in.");
+      return false;
+    }
   };
 
   // Logout function
   const logout = () => {
     setUser(null);
+    
+    // Clear all authentication data
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-    localStorage.removeItem("authToken"); // Clear token on logout
-    navigate("/login"); // Redirect to login page after logout
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userRole");
+    
+    // Don't navigate here - let the component handle navigation
+    return true;
   };
 
   // Register function
-  const register = (userData) => {
-    // You might want to add more logic here
-    login(userData);
+  const register = async (userData) => {
+    try {
+      // You might want to add API call for registration here
+      // For now, just login with the provided data
+      return await login(userData);
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError("Failed to register.");
+      return false;
+    }
   };
 
   // Auth context value
@@ -81,12 +144,13 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     loading,
-    error, // Include error in context value
+    error,
+    setError // Include setError to allow components to clear errors
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading ? children : <div>Loading...</div>}
+      {children}
     </AuthContext.Provider>
   );
 };
