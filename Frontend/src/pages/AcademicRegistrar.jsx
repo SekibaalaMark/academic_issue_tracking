@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { initDb, runQuery } from "../db/sqlHelper";
-
 import { AuthContext } from "@/context/authContext";
-
-// import { UserContext } from "../context/UserContext"; // Adjust the import path as necessary
-
-import styled from "styled-components"; // from donatah branch
+import styled from "styled-components";
 import "./AcademicRegistrar.css";
 
+// API Endpoints
 const ENDPOINTS = {
   issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
   lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
+  users: "https://academic-6ea365e4b745.herokuapp.com/api/users/",
 };
 
-// Styled Components from donatah
+// Styled Components
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -55,11 +52,9 @@ const PageButton = styled.button`
   background-color: #f2f2f2;
   border-radius: 3px;
   cursor: pointer;
-
   &:hover {
     background-color: #ddd;
   }
-
   &:disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -74,52 +69,25 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
-
   &:hover {
     background-color: #0056b3;
   }
 `;
 
 const AcademicRegistrar = () => {
-
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-  const [selectedTab, setSelectedTab] = useState("coverPage");
-  const { user, logout } = useContext(UserContext); // Adjust the import path as necessary
-
-
-  const authToken = localStorage.getItem("authToken");
-  const navigate = useNavigate();
-
+  const [selectedTab, setSelectedTab] = useState("home");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
-  useEffect(() => {
-    axios
-      .get(ENDPOINTS.issues, {
-        headers: { Authorization: `Token ${authToken}` },
-      })
-      .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching issues:", err));
-
-    axios
-      .get(ENDPOINTS.lecturers, {
-        headers: { Authorization: `Token ${authToken}` },
-      })
-      .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching lecturers:", err));
-  }, [authToken]);
-
-  /* const totalIssues = issues.length;
-  const pendingIssues = issues.filter((i) => i.status === "pending").length;
-  const inProgressIssues = issues.filter((i) => i.status === "in progress").length;
-  const resolvedIssues = issues.filter((i) => i.status === "resolved").length;
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); */
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   // Create axios instance with authentication
   const createAuthAxios = () => {
@@ -134,18 +102,18 @@ const AcademicRegistrar = () => {
   // Check authentication and fetch data
   useEffect(() => {
     console.log("AcademicRegistrar component mounted");
-
+    
     const checkAuthAndRedirect = () => {
       const token = localStorage.getItem("accessToken");
       const userRole = localStorage.getItem("userRole");
       const isAuthenticated = localStorage.getItem("isAuthenticated");
-
+      
       if (!token || !isAuthenticated) {
         console.log("Not authenticated, redirecting to login");
         navigate("/login");
         return false;
       }
-
+      
       // Check if user is actually a registrar
       if (
         userRole &&
@@ -157,7 +125,7 @@ const AcademicRegistrar = () => {
           "User is not a registrar, redirecting based on role:",
           userRole
         );
-
+        
         if (userRole === "student") {
           navigate("/students");
         } else if (userRole === "lecturer") {
@@ -177,33 +145,35 @@ const AcademicRegistrar = () => {
       }
 
       const authAxios = createAuthAxios();
-
+      
       try {
         // Fetch registrar issues
         console.log("Fetching registrar issues");
         const issuesResponse = await authAxios.get(ENDPOINTS.issues);
         console.log("Issues response:", issuesResponse.data);
+        
         setIssues(
           Array.isArray(issuesResponse.data) ? issuesResponse.data : []
         );
 
-        // Fetch lecturers from the users endpoint with role filter
+        // Fetch lecturers
         try {
           console.log("Fetching lecturers");
           const lecturersResponse = await authAxios.get(
             `${ENDPOINTS.users}?role=lecturer`
           );
           console.log("Lecturers response:", lecturersResponse.data);
-
+          
           // Transform the data to match the expected format
           const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
             id: lecturer.id,
             name: `${lecturer.first_name} ${lecturer.last_name}`,
           }));
-
+          
           setLecturers(formattedLecturers);
         } catch (lecturerErr) {
           console.error("Error fetching lecturers:", lecturerErr);
+          
           // Try alternative endpoint if the first one fails
           try {
             const alternativeLecturersResponse = await authAxios.get(
@@ -213,6 +183,7 @@ const AcademicRegistrar = () => {
               "Alternative lecturers response:",
               alternativeLecturersResponse.data
             );
+            
             setLecturers(
               Array.isArray(alternativeLecturersResponse.data)
                 ? alternativeLecturersResponse.data
@@ -223,13 +194,13 @@ const AcademicRegistrar = () => {
             setLecturers([]);
           }
         }
-
+        
         setLoading(false);
       } catch (err) {
         console.error("Error in AcademicRegistrar:", err);
         console.error("Response data:", err.response?.data);
         console.error("Response status:", err.response?.status);
-
+        
         if (err.response?.status === 401) {
           console.log("Unauthorized access, logging out");
           handleLogout();
@@ -241,7 +212,7 @@ const AcademicRegistrar = () => {
     };
 
     fetchData();
-  }, [navigate, logout, user]);
+  }, [navigate]);
 
   // Calculate summary counts
   const totalIssues = issues.length;
@@ -256,37 +227,41 @@ const AcademicRegistrar = () => {
   ).length;
 
   // Filter issues for management view
-
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueCategory === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
-
       ? issue.assignedLecturer &&
         issue.assignedLecturer
           .toLowerCase()
           .includes(filterLecturer.toLowerCase())
-
       : true;
     return matchType && matchStatus && matchLecturer;
   });
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredIssues.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Assign an issue to a lecturer
   const handleAssign = async (issueId, lecturerId) => {
     if (!lecturerId) return; // Don't proceed if no lecturer is selected
-
+    
     try {
       const authAxios = createAuthAxios();
       console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
-
+      
       const response = await authAxios.patch(
         `${ENDPOINTS.issues}${issueId}/assign`,
         { assigned_to: lecturerId }
       );
-
       console.log("Assign response:", response.data);
-
+      
       // Update the local state with the new assignment
       setIssues((prevIssues) =>
         prevIssues.map((issue) =>
@@ -300,7 +275,7 @@ const AcademicRegistrar = () => {
             : issue
         )
       );
-
+      
       alert("Issue assigned successfully!");
     } catch (err) {
       console.error("Error assigning issue:", err);
@@ -318,21 +293,20 @@ const AcademicRegistrar = () => {
       try {
         const authAxios = createAuthAxios();
         console.log(`Resolving issue ${issueId}`);
-
+        
         const response = await authAxios.patch(
           `${ENDPOINTS.issues}${issueId}/resolve`,
           { status: "resolved" }
         );
-
         console.log("Resolve response:", response.data);
-
+        
         // Update the local state with the resolved status
         setIssues((prevIssues) =>
           prevIssues.map((issue) =>
             issue.id === issueId ? { ...issue, status: "resolved" } : issue
           )
         );
-
+        
         alert("Issue marked as resolved.");
       } catch (err) {
         console.error("Error resolving issue:", err);
@@ -353,12 +327,12 @@ const AcademicRegistrar = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
-
+    
     // Use context logout if available
     if (logout) {
       logout();
     }
-
+    
     navigate("/login");
   };
 
@@ -413,12 +387,10 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
-
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
-
-
+      
       {/* Main Content */}
       <main className="main-content">
         <h1 className="page-title">Academic Registrar Dashboard</h1>
@@ -427,7 +399,7 @@ const AcademicRegistrar = () => {
             Welcome, {localStorage.getItem("username") || "Academic Registrar"}
           </p>
         </div>
-
+        
         {selectedTab === "home" && (
           <div className="dashboard-summary">
             <div className="summary-item">
@@ -446,12 +418,10 @@ const AcademicRegistrar = () => {
               <span className="summary-label">Resolved:</span>
               <span className="summary-value">{resolvedIssues}</span>
             </div>
-
           </div>
         )}
-
+        
         {selectedTab === "management" && (
-
           <div className="management-section">
             {/* Filters */}
             <div className="filter-container">
@@ -461,7 +431,6 @@ const AcademicRegistrar = () => {
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
-
                   <option value="">All</option>
                   <option value="Missing_Marks">Missing Marks</option>
                   <option value="wrong grading">Wrong Grading</option>
@@ -469,97 +438,165 @@ const AcademicRegistrar = () => {
                   <option value="other">Other</option>
                 </select>
               </label>
-
               <label>
                 Filter by Status:
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                >
 
-                  <option value="">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="in progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                </select>
-              </label>
+>
+<option value="">All</option>
+<option value="pending">Pending</option>
+<option value="in progress">In Progress</option>
+<option value="resolved">Resolved</option>
+</select>
+</label>
+<label>
+Filter by Lecturer:
+<input
+type="text"
+value={filterLecturer}
+onChange={(e) => setFilterLecturer(e.target.value)}
+placeholder="Lecturer's name"
+/>
+</label>
+</div>
 
+{/* Issues Table */}
+<div className="issues-table-container">
+<h2 className="section-title">Registrar Issue Management</h2>
+{currentItems.length === 0 ? (
+<p>No issues found matching your filters.</p>
+) : (
+<>
+<Table>
+  <thead>
+    <tr>
+      <Th>ID</Th>
+      <Th>Course Code</Th>
+      <Th>Issue Category</Th>
+      <Th>Description</Th>
+      <Th>Status</Th>
+      <Th>Assigned Lecturer</Th>
+      <Th>Actions</Th>
+    </tr>
+  </thead>
+  <tbody>
+    {currentItems.map((issue) => (
+      <Tr key={issue.id}>
+        <Td>{issue.id}</Td>
+        <Td>{issue.courseCode}</Td>
+        <Td>{issue.issueCategory}</Td>
+        <Td>{issue.description}</Td>
+        <Td>{issue.status}</Td>
+        <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+        <Td>
+          {issue.status !== "resolved" && (
+            <>
+              <select
+                onChange={(e) =>
+                  handleAssign(issue.id, e.target.value)
+                }
+                value=""
+                style={{ marginBottom: "5px", width: "100%" }}
+              >
+                <option value="">Select Lecturer</option>
+                {lecturers.map((lecturer) => (
+                  <option key={lecturer.id} value={lecturer.id}>
+                    {lecturer.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                onClick={() => handleResolve(issue.id)}
+                style={{ width: "100%" }}
+              >
+                Resolve
+              </Button>
+            </>
+          )}
+          {issue.status === "resolved" && (
+            <span>Issue Resolved</span>
+          )}
+        </Td>
+      </Tr>
+    ))}
+  </tbody>
+</Table>
 
-
-
-              <label>
-                Filter by Lecturer:
-                <input
-                  type="text"
-                  value={filterLecturer}
-                  onChange={(e) => setFilterLecturer(e.target.value)}
-                  placeholder="Lecturer's name"
-                />
-              </label>
-            </div>
-
-            {/* Issues Table */}
-            <div className="issues-table-container">
-              <h2 className="section-title">Registrar Issue Management</h2>
-              {filteredIssues.length === 0 ? (
-                <p>No issues found.</p>
-              ) : (
-                <table className="issues-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Course Code</th>
-                      <th>Issue Category</th>
-                      <th>Description</th>
-                      <th>Status</th>
-                      <th>Assigned Lecturer</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredIssues.map((issue) => (
-                      <tr key={issue.id}>
-                        <td>{issue.id}</td>
-                        <td>{issue.courseCode}</td>
-                        <td>{issue.issueCategory}</td>
-                        <td>{issue.description}</td>
-                        <td>{issue.status}</td>
-                        <td>{issue.assignedLecturer || "Not Assigned"}</td>
-                        <td>
-                          <select
-                            onChange={(e) =>
-                              handleAssign(issue.id, e.target.value)
-                            }
-                            value=""
-                          >
-                            <option value="">Select Lecturer</option>
-                            {lecturers.map((lecturer) => (
-                              <option key={lecturer.id} value={lecturer.id}>
-                                {lecturer.name}
-                              </option>
-                            ))}
-                          </select>
-                          {issue.status !== "resolved" && (
-                            <button
-                              className="resolve-btn"
-                              onClick={() => handleResolve(issue.id)}
-                            >
-                              Resolve
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-        )}
-      </main>
-    </div>
-  );
+{/* Pagination */}
+{totalPages > 1 && (
+  <Pagination>
+    <PageButton
+      onClick={() => paginate(1)}
+      disabled={currentPage === 1}
+    >
+      First
+    </PageButton>
+    <PageButton
+      onClick={() => paginate(currentPage - 1)}
+      disabled={currentPage === 1}
+    >
+      Previous
+    </PageButton>
+    
+    {/* Page numbers */}
+    {Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(
+        (number) =>
+          number === 1 ||
+          number === totalPages ||
+          (number >= currentPage - 1 && number <= currentPage + 1)
+      )
+      .map((number) => (
+        <React.Fragment key={number}>
+          {number > 1 &&
+            (number === currentPage - 1 ||
+              (number === 2 && currentPage > 3)) && (
+              <span>...</span>
+            )}
+          <PageButton
+            onClick={() => paginate(number)}
+            disabled={currentPage === number}
+            style={{
+              backgroundColor:
+                currentPage === number ? "#007bff" : "#f2f2f2",
+              color: currentPage === number ? "white" : "black",
+            }}
+          >
+            {number}
+          </PageButton>
+          {number < totalPages &&
+            (number === currentPage + 1 ||
+              (number === totalPages - 1 &&
+                currentPage < totalPages - 2)) && (
+              <span>...</span>
+            )}
+        </React.Fragment>
+      ))}
+    
+    <PageButton
+      onClick={() => paginate(currentPage + 1)}
+      disabled={currentPage === totalPages}
+    >
+      Next
+    </PageButton>
+    <PageButton
+      onClick={() => paginate(totalPages)}
+      disabled={currentPage === totalPages}
+    >
+      Last
+    </PageButton>
+  </Pagination>
+)}
+</>
+)}
+</div>
+</div>
+)}
+</main>
+</div>
+);
 };
 
 export default AcademicRegistrar;

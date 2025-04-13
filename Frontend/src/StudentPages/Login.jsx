@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "./Login.css";
-import { AuthContext } from "../context/authContext"; // Updated import path
+import { AuthContext } from "../context/authContext";
 
 const Login = () => {
   const [username, setUsername] = useState(
@@ -15,130 +15,112 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(
     !!localStorage.getItem("rememberedUsername")
   );
-  
+
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext); // Use the login function from AuthContext
+  const { login } = useContext(AuthContext);
 
-  // Define navigateBasedOnRole with useCallback to avoid dependency issues
-  const navigateBasedOnRole = useCallback(
-    (role) => {
-      if (!role) return navigate("/dashboard");
-      
-      switch (role.toLowerCase()) {
-        case "student":
-          return navigate("/Students");
-        case "lecturer":
-          return navigate("/lecturer"); // Fixed path to match your routes
-        case "registrar":
-        case "academic_registrar":
-          return navigate("/academicregistrar"); // Fixed path to match your routes
-        default:
-          return navigate("/dashboard");
-      }
-    },
-    [navigate]
-  );
-
-  // If already logged in, redirect once
+  // If already logged in, redirect based on role
   useEffect(() => {
     const isAuth = localStorage.getItem("isAuthenticated") === "true";
     const role = localStorage.getItem("userRole");
-    
+
     if (isAuth && role) {
       navigateBasedOnRole(role);
     }
-  }, [navigateBasedOnRole]);
+  }, [navigate]);
+
+  // Navigate based on user role - using lowercase routes for consistency
+  const navigateBasedOnRole = (role) => {
+    if (!role) return navigate("/dashboard");
+
+    switch (role.toLowerCase()) {
+      case "student":
+        return navigate("/students");
+      case "lecturer":
+        return navigate("/lecturers"); // Consistent with App.jsx routes
+      case "registrar":
+      case "academic_registrar":
+      case "academicregistrar":
+        return navigate("/academicregistrar");
+      default:
+        return navigate("/dashboard");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
-    
+
     try {
       const response = await axios.post(
         "https://academic-6ea365e4b745.herokuapp.com/api/login/",
         { username, password }
       );
-      
+
       const data = response.data;
-      console.log("Login response:", data); // Debug log
-      
-      // More robust token extraction
-      let token, refresh, userRole;
-      
-      // Try different possible response structures
-      if (data.tokens) {
-        token = data.tokens.access;
-        refresh = data.tokens.refresh;
-      } else {
-        token = data.token || data.access;
-        refresh = data.refresh;
-      }
-      
-      // Try different possible user role locations
-      if (data.data && data.data.user) {
-        userRole = data.data.user.role;
-      } else if (data.data) {
-        userRole = data.data.role;
-      } else if (data.user) {
-        userRole = data.user.role;
-      } else {
-        userRole = data.role;
-      }
-      
+      console.log("Login response:", data);
+
+      // Extract tokens with fallbacks
+      const token = data.tokens?.access || data.token || data.access;
+      const refresh = data.tokens?.refresh || data.refresh;
+
+      // Extract user role with fallbacks
+      let userRole = 
+        data.data?.user?.role || 
+        data.data?.role || 
+        data.user?.role || 
+        data.role;
+
       if (!token) {
         throw new Error("Authentication failed: No token received");
       }
-      
+
       if (!userRole) {
-        // If userRole is not found, let's default to "student" for testing
         console.warn("User role not found in response, defaulting to 'student'");
         userRole = "student";
       }
-      
-      // Important: Update the AuthContext with user info
+
+      // Update auth context
       await login({
         token,
         refreshToken: refresh,
         username,
         role: userRole,
       });
-      
-      // Persist
+
+      // Store authentication data
       localStorage.setItem("accessToken", token);
       if (refresh) localStorage.setItem("refreshToken", refresh);
       localStorage.setItem("userRole", userRole);
       localStorage.setItem("isAuthenticated", "true");
-      
+
+      // Handle remember me
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
       } else {
         localStorage.removeItem("rememberedUsername");
       }
-      
+
       console.log("Login successful, navigating to:", userRole);
       navigateBasedOnRole(userRole);
     } catch (err) {
       console.error("Login error:", err);
-      
-      // More comprehensive error handling
+
+      // Error handling
       if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         const errorData = err.response.data;
         setErrorMessage(
           errorData.detail ||
-            errorData.message ||
-            errorData.error ||
-            "Invalid credentials. Please try again."
+          errorData.message ||
+          errorData.error ||
+          "Invalid credentials. Please try again."
         );
       } else if (err.request) {
-        // The request was made but no response was received
         setErrorMessage(
           "No response from server. Please check your internet connection."
         );
       } else {
-        // Something happened in setting up the request that triggered an Error
         setErrorMessage(err.message || "An unexpected error occurred.");
       }
     } finally {
@@ -151,7 +133,7 @@ const Login = () => {
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Login</h1>
-          
+
           {/* Username */}
           <div className="input-wrapper">
             <label htmlFor="username" className="form-label">
@@ -170,7 +152,7 @@ const Login = () => {
               <FaUserCircle className="input-icon" />
             </div>
           </div>
-          
+
           {/* Password */}
           <div className="input-wrapper">
             <label htmlFor="password" className="form-label">
@@ -189,7 +171,7 @@ const Login = () => {
               <FaLock className="input-icon" />
             </div>
           </div>
-          
+
           {/* Remember me */}
           <div className="remember-me">
             <label className="remember-checkbox">
@@ -200,14 +182,14 @@ const Login = () => {
               />
               <span className="checkbox-text">Remember me</span>
             </label>
-            <a href="/forgot-password" className="forgot-password-link">
+            <Link to="/forgot-password" className="forgot-password-link">
               Forgot Password?
-            </a>
+            </Link>
           </div>
-          
+
           {/* Error */}
           {errorMessage && <p className="error-message">{errorMessage}</p>}
-          
+
           {/* Submit */}
           <button type="submit" className="login-btn" disabled={isLoading}>
             {isLoading ? (
@@ -219,10 +201,10 @@ const Login = () => {
               "Login"
             )}
           </button>
-          
+
           <div className="redirect-text">
             <p>
-              Don't have an account? <a href="/register">Register</a>
+              Don't have an account? <Link to="/register">Register</Link>
             </p>
           </div>
         </form>

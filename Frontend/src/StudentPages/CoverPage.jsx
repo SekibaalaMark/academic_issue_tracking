@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Container, Typography, Box } from "@mui/material";
 
 const CoverPage = () => {
   const navigate = useNavigate();
-  
+
+
   const handleLogin = () => {
-    navigate("/login"); // Navigate to Login page
+    navigate("/login");
   };
   
   const handleRegister = () => {
-    navigate("/register"); // Navigate to Register page
+    navigate("/register");
   };
 
   return (
@@ -38,7 +39,7 @@ const CoverPage = () => {
         }}
       />
       
-      {/* Optional overlay for better text readability */}
+      {/* Overlay for better text readability */}
       <Box
         sx={{
           position: "absolute",
@@ -46,7 +47,7 @@ const CoverPage = () => {
           left: 0,
           width: "100%",
           height: "100%",
-          backgroundColor: "rgba(0,0,0,0.5)", // Dark overlay for text readability
+          backgroundColor: "rgba(0,0,0,0.5)",
           zIndex: 1,
         }}
       />
@@ -61,7 +62,7 @@ const CoverPage = () => {
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 2,
-          color: "white", // Text color
+          color: "white",
         }}
       >
         <Typography
@@ -98,7 +99,11 @@ const CoverPage = () => {
             px: { xs: 3, sm: 4 },
             py: 1.5,
             fontSize: "1.1rem",
-            mr: 2, // Add margin to the right for spacing
+            mr: 2,
+            boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
+            "&:hover": {
+              boxShadow: "0 6px 8px rgba(0,0,0,0.3)",
+            }
           }}
         >
           Login
@@ -114,6 +119,10 @@ const CoverPage = () => {
             px: { xs: 3, sm: 4 },
             py: 1.5,
             fontSize: "1.1rem",
+            boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
+            "&:hover": {
+              boxShadow: "0 6px 8px rgba(0,0,0,0.3)",
+            }
           }}
         >
           Register
