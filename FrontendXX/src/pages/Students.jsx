@@ -75,7 +75,7 @@ function Students() {
 
   // Fetch issues and notifications
   useEffect(() => {
-    fetch("/api/issues/mine")
+    fetch("https://academic-6ea365e4b745.herokuapp.com/api/student-issues/?format=api")
       .then((res) => res.json())
       .then((data) => setIssues(Array.isArray(data) ? data : []))
       .catch((err) => console.error("Error fetching issues:", err));

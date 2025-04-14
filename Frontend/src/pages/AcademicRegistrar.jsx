@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/authContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { initDb, runQuery } from "../db/sqlHelper";
 import styled from "styled-components";
 import "./AcademicRegistrar.css";
 
+// API Endpoints
 const ENDPOINTS = {
   issues:
     "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
@@ -87,14 +87,10 @@ const AcademicRegistrar = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
-  // Use the useAuth hook instead of UserContext
   const { user, logout } = useAuth();
-
   const navigate = useNavigate();
 
-  // Create axios instance with authentication
   const createAuthAxios = () => {
-    // Check for both token names for compatibility
     const token =
       localStorage.getItem("accessToken") || localStorage.getItem("authToken");
     return axios.create({
@@ -104,7 +100,6 @@ const AcademicRegistrar = () => {
     });
   };
 
-  // Check authentication and fetch data
   useEffect(() => {
     console.log("AcademicRegistrar component mounted");
 
@@ -121,7 +116,6 @@ const AcademicRegistrar = () => {
         return false;
       }
 
-      // Check if user is actually a registrar
       if (
         userRole &&
         userRole !== "academic_registrar" &&
@@ -145,29 +139,23 @@ const AcademicRegistrar = () => {
     };
 
     const fetchData = async () => {
-      // First check authentication and role
       if (!checkAuthAndRedirect()) {
         return;
       }
 
       const authAxios = createAuthAxios();
       try {
-        // Fetch registrar issues
         console.log("Fetching registrar issues");
         const issuesResponse = await authAxios.get(ENDPOINTS.issues);
-        console.log("Issues response:", issuesResponse.data);
         setIssues(
           Array.isArray(issuesResponse.data) ? issuesResponse.data : []
         );
 
-        // Fetch lecturers from the users endpoint with role filter
         try {
           console.log("Fetching lecturers");
           const lecturersResponse = await authAxios.get(
             `${ENDPOINTS.users}?role=lecturer`
           );
-          console.log("Lecturers response:", lecturersResponse.data);
-          // Transform the data to match the expected format
           const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
             id: lecturer.id,
             name: `${lecturer.first_name} ${lecturer.last_name}`,
@@ -175,14 +163,9 @@ const AcademicRegistrar = () => {
           setLecturers(formattedLecturers);
         } catch (lecturerErr) {
           console.error("Error fetching lecturers:", lecturerErr);
-          // Try alternative endpoint if the first one fails
           try {
             const alternativeLecturersResponse = await authAxios.get(
               ENDPOINTS.lecturers
-            );
-            console.log(
-              "Alternative lecturers response:",
-              alternativeLecturersResponse.data
             );
             setLecturers(
               Array.isArray(alternativeLecturersResponse.data)
@@ -197,8 +180,6 @@ const AcademicRegistrar = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error in AcademicRegistrar:", err);
-        console.error("Response data:", err.response?.data);
-        console.error("Response status:", err.response?.status);
         if (err.response?.status === 401) {
           console.log("Unauthorized access, logging out");
           handleLogout();
@@ -237,9 +218,16 @@ const AcademicRegistrar = () => {
     return matchType && matchStatus && matchLecturer;
   });
 
-  // Assign an issue to a lecturer
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentIssues = filteredIssues.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   const handleAssign = async (issueId, lecturerId) => {
-    if (!lecturerId) return; // Don't proceed if no lecturer is selected
+    if (!lecturerId) return;
     try {
       const authAxios = createAuthAxios();
       console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
@@ -247,8 +235,6 @@ const AcademicRegistrar = () => {
         `${ENDPOINTS.issues}${issueId}/assign`,
         { assigned_to: lecturerId }
       );
-      console.log("Assign response:", response.data);
-      // Update the local state with the new assignment
       setIssues((prevIssues) =>
         prevIssues.map((issue) =>
           issue.id === issueId
@@ -256,7 +242,7 @@ const AcademicRegistrar = () => {
                 ...issue,
                 assignedLecturer: lecturers.find((l) => l.id === lecturerId)
                   ?.name,
-                status: "in progress", // Update status if your API does this
+                status: "in progress",
               }
             : issue
         )
@@ -270,7 +256,6 @@ const AcademicRegistrar = () => {
     }
   };
 
-  // Resolve an issue
   const handleResolve = async (issueId) => {
     if (
       window.confirm("Are you sure you want to mark this issue as resolved?")
@@ -282,8 +267,6 @@ const AcademicRegistrar = () => {
           `${ENDPOINTS.issues}${issueId}/resolve`,
           { status: "resolved" }
         );
-        console.log("Resolve response:", response.data);
-        // Update the local state with the resolved status
         setIssues((prevIssues) =>
           prevIssues.map((issue) =>
             issue.id === issueId ? { ...issue, status: "resolved" } : issue
@@ -300,31 +283,26 @@ const AcademicRegistrar = () => {
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     console.log("Logging out");
-    // Clear localStorage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("authToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
-    // Use context logout if available
     if (logout) {
       logout();
     }
     navigate("/login");
   };
 
-  // Handle retry
   const handleRetry = () => {
     setLoading(true);
     setError(null);
     window.location.reload();
   };
 
-  // Show loading state
   if (loading) {
     return (
       <div className="loading">
@@ -334,33 +312,16 @@ const AcademicRegistrar = () => {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="error-container">
         <h2>Error</h2>
         <p>{error}</p>
         <div style={{ marginTop: "20px" }}>
-          <button onClick={handleRetry} style={{ marginRight: "10px" }}>
+          <Button onClick={handleRetry} style={{ marginRight: "10px" }}>
             Retry
-          </button>
-          <button onClick={handleLogout}>Logout</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="error-container">
-        <h2>Error</h2>
-        <p>{error}</p>
-        <div style={{ marginTop: "20px" }}>
-          <button onClick={handleRetry} style={{ marginRight: "10px" }}>
-            Retry
-          </button>
-          <button onClick={handleLogout}>Logout</button>
+          </Button>
+          <Button onClick={handleLogout}>Logout</Button>
         </div>
       </div>
     );
@@ -368,7 +329,6 @@ const AcademicRegistrar = () => {
 
   return (
     <div className="academic-registrar-dashboard">
-      {/* Sidebar */}
       <aside className="sidebar">
         <h2 className="sidebar-title">Registrar Dashboard</h2>
         <ul className="sidebar-nav">
@@ -384,12 +344,10 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
-
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <h1 className="page-title">Academic Registrar Dashboard</h1>
         <div className="user-welcome">
@@ -421,7 +379,6 @@ const AcademicRegistrar = () => {
 
         {selectedTab === "management" && (
           <div className="management-section">
-            {/* Filters */}
             <div className="filter-container">
               <label>
                 Filter by Issue Category:
@@ -436,7 +393,6 @@ const AcademicRegistrar = () => {
                   <option value="other">Other</option>
                 </select>
               </label>
-
               <label>
                 Filter by Status:
                 <select
@@ -449,7 +405,6 @@ const AcademicRegistrar = () => {
                   <option value="resolved">Resolved</option>
                 </select>
               </label>
-
               <label>
                 Filter by Lecturer:
                 <input
@@ -461,60 +416,87 @@ const AcademicRegistrar = () => {
               </label>
             </div>
 
-            {/* Issues Table */}
             <div className="issues-table-container">
               <h2 className="section-title">Registrar Issue Management</h2>
-              {filteredIssues.length === 0 ? (
+              {currentIssues.length === 0 ? (
                 <p>No issues found.</p>
               ) : (
-                <table className="issues-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Course Code</th>
-                      <th>Issue Category</th>
-                      <th>Description</th>
-                      <th>Status</th>
-                      <th>Assigned Lecturer</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredIssues.map((issue) => (
-                      <tr key={issue.id}>
-                        <td>{issue.id}</td>
-                        <td>{issue.courseCode}</td>
-                        <td>{issue.issueCategory}</td>
-                        <td>{issue.description}</td>
-                        <td>{issue.status}</td>
-                        <td>{issue.assignedLecturer || "Not Assigned"}</td>
-                        <td>
-                          <select
-                            onChange={(e) =>
-                              handleAssign(issue.id, e.target.value)
-                            }
-                            value=""
-                          >
-                            <option value="">Select Lecturer</option>
-                            {lecturers.map((lecturer) => (
-                              <option key={lecturer.id} value={lecturer.id}>
-                                {lecturer.name}
-                              </option>
-                            ))}
-                          </select>
-                          {issue.status !== "resolved" && (
-                            <button
-                              className="resolve-btn"
-                              onClick={() => handleResolve(issue.id)}
+                <>
+                  <Table>
+                    <thead>
+                      <Tr>
+                        <Th>ID</Th>
+                        <Th>Course Code</Th>
+                        <Th>Issue Category</Th>
+                        <Th>Description</Th>
+                        <Th>Status</Th>
+                        <Th>Assigned Lecturer</Th>
+                        <Th>Actions</Th>
+                      </Tr>
+                    </thead>
+                    <tbody>
+                      {currentIssues.map((issue) => (
+                        <Tr key={issue.id}>
+                          <Td>{issue.id}</Td>
+                          <Td>{issue.courseCode}</Td>
+                          <Td>{issue.issueCategory}</Td>
+                          <Td>{issue.description}</Td>
+                          <Td>{issue.status}</Td>
+                          <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+                          <Td>
+                            <select
+                              onChange={(e) =>
+                                handleAssign(issue.id, e.target.value)
+                              }
+                              value=""
                             >
-                              Resolve
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                              <option value="">Select Lecturer</option>
+                              {lecturers.map((lecturer) => (
+                                <option key={lecturer.id} value={lecturer.id}>
+                                  {lecturer.name}
+                                </option>
+                              ))}
+                            </select>
+                            {issue.status !== "resolved" && (
+                              <Button onClick={() => handleResolve(issue.id)}>
+                                Resolve
+                              </Button>
+                            )}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                  <Pagination>
+                    <PageButton
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </PageButton>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PageButton
+                          key={page}
+                          onClick={() => paginate(page)}
+                          style={{
+                            backgroundColor:
+                              currentPage === page ? "#007bff" : "#f2f2f2",
+                            color: currentPage === page ? "white" : "black",
+                          }}
+                        >
+                          {page}
+                        </PageButton>
+                      )
+                    )}
+                    <PageButton
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </PageButton>
+                  </Pagination>
+                </>
               )}
             </div>
           </div>

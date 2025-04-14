@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Students.css";
 import { AuthContext } from "@/context/authContext";
-import { initDb, runQuery } from "../db/sqlHelper";
 
 const ENDPOINTS = {
   studentIssues:
     "https://academic-6ea365e4b745.herokuapp.com/api/student-issues/",
   raiseIssue: "https://academic-6ea365e4b745.herokuapp.com/api/raise-issue/",
-  registrars: "https://academic-6ea365e4b745.herokuapp.com/api/registrars/",
-  programmes: "https://academic-6ea365e4b745.herokuapp.com/api/programmes/",
+  registrars: "https://academic-6ea365e4b745.herokuapp.com/api/registrars/", // Verify endpoint
+  programmes: "https://academic-6ea365e4b745.herokuapp.com/api/programmes/", // Verify endpoint
 };
 
-// Department choices
 const DEPT_CHOICES = [
   { value: "computer_science", label: "Computer Science Department" },
   { value: "networks", label: "Networks Department" },
@@ -21,7 +19,6 @@ const DEPT_CHOICES = [
   { value: "information_technology", label: "Information Technology" },
 ];
 
-// Category choices - corrected format based on API error
 const CATEGORY_CHOICES = [
   { value: "missing_marks", label: "Missing Marks" },
   { value: "wrong_marks", label: "Wrong Marks" },
@@ -43,8 +40,8 @@ const Students = () => {
     description: "",
     department: "computer_science",
     attachment: null,
-    registrar: "", // Will be set after fetching registrars
-    programme: "", // Will be set after fetching programmes
+    registrar: "",
+    programme: "",
   });
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -54,62 +51,60 @@ const Students = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [profileData, setProfileData] = useState(null);
+  const [dataFetched, setDataFetched] = useState(false);
 
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "attachment" && files && files[0]) {
-      setFormData({
-        ...formData,
-        attachment: files[0],
-      });
+      setFormData({ ...formData, attachment: files[0] });
     } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Fetch data on component mount
+  // Check authentication
   useEffect(() => {
-    if (user && user.token) {
-      // Fetch registrars, programmes, and issues
+    if (!user || !user.token) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
+  // Fetch data
+  useEffect(() => {
+    if (user && user.token && !dataFetched) {
       const fetchData = async () => {
         setLoading(true);
-
         try {
           // Fetch registrars
           try {
             const registrarsResponse = await axios.get(ENDPOINTS.registrars, {
-              headers: {
-                Authorization: `Bearer ${user.token}`,
-              },
+              headers: { Authorization: `Bearer ${user.token}` },
             });
-
             if (registrarsResponse.data.success) {
               setRegistrars(registrarsResponse.data.data);
+            } else {
+              throw new Error("No registrar data returned");
             }
           } catch (error) {
             console.error("Error fetching registrars:", error);
-            // Fallback data in case API fails
-            setRegistrars([{ value: "nairah", label: "nairah" }]);
+            setError("Failed to fetch registrars. Using fallback data.");
+            setRegistrars([{ value: "nairah", label: "Nairah" }]);
           }
 
           // Fetch programmes
           try {
             const programmesResponse = await axios.get(ENDPOINTS.programmes, {
-              headers: {
-                Authorization: `Bearer ${user.token}`,
-              },
+              headers: { Authorization: `Bearer ${user.token}` },
             });
-
             if (programmesResponse.data.success) {
               setProgrammes(programmesResponse.data.data);
+            } else {
+              throw new Error("No programme data returned");
             }
           } catch (error) {
             console.error("Error fetching programmes:", error);
-            // Fallback data in case API fails
+            setError("Failed to fetch programmes. Using fallback data.");
             setProgrammes([
               {
                 value: "computer_science",
@@ -135,24 +130,70 @@ const Students = () => {
             const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
               headers: { Authorization: `Bearer ${user.token}` },
             });
-            setIssues(issuesRes.data);
+            setIssues(issuesRes.data || []);
           } catch (err) {
             console.error("Error fetching issues:", err);
             setIssues([]);
+            setError("Failed to fetch issues.");
           }
+
+          setDataFetched(true);
         } catch (err) {
           console.error("Error fetching data:", err);
+          setError("An error occurred while loading data.");
         } finally {
           setLoading(false);
         }
       };
-
       fetchData();
-    } else {
-      navigate("/login");
     }
-  }, [user, navigate]); // Keep dependencies minimal to avoid infinite loops
+  }, [user, dataFetched]);
 
+  // Initialize form data
+  useEffect(() => {
+    if (
+      registrars.length > 0 &&
+      programmes.length > 0 &&
+      !formData.registrar &&
+      !formData.programme
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        registrar: registrars[0]?.value || "",
+        programme: programmes[0]?.value || "",
+      }));
+    }
+  }, [registrars, programmes, formData.registrar, formData.programme]);
+
+  // Fetch profile data
+  const fetchProfileData = useCallback(() => {
+    if (user && user.token && !profileData) {
+      setProfileLoading(true);
+      setProfileError("");
+      try {
+        setProfileData({
+          username: user.username,
+          email: user.email || "student@example.com",
+          role: "Student",
+          "student number":
+            user.student_id || "STU" + Math.floor(Math.random() * 10000),
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setProfileError("Failed to load profile data");
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+  }, [user, profileData]);
+
+  useEffect(() => {
+    if (selectedTab === "profile") {
+      fetchProfileData();
+    }
+  }, [selectedTab, fetchProfileData]);
+
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -172,24 +213,18 @@ const Students = () => {
       return;
     }
 
-    // Validate registrar exists
     const registrarExists = registrars.some(
       (r) => r.value === formData.registrar
     );
-
     if (!registrarExists) {
-      setError(
-        `Registrar with username '${formData.registrar}' does not exist.`
-      );
+      setError(`Registrar '${formData.registrar}' does not exist.`);
       setSubmitting(false);
       return;
     }
 
-    // Validate programme exists
     const programmeExists = programmes.some(
       (p) => p.value === formData.programme
     );
-
     if (!programmeExists) {
       setError(`Programme '${formData.programme}' does not exist.`);
       setSubmitting(false);
@@ -197,19 +232,13 @@ const Students = () => {
     }
 
     const data = new FormData();
-
-    // Add all form fields to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== "") {
         data.append(key, value);
-        console.log(`Adding to FormData: ${key} = ${value}`);
       }
     });
 
     try {
-      console.log("Submitting with registrar:", formData.registrar);
-      console.log("Submitting with programme:", formData.programme);
-
       const response = await axios.post(ENDPOINTS.raiseIssue, data, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -217,10 +246,9 @@ const Students = () => {
         },
       });
 
-      console.log("Issue submission response:", response);
       setSuccessMsg("Issue raised successfully.");
 
-      // Reset form after successful submission
+      // Reset form
       setFormData({
         course_name: "",
         course_code: "",
@@ -238,24 +266,20 @@ const Students = () => {
         const issuesRes = await axios.get(ENDPOINTS.studentIssues, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        setIssues(issuesRes.data);
+        setIssues(issuesRes.data || []);
       } catch (err) {
         console.error("Error refreshing issues:", err);
+        setError("Failed to refresh issues list.");
       }
 
-      // Switch to My Issues tab after a short delay
-      setTimeout(() => {
-        setSelectedTab("myIssues");
-      }, 2000);
+      // Stay on "Raise Issue" tab to avoid rendering issues until data is fixed
+      // Remove setTimeout to prevent automatic tab switch
     } catch (err) {
       console.error("Error submitting issue:", err);
       if (err.response?.data) {
-        const errorData = err.response.data;
-        console.log("API error response:", errorData);
-        // Format error message more clearly
         let errorMessage = "Validation errors:";
-        Object.entries(errorData).forEach(([field, errors]) => {
-          errorMessage += `\n- ${field}: ${errors.join(", ")}`;
+        Object.entries(err.response.data).forEach(([field, errors]) => {
+          errorMessage += `\n- ${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`;
         });
         setError(errorMessage);
       } else {
@@ -266,7 +290,6 @@ const Students = () => {
     }
   };
 
-  // Show loading state
   if (loading) {
     return (
       <div className="loading">
@@ -287,7 +310,6 @@ const Students = () => {
           </button>
         </div>
       </header>
-      {/* Navigation Tabs */}
       <nav className="tabs">
         <button
           className={`tab-button ${selectedTab === "home" ? "active" : ""}`}
@@ -315,7 +337,6 @@ const Students = () => {
         </button>
       </nav>
       <main className="dashboard-content">
-        {/* Home Tab Content */}
         {selectedTab === "home" && (
           <section className="tab-content">
             <div className="welcome-banner">
@@ -359,7 +380,6 @@ const Students = () => {
             </div>
           </section>
         )}
-        {/* Profile Tab Content */}
         {selectedTab === "profile" && (
           <section className="tab-content">
             <h2>My Profile</h2>
@@ -443,7 +463,6 @@ const Students = () => {
             )}
           </section>
         )}
-        {/* Raise Issue Tab Content */}
         {selectedTab === "raiseIssue" && (
           <section className="tab-content">
             <h2>Raise a New Issue</h2>
@@ -619,7 +638,6 @@ const Students = () => {
                 </button>
               </div>
             </form>
-            {/* Add the debug section here, right after the form */}
             {process.env.NODE_ENV === "development" && (
               <div
                 className="debug-info"
@@ -659,7 +677,6 @@ const Students = () => {
             )}
           </section>
         )}
-        {/* My Issues Tab Content */}
         {selectedTab === "myIssues" && (
           <section className="tab-content">
             <h2>My Issues</h2>
@@ -682,24 +699,37 @@ const Students = () => {
                         {issue.course_name} ({issue.course_code})
                       </h3>
                       <span className={`status-badge ${issue.status}`}>
-                        {issue.status.replace("_", " ")}
+                        {(typeof issue.status === "string"
+                          ? issue.status
+                          : "Unknown"
+                        ).replace("_", " ")}
                       </span>
                     </div>
                     <div className="issue-details">
                       <p className="issue-category">
                         <strong>Category:</strong>{" "}
-                        {issue.category.replace("_", " ")}
+                        {(typeof issue.category === "string"
+                          ? issue.category
+                          : "N/A"
+                        ).replace("_", " ")}
                       </p>
                       <p className="issue-year">
                         <strong>Year:</strong>{" "}
-                        {issue.year_of_study.replace("_", " ")}
+                        {(typeof issue.year_of_study === "string"
+                          ? issue.year_of_study
+                          : "N/A"
+                        ).replace("_", " ")}
                       </p>
                       <p className="issue-department">
                         <strong>Department:</strong>{" "}
-                        {issue.department.replace("_", " ")}
+                        {(typeof issue.department === "string"
+                          ? issue.department
+                          : "N/A"
+                        ).replace("_", " ")}
                       </p>
                       <p className="issue-description">
-                        <strong>Description:</strong> {issue.description}
+                        <strong>Description:</strong>{" "}
+                        {issue.description || "No description"}
                       </p>
                       {issue.attachment && (
                         <div className="issue-attachment">
@@ -715,7 +745,9 @@ const Students = () => {
                       )}
                       <p className="issue-date">
                         <strong>Date Submitted:</strong>{" "}
-                        {new Date(issue.created_at).toLocaleDateString()}
+                        {issue.created_at
+                          ? new Date(issue.created_at).toLocaleDateString()
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -729,4 +761,47 @@ const Students = () => {
   );
 };
 
-export default Students;
+// Error Boundary Component
+
+
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error caught in ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          className="error-boundary"
+          style={{ padding: "20px", textAlign: "center" }}
+        >
+          <h2>Something went wrong.</h2>
+          <p>{this.state.error?.message || "An unexpected error occurred."}</p>
+          <button
+            className="action-btn"
+            onClick={() => window.location.reload()}
+            
+          >
+            
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function StudentsWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <Students />
+    </ErrorBoundary>
+  );
+}

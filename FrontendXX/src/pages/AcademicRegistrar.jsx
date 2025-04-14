@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
+import { AuthContext } from "@/context/authContext";
 
 // Styled components for the table and controls
 const Table = styled.table`
@@ -88,7 +89,7 @@ function AcademicRegistrar() {
   // Fetch all issues and lecturers
   useEffect(() => {
     axios
-      .get("http://localhost:5000/issues")
+      .get("https://academic-6ea365e4b745.herokuapp.com/api/issues")
       .then((res) => {
         setIssues(Array.isArray(res.data) ? res.data : []);
       })
@@ -98,7 +99,7 @@ function AcademicRegistrar() {
       });
 
     axios
-      .get("http://localhost:5000/lecturers")
+      .get("https://academic-6ea365e4b745.herokuapp.com/api/lecturers")
       .then((res) => {
         setLecturers(Array.isArray(res.data) ? res.data : []);
       })

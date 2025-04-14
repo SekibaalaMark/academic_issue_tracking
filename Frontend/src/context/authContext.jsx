@@ -1,55 +1,47 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-// Create the auth context
 export const AuthContext = createContext(null);
 
-// Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Use consistent token naming - check both for backward compatibility
-        const token =
-          localStorage.getItem("accessToken") ||
-          localStorage.getItem("authToken");
-
+        const token = localStorage.getItem("accessToken");
         if (token) {
-          // This should be a GET request to verify the token
           const response = await axios.get(
-            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/", // Adjust endpoint as needed
+            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-
-          console.log("User data fetched:", response.data);
           setUser(response.data);
-        } else {
-          console.error("No token found, user may need to log in.");
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
-        setError("Failed to fetch user data.");
-
-        // Clear invalid tokens on error
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("isAuthenticated");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("userRole");
+          navigate("/login");
+        } else {
+          setError("Failed to fetch user data. Please try refreshing.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    // Check if user is authenticated on component mount
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
     if (isAuthenticated) {
       fetchUserData();
@@ -58,21 +50,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Login function
-  const login = (userData) => {
+  const login = (userData, role) => {
     setUser(userData);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
-
-    // Use consistent token naming
     localStorage.setItem("accessToken", userData.token);
-
-    // Store user role for routing decisions
     if (userData.user_role) {
       localStorage.setItem("userRole", userData.user_role);
     }
-
-    // Navigate based on user role
     const userRole = userData.user_role || "student";
     switch (userRole) {
       case "student":
@@ -89,24 +74,86 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
   const logout = () => {
     setUser(null);
-    // Clear all auth-related items
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("authToken");
     localStorage.removeItem("userRole");
     navigate("/login");
   };
 
-  // Register function
   const register = (userData) => {
     login(userData);
   };
 
-  // Auth context value
+  const handleFormSubmission = async (
+    url,
+    data,
+    method = "post",
+    successCallback = null
+  ) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("No access token found. Please log in.");
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      let response;
+      if (method.toLowerCase() === "post") {
+        response = await axios.post(url, data, config);
+      } else if (method.toLowerCase() === "put") {
+        response = await axios.put(url, data, config);
+      } else if (method.toLowerCase() === "patch") {
+        response = await axios.patch(url, data, config);
+      } else {
+        throw new Error("Unsupported method");
+      }
+
+      if (successCallback) {
+        successCallback(response.data);
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      console.error("Form submission error:", err);
+      return {
+        success: false,
+        error: err.response?.data || "An error occurred during submission",
+      };
+    }
+  };
+
+  const assignIssue = async (issueId, lecturerId) => {
+    try {
+      const response = await handleFormSubmission(
+        `https://academic-6ea365e4b745.herokuapp.com/api/issues/${issueId}/assign`,
+        { lecturer_id: lecturerId },
+        "patch",
+        (data) => {
+          console.log("Issue assigned:", data);
+        }
+      );
+      return response;
+    } catch (err) {
+      console.error("Issue assignment error:", err);
+      return {
+        success: false,
+        error: err.response?.data || "Failed to assign issue.",
+      };
+    }
+  };
+
   const value = {
     user,
     login,
@@ -114,16 +161,14 @@ export const AuthProvider = ({ children }) => {
     register,
     loading,
     error,
+    handleFormSubmission,
+    assignIssue,
+    currentPath: location.pathname,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading ? children : <div>Loading...</div>}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook for child components to get the auth object
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

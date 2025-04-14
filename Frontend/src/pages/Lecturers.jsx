@@ -1,24 +1,25 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "./Lecturers.css"; // You'll need to create this CSS file
+import "./Lecturers.css";
 import { AuthContext } from "@/context/authContext";
-import { initDb, runQuery } from "../db/sqlHelper";
 
-
+// API Endpoints
 const ENDPOINTS = {
-  lecturerIssues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
-  lecturerDashboard:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
+  lecturerIssues: "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
+  lecturerDashboard: "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
   userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
-  lecturerProfile:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
+  lecturerProfile: "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
 };
+
+// Message timeout duration
+const MESSAGE_TIMEOUT = 5000; // 5 seconds
 
 const Lecturer = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  
+  // State variables
   const [userRole, setUserRole] = useState(null);
   const [issues, setIssues] = useState([]);
   const [dashboardData, setDashboardData] = useState({
@@ -27,7 +28,6 @@ const Lecturer = () => {
     resolved_count: 0,
   });
   const [selectedIssue, setSelectedIssue] = useState(null);
-  const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
@@ -37,126 +37,192 @@ const Lecturer = () => {
   const [filterStatus, setFilterStatus] = useState("");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
+  
+  // Clear messages after timeout
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => {
+        setSuccessMsg("");
+      }, MESSAGE_TIMEOUT);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+  
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError("");
+      }, MESSAGE_TIMEOUT);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+  
+  // Create axios instance with authentication
+  const createAuthAxios = useCallback(() => {
+    const token = user?.token || localStorage.getItem("accessToken");
+    return axios.create({
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    });
+  }, [user]);
+  
   // Function to fetch lecturer data
-  const fetchLecturerData = async (token) => {
+  const fetchLecturerData = useCallback(async () => {
     try {
+      setLoading(true);
+      const authAxios = createAuthAxios();
+      
       const [issuesRes, dashboardRes] = await Promise.all([
-        axios.get(ENDPOINTS.lecturerIssues, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-        axios.get(ENDPOINTS.lecturerDashboard, {
-          headers: { Authorization: `Token ${token}` },
-        }),
+        authAxios.get(ENDPOINTS.lecturerIssues),
+        authAxios.get(ENDPOINTS.lecturerDashboard),
       ]);
-      setIssues(issuesRes.data);
-      setDashboardData(dashboardRes.data.dashboard);
+      
+      setIssues(Array.isArray(issuesRes.data) ? issuesRes.data : []);
+      setDashboardData(dashboardRes.data.dashboard || {
+        total_assigned: 0,
+        in_progress_count: 0,
+        resolved_count: 0,
+      });
+      
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching lecturer data:", err);
+      setError("Failed to load data. Please try again.");
+      setLoading(false);
+      
+      if (err.response?.status === 401) {
+        handleLogout();
+      }
     }
-  };
-
+  }, [createAuthAxios]);
+  
   // Check authentication and user role on component mount
   useEffect(() => {
-    console.log("Lecturers component mounted, user:", user);
-    const fetchUserRole = async () => {
-      if (!user || !user.token) {
-        console.log("No user or token found, redirecting to login");
+    console.log("Lecturers component mounted");
+    
+    const checkAuthAndFetchData = async () => {
+      // Check if user is authenticated
+      const token = user?.token || localStorage.getItem("accessToken");
+      const storedRole = localStorage.getItem("userRole");
+      
+      if (!token) {
+        console.log("No token found, redirecting to login");
         navigate("/login");
         setLoading(false);
         setAuthChecked(true);
         return;
       }
+      
       try {
-        console.log("Fetching user profile with token:", user.token);
-        const response = await axios.get(ENDPOINTS.userProfile, {
-          headers: { Authorization: `Token ${user.token}` },
-        });
-        console.log("User profile response:", response.data);
-        const role = response.data.role;
-        setUserRole(role);
-        // Redirect based on role
-        if (role === "academic_registrar" || role === "registrar") {
-          console.log("User is registrar, redirecting");
-          navigate("/AcademicRegistrar");
-          return;
-        } else if (role === "student") {
-          console.log("User is student, redirecting");
-          navigate("/students");
-          return;
-        } else if (role !== "lecturer") {
-          console.log("Unknown role, redirecting to dashboard");
-          navigate("/dashboard");
-          return;
+        // If we already know the role from localStorage, use it
+        if (storedRole) {
+          setUserRole(storedRole);
+          
+          // Redirect based on stored role if not lecturer
+          if (storedRole !== "lecturer") {
+            if (storedRole === "academic_registrar" || storedRole === "registrar") {
+              navigate("/AcademicRegistrar");
+            } else if (storedRole === "student") {
+              navigate("/students");
+            } else {
+              navigate("/dashboard");
+            }
+            setLoading(false);
+            setAuthChecked(true);
+            return;
+          }
+        } else {
+          // Fetch user profile to determine role
+          const authAxios = createAuthAxios();
+          const response = await authAxios.get(ENDPOINTS.userProfile);
+          const role = response.data.role;
+          
+          setUserRole(role);
+          localStorage.setItem("userRole", role);
+          
+          // Redirect based on role if not lecturer
+          if (role !== "lecturer") {
+            if (role === "academic_registrar" || role === "registrar") {
+              navigate("/AcademicRegistrar");
+            } else if (role === "student") {
+              navigate("/students");
+            } else {
+              navigate("/dashboard");
+            }
+            setLoading(false);
+            setAuthChecked(true);
+            return;
+          }
         }
+        
         // Only fetch lecturer data if user is actually a lecturer
-        console.log("User is lecturer, fetching lecturer data");
-        await fetchLecturerData(user.token);
+        await fetchLecturerData();
       } catch (err) {
-        console.error("Error fetching user role:", err);
-        console.error("Response data:", err.response?.data);
-        console.error("Response status:", err.response?.status);
+        console.error("Error in authentication check:", err);
+        
         if (err.response?.status === 401) {
-          console.log("Unauthorized access, logging out");
-          logout();
-          navigate("/login");
+          handleLogout();
+        } else {
+          setError("Authentication error. Please try logging in again.");
+          setLoading(false);
+          setAuthChecked(true);
         }
-      } finally {
-        setLoading(false);
-        setAuthChecked(true);
       }
     };
-
-    fetchUserRole();
-  }, [user, navigate, logout]);
-
+    
+    checkAuthAndFetchData();
+  }, [user, navigate, fetchLecturerData, createAuthAxios]);
+  
   // Handle logout function
-  const handleLogout = () => {
-    logout();
+  const handleLogout = useCallback(() => {
+    // Clear localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("username");
+    
+    // Use context logout
+    if (logout) {
+      logout();
+    }
+    
     navigate("/login");
-  };
-
+  }, [logout, navigate]);
+  
   // Handle view issue
-  const handleViewIssue = (issueId) => {
+  const handleViewIssue = useCallback((issueId) => {
     const issue = issues.find((i) => i.id === issueId);
     setSelectedIssue(issue);
     setSelectedTab("issueDetail");
-  };
-
+  }, [issues]);
+  
   // Handle status update
-  const handleStatusUpdate = async (issueId, status) => {
+  const handleStatusUpdate = useCallback(async (issueId, status) => {
     setSubmitting(true);
     setError("");
     setSuccessMsg("");
+    
     try {
-      await axios.patch(
+      const authAxios = createAuthAxios();
+      
+      await authAxios.patch(
         `${ENDPOINTS.lecturerIssues}${issueId}/`,
-        { status, feedback: comment },
-        {
-          headers: {
-            Authorization: `Token ${user.token}`,
-          },
-        }
+        { status, feedback: comment }
       );
-      setSuccessMessage("Issue updated successfully.");
-      // Refresh issues list
-      const issuesRes = await axios.get(ENDPOINTS.lecturerIssues, {
-        headers: { Authorization: `Token ${user.token}` },
-      });
-      setIssues(issuesRes.data);
-      // Refresh dashboard data
-      const dashboardRes = await axios.get(ENDPOINTS.lecturerDashboard, {
-        headers: { Authorization: `Token ${user.token}` },
-      });
-      setDashboardData(dashboardRes.data.dashboard);
-
+      
+      setSuccessMsg("Issue updated successfully.");
+      
+      // Refresh issues list and dashboard data
+      await fetchLecturerData();
+      
       // Update selected issue if we're viewing it
       if (selectedIssue && selectedIssue.id === issueId) {
-        const updatedIssue = issuesRes.data.find((i) => i.id === issueId);
-        setSelectedIssue(updatedIssue);
+        const updatedIssue = await authAxios.get(`${ENDPOINTS.lecturerIssues}${issueId}/`);
+        setSelectedIssue(updatedIssue.data);
       }
-
+      
       setComment("");
     } catch (err) {
       setError("Failed to update issue. Please try again.");
@@ -164,33 +230,28 @@ const Lecturer = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
+  }, [comment, createAuthAxios, fetchLecturerData, selectedIssue]);
+  
   // Handle add comment
-  const handleAddComment = async (issueId) => {
+  const handleAddComment = useCallback(async (issueId) => {
     if (!comment.trim()) return;
-
+    
     setSubmitting(true);
     setError("");
     setSuccessMsg("");
+    
     try {
-      await axios.post(
+      const authAxios = createAuthAxios();
+      
+      await authAxios.post(
         `${ENDPOINTS.lecturerIssues}${issueId}/comment/`,
-        { content: comment },
-        {
-          headers: {
-            Authorization: `Token ${user.token}`,
-          },
-        }
+        { content: comment }
       );
-      setSuccessMessage("Comment added successfully.");
+      
+      setSuccessMsg("Comment added successfully.");
+      
       // Refresh the selected issue to show the new comment
-      const issueRes = await axios.get(
-        `${ENDPOINTS.lecturerIssues}${issueId}/`,
-        {
-          headers: { Authorization: `Token ${user.token}` },
-        }
-      );
+      const issueRes = await authAxios.get(`${ENDPOINTS.lecturerIssues}${issueId}/`);
       setSelectedIssue(issueRes.data);
       setComment("");
     } catch (err) {
@@ -199,46 +260,46 @@ const Lecturer = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
+  }, [comment, createAuthAxios]);
+  
   // Filter issues based on search term and status
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
       searchTerm === "" ||
-      issue.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      issue.course_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      issue.course_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (issue.student?.first_name + " " + issue.student?.last_name)
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
-
+        
     const matchesStatus = filterStatus === "" || issue.status === filterStatus;
-
+    
     return matchesSearch && matchesStatus;
   });
-
+  
   // Show loading state
   if (loading) {
     return (
       <div className="loading">
         <div className="spinner"></div>
-        <p>Loading...</p>
+        <p>Loading Lecturer Dashboard...</p>
       </div>
     );
   }
-
+  
   // If authentication check is complete and no user, redirect to login
   if (authChecked && !user) {
     console.log("Auth checked, no user found, redirecting to login");
     navigate("/login");
     return null;
   }
-
+  
   // If user role is not lecturer and auth check is complete, return null (already redirected)
   if (authChecked && userRole && userRole !== "lecturer") {
     console.log("User role is not lecturer, already redirected");
     return null;
   }
-
+  
   return (
     <div className="lecturer-dashboard">
       {/* Sidebar */}
@@ -266,25 +327,31 @@ const Lecturer = () => {
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
+      
       {/* Main Content */}
       <main className="main-content">
-        {successMessage && (
+        {successMsg && (
           <div className="success-message">
-            <p>{successMessage}</p>
+            <p>{successMsg}</p>
+            <button className="close-btn" onClick={() => setSuccessMsg("")}>×</button>
           </div>
         )}
+        
         {error && (
           <div className="error-message">
             <p>{error}</p>
+            <button className="close-btn" onClick={() => setError("")}>×</button>
           </div>
         )}
+        
         {/* Home Tab */}
         {selectedTab === "home" && (
           <div className="dashboard-home">
             <h1 className="page-title">Lecturer Dashboard</h1>
             <div className="user-welcome">
-              <p>Welcome, {localStorage.getItem("username") || "Lecturer"}</p>
+              <p>Welcome, {localStorage.getItem("username") || user?.name || "Lecturer"}</p>
             </div>
+            
             <div className="dashboard-summary">
               <div className="summary-item">
                 <span className="summary-label">Total Assigned:</span>
@@ -305,6 +372,7 @@ const Lecturer = () => {
                 </span>
               </div>
             </div>
+            
             <div className="recent-issues">
               <h2 className="section-title">Recent Issues</h2>
               {issues.length === 0 ? (
@@ -325,7 +393,7 @@ const Lecturer = () => {
                         </span>
                       </div>
                       <p className="issue-description">
-                        {issue.description.substring(0, 100)}...
+                        {issue.description?.substring(0, 100)}...
                       </p>
                       <div className="issue-footer">
                         <span className="student-name">
@@ -342,6 +410,7 @@ const Lecturer = () => {
                   ))}
                 </div>
               )}
+              
               {issues.length > 4 && (
                 <button
                   className="view-all-btn"
@@ -353,36 +422,37 @@ const Lecturer = () => {
             </div>
           </div>
         )}
+        
         {/* Issues Management Tab */}
         {selectedTab === "issues" && (
           <div className="issues-management">
             <h1 className="page-title">Manage Issues</h1>
+            
             <div className="filter-container">
               <div className="search-box">
                 <input
                   type="text"
-                  placeholder="Search issues..."
+                  placeholder="Search by course or student name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <div className="status-filter">
-                <label>Filter by Status:</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
-                  <option value="">All</option>
+                  <option value="">All Statuses</option>
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
                   <option value="resolved">Resolved</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
             </div>
+            
             {filteredIssues.length === 0 ? (
-              <div className="no-issues-container">
-                <p>No issues found matching your criteria.</p>
-              </div>
+              <p className="no-issues">No issues match your search criteria.</p>
             ) : (
               <div className="issues-table-container">
                 <table className="issues-table">
@@ -391,9 +461,8 @@ const Lecturer = () => {
                       <th>ID</th>
                       <th>Course</th>
                       <th>Student</th>
-                      <th>Category</th>
+                      <th>Date Submitted</th>
                       <th>Status</th>
-                      <th>Last Updated</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -402,69 +471,26 @@ const Lecturer = () => {
                       <tr key={issue.id} className={issue.status}>
                         <td>{issue.id}</td>
                         <td>
-                          <div className="course-info">
-                            <span className="course-code">
-                              {issue.course_code}
-                            </span>
-                            <span className="course-name">
-                              {issue.course_name}
-                            </span>
-                          </div>
+                          {issue.course_code}: {issue.course_name}
                         </td>
                         <td>
                           {issue.student?.first_name} {issue.student?.last_name}
                         </td>
-                        <td>{issue.category}</td>
+                        <td>
+                          {new Date(issue.created_at).toLocaleDateString()}
+                        </td>
                         <td>
                           <span className={`status-badge ${issue.status}`}>
                             {issue.status}
                           </span>
                         </td>
                         <td>
-                          {new Date(issue.last_updated).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            <button
-                              className="view-btn"
-                              onClick={() => handleViewIssue(issue.id)}
-                            >
-                              View
-                            </button>
-                            {issue.status === "pending" && (
-                              <button
-                                className="progress-btn"
-                                onClick={() =>
-                                  handleStatusUpdate(issue.id, "in_progress")
-                                }
-                                disabled={submitting}
-                              >
-                                Start
-                              </button>
-                            )}
-                            {issue.status === "in_progress" && (
-                              <button
-                                className="resolve-btn"
-                                onClick={() =>
-                                  handleStatusUpdate(issue.id, "resolved")
-                                }
-                                disabled={submitting}
-                              >
-                                Resolve
-                              </button>
-                            )}
-                            {issue.status === "resolved" && (
-                              <button
-                                className="reopen-btn"
-                                onClick={() =>
-                                  handleStatusUpdate(issue.id, "in_progress")
-                                }
-                                disabled={submitting}
-                              >
-                                Reopen
-                              </button>
-                            )}
-                          </div>
+                          <button
+                            className="view-btn"
+                            onClick={() => handleViewIssue(issue.id)}
+                          >
+                            View
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -474,147 +500,102 @@ const Lecturer = () => {
             )}
           </div>
         )}
+        
         {/* Issue Detail Tab */}
         {selectedTab === "issueDetail" && selectedIssue && (
           <div className="issue-detail">
             <div className="detail-header">
               <button
                 className="back-btn"
-                onClick={() => {
-                  setSelectedIssue(null);
-                  setSelectedTab("issues");
-                }}
+                onClick={() => setSelectedTab("issues")}
               >
                 ← Back to Issues
               </button>
-              <h1 className="page-title">Issue #{selectedIssue.id}</h1>
+              <h1 className="page-title">Issue Details</h1>
             </div>
-            <div className="issue-detail-container">
-              <div className="issue-info">
-                <div className="info-header">
-                  <h2>
-                    {selectedIssue.course_code}: {selectedIssue.course_name}
-                  </h2>
+            
+            <div className="issue-info">
+              <div className="info-section">
+                <h2>
+                  {selectedIssue.course_code}: {selectedIssue.course_name}
+                </h2>
+                <div className="info-row">
+                  <span className="info-label">Status:</span>
                   <span className={`status-badge ${selectedIssue.status}`}>
                     {selectedIssue.status}
                   </span>
                 </div>
-                <div className="info-section">
-                  <h3>Issue Details</h3>
-                  <div className="info-grid">
-                    <div className="info-item">
-                      <span className="info-label">Student:</span>
-                      <span className="info-value">
-                        {selectedIssue.student?.first_name}{" "}
-                        {selectedIssue.student?.last_name}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Category:</span>
-                      <span className="info-value">
-                        {selectedIssue.category}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Department:</span>
-                      <span className="info-value">
-                        {selectedIssue.department?.name}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Programme:</span>
-                      <span className="info-value">
-                        {selectedIssue.programme?.programme_name}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Year of Study:</span>
-                      <span className="info-value">
-                        {selectedIssue.year_of_study}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Date Submitted:</span>
-                      <span className="info-value">
-                        {new Date(
-                          selectedIssue.created_at
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">Last Updated:</span>
-                      <span className="info-value">
-                        {new Date(
-                          selectedIssue.last_updated
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
+                <div className="info-row">
+                  <span className="info-label">Student:</span>
+                  <span>
+                    {selectedIssue.student?.first_name}{" "}
+                    {selectedIssue.student?.last_name}
+                  </span>
                 </div>
-                <div className="description-section">
-                  <h3>Description</h3>
-                  <p className="description-text">
-                    {selectedIssue.description}
-                  </p>
+                <div className="info-row">
+                  <span className="info-label">Student ID:</span>
+                  <span>{selectedIssue.student?.student_id}</span>
                 </div>
-                {selectedIssue.attachment && (
-                  <div className="attachment-section">
-                    <h3>Attachment</h3>
-                    <a
-                      href={selectedIssue.attachment}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="attachment-link"
-                    >
-                      View Attachment
-                    </a>
+                <div className="info-row">
+                  <span className="info-label">Date Submitted:</span>
+                  <span>
+                    {new Date(selectedIssue.created_at).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="description-section">
+                <h3>Issue Description</h3>
+                <p>{selectedIssue.description}</p>
+              </div>
+              
+              {selectedIssue.attachments && selectedIssue.attachments.length > 0 && (
+                <div className="attachments-section">
+                  <h3>Attachments</h3>
+                  <ul className="attachments-list">
+                    {selectedIssue.attachments.map((attachment, index) => (
+                      <li key={index}>
+                        <a
+                          href={attachment.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {attachment.filename || `Attachment ${index + 1}`}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* Comments Section */}
+              <div className="comments-section">
+                <h3>Comments</h3>
+                {selectedIssue.comments && selectedIssue.comments.length > 0 ? (
+                  <div className="comments-list">
+                    {selectedIssue.comments.map((comment, index) => (
+                      <div key={index} className="comment">
+                        <div className="comment-header">
+                          <span className="comment-author">
+                            {comment.author_name || "Unknown"}
+                          </span>
+                          <span className="comment-date">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="comment-content">{comment.content}</p>
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <p className="no-comments">No comments yet.</p>
                 )}
-                <div className="status-actions">
-                  <h3>Update Status</h3>
-                  <div className="action-buttons">
-                    {selectedIssue.status === "pending" && (
-                      <button
-                        className="progress-btn"
-                        onClick={() =>
-                          handleStatusUpdate(selectedIssue.id, "in_progress")
-                        }
-                        disabled={submitting}
-                      >
-                        Mark as In Progress
-                      </button>
-                    )}
-                    {selectedIssue.status === "in_progress" && (
-                      <button
-                        className="resolve-btn"
-                        onClick={() =>
-                          handleStatusUpdate(selectedIssue.id, "resolved")
-                        }
-                        disabled={submitting}
-                      >
-                        Mark as Resolved
-                      </button>
-                    )}
-                    {selectedIssue.status === "resolved" && (
-                      <button
-                        className="reopen-btn"
-                        onClick={() =>
-                          handleStatusUpdate(selectedIssue.id, "in_progress")
-                        }
-                        disabled={submitting}
-                      >
-                        Reopen Issue
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="comment-section">
-                  <h3>Add Comment</h3>
+                
+                <div className="add-comment">
                   <textarea
+                    placeholder="Add a comment or feedback..."
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Type your comment here..."
-                    rows={4}
                     disabled={submitting}
                   ></textarea>
                   <button
@@ -625,94 +606,73 @@ const Lecturer = () => {
                     {submitting ? "Submitting..." : "Add Comment"}
                   </button>
                 </div>
-                {/* Comments display would go here if the API supports retrieving comments */}
-                {selectedIssue.comments &&
-                  selectedIssue.comments.length > 0 && (
-                    <div className="comments-list">
-                      <h3>Comments</h3>
-                      {selectedIssue.comments.map((comment, index) => (
-                        <div key={index} className="comment-item">
-                          <div className="comment-header">
-                            <span className="comment-author">
-                              {comment.user?.first_name}{" "}
-                              {comment.user?.last_name}
-                            </span>
-                            <span className="comment-date">
-                              {new Date(comment.created_at).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="comment-content">{comment.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              </div>
+              
+              {/* Status Update Section */}
+              <div className="status-update-section">
+                <h3>Update Status</h3>
+                <div className="status-buttons">
+                  <button
+                    className={`status-btn pending ${
+                      selectedIssue.status === "pending" ? "active" : ""
+                    }`}
+                    onClick={() => handleStatusUpdate(selectedIssue.id, "pending")}
+                    disabled={
+                      selectedIssue.status === "pending" || submitting
+                    }
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`status-btn in_progress ${
+                      selectedIssue.status === "in_progress" ? "active" : ""
+                    }`}
+                    onClick={() =>
+                      handleStatusUpdate(selectedIssue.id, "in_progress")
+                    }
+                    disabled={
+                      selectedIssue.status === "in_progress" || submitting
+                    }
+                  >
+                    In Progress
+                  </button>
+                  <button
+                    className={`status-btn resolved ${
+                      selectedIssue.status === "resolved" ? "active" : ""
+                    }`}
+                    onClick={() =>
+                      handleStatusUpdate(selectedIssue.id, "resolved")
+                    }
+                    disabled={
+                      selectedIssue.status === "resolved" || submitting
+                    }
+                  >
+                    Resolved
+                  </button>
+                  <button
+                    className={`status-btn rejected ${
+                      selectedIssue.status === "rejected" ? "active" : ""
+                    }`}
+                    onClick={() =>
+                      handleStatusUpdate(selectedIssue.id, "rejected")
+                    }
+                    disabled={
+                      selectedIssue.status === "rejected" || submitting
+                    }
+                  >
+                    Reject
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
+        
         {/* Profile Tab */}
         {selectedTab === "profile" && (
           <div className="profile-section">
             <h1 className="page-title">Lecturer Profile</h1>
-            <div className="profile-card">
-              <div className="profile-header">
-                <div className="profile-avatar">
-                  {localStorage.getItem("username")?.charAt(0).toUpperCase() ||
-                    "L"}
-                </div>
-                <div className="profile-name">
-                  <h2>{localStorage.getItem("username") || "Lecturer"}</h2>
-                  <p className="profile-role">Lecturer</p>
-                </div>
-              </div>
-              <div className="profile-details">
-                <div className="profile-item">
-                  <span className="profile-label">Email:</span>
-                  <span className="profile-value">
-                    {user?.email || "Not available"}
-                  </span>
-                </div>
-                <div className="profile-item">
-                  <span className="profile-label">Staff ID:</span>
-                  <span className="profile-value">
-                    {user?.staff_id || "Not available"}
-                  </span>
-                </div>
-                <div className="profile-item">
-                  <span className="profile-label">Department:</span>
-                  <span className="profile-value">
-                    {user?.department || "Not available"}
-                  </span>
-                </div>
-              </div>
-              <div className="profile-stats">
-                <div className="stat-item">
-                  <span className="stat-value">
-                    {dashboardData.total_assigned}
-                  </span>
-                  <span className="stat-label">Total Issues</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-value">
-                    {dashboardData.resolved_count}
-                  </span>
-                  <span className="stat-label">Resolved</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-value">
-                    {dashboardData.total_assigned > 0
-                      ? Math.round(
-                          (dashboardData.resolved_count /
-                            dashboardData.total_assigned) *
-                            100
-                        )
-                      : 0}
-                    %
-                  </span>
-                  <span className="stat-label">Resolution Rate</span>
-                </div>
-              </div>
-            </div>
+            <ProfileContent createAuthAxios={createAuthAxios} setError={setError} />
           </div>
         )}
       </main>
@@ -720,5 +680,111 @@ const Lecturer = () => {
   );
 };
 
-export default Lecturer;
+// Profile Content Component
+const ProfileContent = ({ createAuthAxios, setError }) => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const authAxios = createAuthAxios();
+        const response = await authAxios.get(ENDPOINTS.lecturerProfile);
+        setProfile(response.data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  }, [createAuthAxios, setError]);
+  
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+  
+  if (!profile) {
+    return <p>No profile information available.</p>;
+  }
+  
+  return (
+    <div className="profile-content">
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {profile.profile_picture ? (
+              <img src={profile.profile_picture} alt="Profile" />
+            ) : (
+              <div className="avatar-placeholder">
+                {profile.first_name ? profile.first_name.charAt(0) : "L"}
+              </div>
+            )}
+          </div>
+          <div className="profile-name">
+            <h2>
+              {profile.title || ""} {profile.first_name || ""} {profile.last_name || ""}
+            </h2>
+            <p className="profile-role">Lecturer</p>
+          </div>
+        </div>
+        
+        <div className="profile-details">
+          <div className="detail-row">
+            <span className="detail-label">Email:</span>
+            <span className="detail-value">{profile.email || "Not provided"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Phone:</span>
+            <span className="detail-value">{profile.phone || "Not provided"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Department:</span>
+            <span className="detail-value">{profile.department || "Not provided"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Faculty:</span>
+            <span className="detail-value">{profile.faculty || "Not provided"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Staff ID:</span>
+            <span className="detail-value">{profile.staff_id || "Not provided"}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Office Location:</span>
+            <span className="detail-value">{profile.office_location || "Not provided"}</span>
+          </div>
+        </div>
+        
+        <div className="profile-bio">
+          <h3>Bio</h3>
+          <p>{profile.bio || "No bio information available."}</p>
+        </div>
+        
+        {profile.courses && profile.courses.length > 0 && (
+          <div className="profile-courses">
+            <h3>Courses</h3>
+            <ul className="courses-list">
+              {profile.courses.map((course, index) => (
+                <li key={index}>
+                  <span className="course-code">{course.course_code}</span>
+                  <span className="course-name">{course.course_name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
+export default Lecturer;
