@@ -1,41 +1,49 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios"; // Import axios for API calls
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-// Create the auth context and export it
+// Create the auth context
 export const AuthContext = createContext(null);
 
-// Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
+// Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // State for error handling
-  const navigate = useNavigate(); // Initialize useNavigate for redirection
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Corrected function name
       try {
-        const token = localStorage.getItem("accessToken");
+        // Use consistent token naming - check both for backward compatibility
+        const token =
+          localStorage.getItem("accessToken") ||
+          localStorage.getItem("authToken");
+
         if (token) {
-
-          const response = await axios.post(
-
-            "https://academic-6ea365e4b745.herokuapp.com/api/token/",
+          // This should be a GET request to verify the token
+          const response = await axios.get(
+            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/", // Adjust endpoint as needed
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-          console.log("User data fetched:", response.data); // Log the user data
-          setUser(response.data); // Set user data from response
+
+          console.log("User data fetched:", response.data);
+          setUser(response.data);
         } else {
           console.error("No token found, user may need to log in.");
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
         setError("Failed to fetch user data.");
+
+        // Clear invalid tokens on error
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("isAuthenticated");
       } finally {
         setLoading(false);
       }
@@ -44,9 +52,9 @@ export const AuthProvider = ({ children }) => {
     // Check if user is authenticated on component mount
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
     if (isAuthenticated) {
-      fetchUserData(); // Call the corrected function
+      fetchUserData();
     } else {
-      setLoading(false); // If not authenticated, just set loading to false
+      setLoading(false);
     }
   }, []);
 
@@ -55,22 +63,46 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("authToken", userData.token); // Store token if available
-    navigate("/dashboard"); // Redirect to dashboard after login
+
+    // Use consistent token naming
+    localStorage.setItem("accessToken", userData.token);
+
+    // Store user role for routing decisions
+    if (userData.user_role) {
+      localStorage.setItem("userRole", userData.user_role);
+    }
+
+    // Navigate based on user role
+    const userRole = userData.user_role || "student";
+    switch (userRole) {
+      case "student":
+        navigate("/students");
+        break;
+      case "lecturer":
+        navigate("/lecturers");
+        break;
+      case "academicregistrar":
+        navigate("/registrar");
+        break;
+      default:
+        navigate("/dashboard");
+    }
   };
 
   // Logout function
   const logout = () => {
     setUser(null);
+    // Clear all auth-related items
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-    localStorage.removeItem("authToken"); // Clear token on logout
-    navigate("/login"); // Redirect to login page after logout
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    navigate("/login");
   };
 
   // Register function
   const register = (userData) => {
-    // You might want to add more logic here
     login(userData);
   };
 
@@ -81,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     loading,
-    error, // Include error in context value
+    error,
   };
 
   return (
@@ -91,7 +123,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook for child components to get the auth object and re-render when it changes
+// Hook for child components to get the auth object
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

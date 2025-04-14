@@ -76,41 +76,42 @@ const AppContent = () => {
       sx={{ mt: 4, mb: 4, padding: 3, borderRadius: 2, boxShadow: 3 }}
     >
       <Routes>
-        <Route path="" element={<CoverPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<RegisterForm />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/logout" element={<Logout />} />
+        {/* <ErrorBoundary> */}
+          <Route path="" element={<CoverPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<RegisterForm />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/logout" element={<Logout />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/CoverPage" element={<CoverPage />} /> 
-        <Route path="/students" element={<Students />} />
-        <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
-        <Route path="/registrar" element={<AcademicRegistrar />} />
-        <Route path="/lecturers" element={<Lecturers />} />
-
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/CoverPage" element={<CoverPage />} />
+          <Route path="/students" element={<Students />} />
+          <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} />
+          <Route path="/registrar" element={<AcademicRegistrar />} />
+          <Route path="/lecturers" element={<Lecturers />} />
+        {/* </ErrorBoundary> */}
 
         {/* <Route path="/AcademicRegistrar" element={<AcademicRegistrar />} /> */}
 
         {/* Protected Routes */}
         <Route element={<ProtectedLayout />}>
-
           <Route path="/Students" element={<Students />} />
 
           {/* <Route path="/lecturers" element={<LecturerDashboard />} /> */}
-
-          
         </Route>
       </Routes>
     </Container>
   );
 };
 
+
 const App = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+   
   );
-}
+};
 export default App;

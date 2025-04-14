@@ -93,7 +93,7 @@ const Students = () => {
           } catch (error) {
             console.error("Error fetching registrars:", error);
             // Fallback data in case API fails
-            setRegistrars([{ value: "Emmanuella", label: "Emmanuella" }]);
+            setRegistrars([{ value: "nairah", label: "nairah" }]);
           }
 
           // Fetch programmes
@@ -473,7 +473,7 @@ const Students = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="course_code">Course Code*</label>
+                  <label htmlFor="course_code">Course Code</label>
                   <input
                     type="text"
                     id="course_code"
@@ -488,7 +488,7 @@ const Students = () => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="year_of_study">Year of Study*</label>
+                  <label htmlFor="year_of_study">Year of Study</label>
                   <select
                     id="year_of_study"
                     name="year_of_study"
@@ -503,7 +503,7 @@ const Students = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="category">Issue Category*</label>
+                  <label htmlFor="category">Issue Category</label>
                   <select
                     id="category"
                     name="category"
@@ -520,7 +520,7 @@ const Students = () => {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="department">Department*</label>
+                <label htmlFor="department">Department</label>
                 <select
                   id="department"
                   name="department"
@@ -538,7 +538,7 @@ const Students = () => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="registrar">Academic Registrar*</label>
+                  <label htmlFor="registrar">Academic Registrar</label>
                   <select
                     id="registrar"
                     name="registrar"
@@ -556,7 +556,7 @@ const Students = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="programme">Programme*</label>
+                  <label htmlFor="programme">Programme</label>
                   <select
                     id="programme"
                     name="programme"
@@ -575,7 +575,7 @@ const Students = () => {
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="description">Description*</label>
+                <label htmlFor="description">Description</label>
                 <textarea
                   id="description"
                   name="description"
