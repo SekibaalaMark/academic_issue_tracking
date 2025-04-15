@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "preinstall": "npm install @esbuild/linux-x64@0.17.19",
     "dev": "vite --port 5173",
     "build": "vite build",
     "lint": "eslint .",
