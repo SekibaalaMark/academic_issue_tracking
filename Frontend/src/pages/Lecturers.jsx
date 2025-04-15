@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import "./Lecturers.css";
 import { AuthContext } from "@/context/authContext";
 
-// API Endpoints
 const ENDPOINTS = {
   lecturerIssues:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
@@ -15,15 +14,12 @@ const ENDPOINTS = {
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
 };
 
-// Message timeout duration
-const MESSAGE_TIMEOUT = 5000; // 5 seconds
+const MESSAGE_TIMEOUT = 5000;
 
 const Lecturer = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // State variables
-  const [userRole, setUserRole] = useState(null);
   const [issues, setIssues] = useState([]);
   const [dashboardData, setDashboardData] = useState({
     total_assigned: 0,
@@ -35,13 +31,12 @@ const Lecturer = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [comment, setComment] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Clear messages after timeout
   useEffect(() => {
     if (successMsg) {
       const timer = setTimeout(() => setSuccessMsg(""), MESSAGE_TIMEOUT);
@@ -56,33 +51,34 @@ const Lecturer = () => {
     }
   }, [error]);
 
-  // Create axios instance with authentication
   const createAuthAxios = useCallback(() => {
     const token = user?.token || localStorage.getItem("accessToken");
+    console.log("Using token:", token ? "Present" : "Missing");
     return axios.create({
       baseURL: "https://academic-6ea365e4b745.herokuapp.com",
       headers: {
-        Authorization: token ? `Bearer ${token}` : undefined, // Use Bearer for JWT
+        Authorization: token ? `Bearer ${token}` : undefined,
       },
     });
   }, [user]);
 
-  // Function to fetch lecturer data
   const fetchLecturerData = useCallback(async () => {
     try {
       setLoading(true);
       const authAxios = createAuthAxios();
-
       console.log("Fetching lecturer data...");
       const [issuesRes, dashboardRes] = await Promise.all([
         authAxios.get(ENDPOINTS.lecturerIssues),
         authAxios.get(ENDPOINTS.lecturerDashboard),
       ]);
-
       console.log("Issues response:", issuesRes.data);
       console.log("Dashboard response:", dashboardRes.data);
-
-      setIssues(Array.isArray(issuesRes.data) ? issuesRes.data : []);
+      if (!Array.isArray(issuesRes.data)) {
+        console.warn("Issues response is not an array:", issuesRes.data);
+        setIssues([]);
+      } else {
+        setIssues(issuesRes.data);
+      }
       setDashboardData(
         dashboardRes.data.dashboard || {
           total_assigned: 0,
@@ -97,7 +93,6 @@ const Lecturer = () => {
         data: err.response?.data,
       });
       setError("Failed to load dashboard data. Please try again.");
-      // Only logout on specific conditions
       if (err.response?.status === 401) {
         setError("Session expired. Please log in again.");
         handleLogout();
@@ -107,116 +102,12 @@ const Lecturer = () => {
     }
   }, [createAuthAxios]);
 
-  // Check authentication and user role
   useEffect(() => {
-    const checkAuthAndFetchData = async () => {
-      setLoading(true);
-      console.log("Checking auth:", {
-        user,
-        token: user?.token || localStorage.getItem("accessToken"),
-        storedRole: localStorage.getItem("userRole"),
-      });
+    fetchLecturerData();
+    const interval = setInterval(fetchLecturerData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLecturerData]);
 
-      // Check token
-      const token = user?.token || localStorage.getItem("accessToken");
-      if (!token) {
-        console.log("No token found, redirecting to login");
-        navigate("/login");
-        setAuthChecked(true);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const storedRole = localStorage.getItem("userRole");
-        const authAxios = createAuthAxios();
-
-        // Proceed if storedRole is lecturer
-        if (storedRole === "lecturer") {
-          console.log("Stored role is lecturer, proceeding to fetch data");
-          setUserRole("lecturer");
-          await fetchLecturerData();
-          setAuthChecked(true);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user profile to confirm role
-        console.log("Fetching user profile...");
-        const response = await authAxios.get(ENDPOINTS.userProfile);
-        console.log("Profile response:", response.data);
-
-        // Handle different role field names
-        const role =
-          response.data.role?.toLowerCase() ||
-          response.data.user_role?.toLowerCase() ||
-          response.data.group?.toLowerCase();
-
-        if (!role) {
-          console.error("No role found in profile response");
-          throw new Error("Role not found in profile response");
-        }
-
-        setUserRole(role);
-        localStorage.setItem("userRole", role);
-
-        if (role !== "lecturer") {
-          console.log(`Role ${role} is not lecturer, redirecting`);
-          redirectByRole(role);
-          setAuthChecked(true);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch lecturer data
-        console.log("Role is lecturer, fetching dashboard data");
-        await fetchLecturerData();
-        setAuthChecked(true);
-      } catch (err) {
-        console.error("Auth check error:", {
-          message: err.message,
-          status: err.response?.status,
-          data: err.response?.data,
-        });
-        setError("Authentication failed. Please try again.");
-        if (
-          err.response?.status === 401 ||
-          err.message.includes("Role not found")
-        ) {
-          console.log("Unauthorized or role missing, logging out");
-          handleLogout();
-        } else if (localStorage.getItem("userRole") === "lecturer") {
-          console.log("Falling back to stored lecturer role");
-          setUserRole("lecturer");
-          await fetchLecturerData();
-          setAuthChecked(true);
-        } else {
-          navigate("/login");
-          setAuthChecked(true);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const redirectByRole = (role) => {
-      console.log("Redirecting based on role:", role);
-      if (["academic_registrar", "registrar"].includes(role)) {
-        navigate("/AcademicRegistrar");
-      } else if (role === "student") {
-        navigate("/students");
-      } else {
-        navigate("/dashboard");
-      }
-    };
-
-    if (!authChecked) {
-      console.log("Running auth check");
-      checkAuthAndFetchData();
-    }
-  }, [user, navigate, fetchLecturerData, createAuthAxios, authChecked]);
-
-  // Handle logout
   const handleLogout = useCallback(() => {
     console.log("Logging out...");
     localStorage.removeItem("accessToken");
@@ -224,53 +115,52 @@ const Lecturer = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
-
     if (logout) {
       logout();
     }
-
     navigate("/login");
   }, [logout, navigate]);
 
-  // Handle view issue
   const handleViewIssue = useCallback(
     (issueId) => {
       const issue = issues.find((i) => i.id === issueId);
       setSelectedIssue(issue);
       setSelectedTab("issueDetail");
+      setFeedback("");
+      setEmailMessage("");
     },
     [issues]
   );
 
-  // Handle status update
   const handleStatusUpdate = useCallback(
     async (issueId, status) => {
       setSubmitting(true);
       setError("");
       setSuccessMsg("");
-
       try {
         const authAxios = createAuthAxios();
-        console.log("Updating issue status:", { issueId, status });
+        console.log("Updating issue status:", { issueId, status, feedback });
         await authAxios.patch(`${ENDPOINTS.lecturerIssues}${issueId}/`, {
           status,
-          feedback: comment || "Status updated by lecturer.",
+          feedback: feedback || "Status updated by lecturer.",
         });
-
         setSuccessMsg(
-          `Issue ${status === "resolved" ? "resolved" : "updated"} successfully.`
+          status === "resolved"
+            ? "Issue resolved. Emails sent to you, student, and registrar."
+            : status === "in_progress"
+              ? "Issue set to in progress. Emails sent to you and student."
+              : status === "pending"
+                ? "Issue set to pending. Emails sent to you and student."
+                : "Issue updated successfully."
         );
-
         await fetchLecturerData();
-
         if (selectedIssue && selectedIssue.id === issueId) {
           const updatedIssue = await authAxios.get(
             `${ENDPOINTS.lecturerIssues}${issueId}/`
           );
           setSelectedIssue(updatedIssue.data);
         }
-
-        setComment("");
+        setFeedback("");
       } catch (err) {
         console.error("Error updating issue:", err);
         setError("Failed to update issue. Please try again.");
@@ -282,38 +172,32 @@ const Lecturer = () => {
         setSubmitting(false);
       }
     },
-    [comment, createAuthAxios, fetchLecturerData, selectedIssue]
+    [feedback, createAuthAxios, fetchLecturerData, selectedIssue]
   );
 
-  // Handle add comment
-  const handleAddComment = useCallback(
+  const handleSendRegistrarEmail = useCallback(
     async (issueId) => {
-      if (!comment.trim()) {
-        setError("Comment cannot be empty.");
+      if (!emailMessage.trim()) {
+        setError("Email message cannot be empty.");
         return;
       }
-
       setSubmitting(true);
       setError("");
       setSuccessMsg("");
-
       try {
         const authAxios = createAuthAxios();
-        console.log("Adding comment to issue:", issueId);
-        await authAxios.post(`${ENDPOINTS.lecturerIssues}${issueId}/comment/`, {
-          content: comment,
-        });
-
-        setSuccessMsg("Comment added successfully.");
-
-        const issueRes = await authAxios.get(
-          `${ENDPOINTS.lecturerIssues}${issueId}/`
+        console.log("Sending email to registrar for issue:", issueId);
+        await authAxios.post(
+          `${ENDPOINTS.lecturerIssues}${issueId}/send-registrar-email/`,
+          {
+            message: emailMessage,
+          }
         );
-        setSelectedIssue(issueRes.data);
-        setComment("");
+        setSuccessMsg("Email sent to registrar successfully.");
+        setEmailMessage("");
       } catch (err) {
-        console.error("Error adding comment:", err);
-        setError("Failed to add comment. Please try again.");
+        console.error("Error sending email:", err);
+        setError("Failed to send email to registrar. Please try again.");
         if (err.response?.status === 401) {
           setError("Session expired. Please log in again.");
           handleLogout();
@@ -322,30 +206,33 @@ const Lecturer = () => {
         setSubmitting(false);
       }
     },
-    [comment, createAuthAxios]
+    [emailMessage, createAuthAxios]
   );
 
-  // Filter issues
   const filteredIssues = issues
     .filter((issue) => {
       const matchesSearch =
         searchTerm === "" ||
-        issue.course_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        issue.course_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (issue.student?.first_name + " " + issue.student?.last_name)
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase());
+        (issue.course_code || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (issue.course_name || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (issue.student || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
-        filterStatus === "" || issue.status === filterStatus;
+        filterStatus === "" || (issue.status || "") === filterStatus;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      if (a.status === "pending" && b.status !== "pending") return -1;
-      if (b.status === "pending" && a.status !== "pending") return 1;
-      return new Date(b.created_at) - new Date(a.created_at);
+      if ((a.status || "") === "pending" && (b.status || "") !== "pending")
+        return -1;
+      if ((b.status || "") === "pending" && (a.status || "") !== "pending")
+        return 1;
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
-  if (loading || !authChecked) {
+  if (loading) {
     return (
       <div
         className="loading"
@@ -357,12 +244,6 @@ const Lecturer = () => {
     );
   }
 
-  if (authChecked && (!user || userRole !== "lecturer")) {
-    console.log("Auth checked, redirecting due to invalid user or role");
-    return null;
-  }
-
-  console.log("Rendering lecturer dashboard");
   return (
     <div className="lecturer-dashboard">
       <aside className="sidebar" style={{ backgroundColor: "#f4f4f4" }}>
@@ -434,6 +315,19 @@ const Lecturer = () => {
             <h1 className="page-title" style={{ color: "#1A1A1A" }}>
               Lecturer Dashboard
             </h1>
+            <button
+              onClick={fetchLecturerData}
+              style={{
+                backgroundColor: "#008000",
+                color: "#fff",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                border: "none",
+                marginBottom: "20px",
+              }}
+            >
+              Refresh Issues
+            </button>
             <div className="user-welcome">
               <p style={{ color: "#1A1A1A" }}>
                 Welcome,{" "}
@@ -522,7 +416,9 @@ const Lecturer = () => {
                                 ? "#008000"
                                 : issue.status === "pending"
                                   ? "#ff9900"
-                                  : "#0066cc",
+                                  : issue.status === "in_progress"
+                                    ? "#0066cc"
+                                    : "#ff0000",
                             color: "#fff",
                             padding: "5px 10px",
                             borderRadius: "12px",
@@ -548,7 +444,7 @@ const Lecturer = () => {
                           className="student-name"
                           style={{ color: "#1A1A1A" }}
                         >
-                          {issue.student?.first_name} {issue.student?.last_name}
+                          {issue.student}
                         </span>
                         <button
                           className="view-btn"
@@ -593,7 +489,9 @@ const Lecturer = () => {
             <h1 className="page-title" style={{ color: "#1A1A1A" }}>
               Manage Issues
             </h1>
-
+            <p style={{ color: "#1A1A1A" }}>
+              Showing {filteredIssues.length} of {issues.length} issues
+            </p>
             <div
               className="filter-container"
               style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
@@ -601,7 +499,7 @@ const Lecturer = () => {
               <div className="search-box" style={{ flex: 1 }}>
                 <input
                   type="text"
-                  placeholder="Search by course or student name..."
+                  placeholder="Search by course or student..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{
@@ -628,7 +526,6 @@ const Lecturer = () => {
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
                   <option value="resolved">Resolved</option>
-                  <option value="rejected">Rejected</option>
                 </select>
               </div>
             </div>
@@ -689,7 +586,7 @@ const Lecturer = () => {
                         <td
                           style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
-                          {issue.student?.first_name} {issue.student?.last_name}
+                          {issue.student}
                         </td>
                         <td
                           style={{ padding: "10px", border: "1px solid #ddd" }}
@@ -707,7 +604,9 @@ const Lecturer = () => {
                                   ? "#008000"
                                   : issue.status === "pending"
                                     ? "#ff9900"
-                                    : "#0066cc",
+                                    : issue.status === "in_progress"
+                                      ? "#0066cc"
+                                      : "#ff0000",
                               color: "#fff",
                               padding: "5px 10px",
                               borderRadius: "12px",
@@ -788,7 +687,11 @@ const Lecturer = () => {
                           backgroundColor:
                             selectedIssue.status === "resolved"
                               ? "#008000"
-                              : "#ff9900",
+                              : selectedIssue.status === "pending"
+                                ? "#ff9900"
+                                : selectedIssue.status === "in_progress"
+                                  ? "#0066cc"
+                                  : "#ff0000",
                           color: "#fff",
                           padding: "5px 10px",
                           borderRadius: "12px",
@@ -800,13 +703,7 @@ const Lecturer = () => {
                   },
                   {
                     label: "Student",
-                    value: `${selectedIssue.student?.first_name || ""} ${
-                      selectedIssue.student?.last_name || ""
-                    }`,
-                  },
-                  {
-                    label: "Student ID",
-                    value: selectedIssue.student?.student_id || "N/A",
+                    value: selectedIssue.student || "N/A",
                   },
                   {
                     label: "Date Submitted",
@@ -846,114 +743,40 @@ const Lecturer = () => {
                 </p>
               </div>
 
-              {selectedIssue.attachments?.length > 0 && (
-                <div
-                  className="attachments-section"
-                  style={{ marginTop: "20px" }}
+              <div
+                className="registrar-communication"
+                style={{ marginTop: "20px" }}
+              >
+                <h3 style={{ color: "#1A1A1A" }}>Contact Registrar</h3>
+                <textarea
+                  placeholder="Enter your message to the academic registrar (e.g., need clarification)..."
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  disabled={submitting}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                    minHeight: "100px",
+                  }}
+                />
+                <button
+                  className="send-email-btn"
+                  onClick={() => handleSendRegistrarEmail(selectedIssue.id)}
+                  disabled={!emailMessage.trim() || submitting}
+                  style={{
+                    backgroundColor: "#008000",
+                    color: "#fff",
+                    padding: "10px 20px",
+                    borderRadius: "5px",
+                    border: "none",
+                    marginTop: "10px",
+                  }}
                 >
-                  <h3 style={{ color: "#1A1A1A" }}>Attachments</h3>
-                  <ul
-                    className="attachments-list"
-                    style={{ listStyle: "none", padding: 0 }}
-                  >
-                    {selectedIssue.attachments.map((attachment, index) => (
-                      <li key={index} style={{ margin: "5px 0" }}>
-                        <a
-                          href={attachment.file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: "#008000" }}
-                        >
-                          {attachment.filename || `Attachment ${index + 1}`}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div className="comments-section" style={{ marginTop: "20px" }}>
-                <h3 style={{ color: "#1A1A1A" }}>Comments</h3>
-                {selectedIssue.comments?.length > 0 ? (
-                  <div className="comments-list">
-                    {selectedIssue.comments.map((comment, index) => (
-                      <div
-                        key={index}
-                        className="comment"
-                        style={{
-                          backgroundColor: "#fff",
-                          padding: "10px",
-                          borderRadius: "5px",
-                          margin: "10px 0",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        <div
-                          className="comment-header"
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            className="comment-author"
-                            style={{ color: "#1A1A1A" }}
-                          >
-                            {comment.author_name || "Unknown"}
-                          </span>
-                          <span
-                            className="comment-date"
-                            style={{ color: "#666" }}
-                          >
-                            {new Date(comment.created_at).toLocaleString()}
-                          </span>
-                        </div>
-                        <p
-                          className="comment-content"
-                          style={{ color: "#1A1A1A" }}
-                        >
-                          {comment.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="no-comments" style={{ color: "#1A1A1A" }}>
-                    No comments yet.
-                  </p>
-                )}
-
-                <div className="add-comment" style={{ marginTop: "15px" }}>
-                  <textarea
-                    placeholder="Add a comment or feedback..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    disabled={submitting}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      border: "1px solid #ddd",
-                      color: "#1A1A1A",
-                      minHeight: "100px",
-                    }}
-                  />
-                  <button
-                    className="comment-btn"
-                    onClick={() => handleAddComment(selectedIssue.id)}
-                    disabled={!comment.trim() || submitting}
-                    style={{
-                      backgroundColor: "#008000",
-                      color: "#fff",
-                      padding: "10px 20px",
-                      borderRadius: "5px",
-                      border: "none",
-                      marginTop: "10px",
-                    }}
-                  >
-                    {submitting ? "Submitting..." : "Add Comment"}
-                  </button>
-                </div>
+                  {submitting ? "Sending..." : "Send Email to Registrar"}
+                </button>
               </div>
 
               <div
@@ -961,41 +784,50 @@ const Lecturer = () => {
                 style={{ marginTop: "20px" }}
               >
                 <h3 style={{ color: "#1A1A1A" }}>Update Status</h3>
+                <textarea
+                  placeholder="Enter feedback for this status update..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  disabled={submitting}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                    minHeight: "80px",
+                    marginBottom: "10px",
+                  }}
+                />
                 <div
                   className="status-buttons"
                   style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
                 >
-                  {["pending", "in_progress", "resolved", "rejected"].map(
-                    (status) => (
-                      <button
-                        key={status}
-                        className={`status-btn ${status} ${
-                          selectedIssue.status === status ? "active" : ""
-                        }`}
-                        onClick={() =>
-                          handleStatusUpdate(selectedIssue.id, status)
-                        }
-                        disabled={selectedIssue.status === status || submitting}
-                        style={{
-                          backgroundColor:
-                            selectedIssue.status === status
-                              ? "#ccc"
-                              : "#008000",
-                          color: "#fff",
-                          padding: "10px 20px",
-                          borderRadius: "5px",
-                          border: "none",
-                          opacity:
-                            selectedIssue.status === status || submitting
-                              ? 0.6
-                              : 1,
-                        }}
-                      >
-                        {status.replace("_", " ").charAt(0).toUpperCase() +
-                          status.replace("_", " ").slice(1)}
-                      </button>
-                    )
-                  )}
+                  {["pending", "in_progress", "resolved"].map((status) => (
+                    <button
+                      key={status}
+                      className={`status-btn ${status} ${selectedIssue.status === status ? "active" : ""}`}
+                      onClick={() =>
+                        handleStatusUpdate(selectedIssue.id, status)
+                      }
+                      disabled={selectedIssue.status === status || submitting}
+                      style={{
+                        backgroundColor:
+                          selectedIssue.status === status ? "#ccc" : "#008000",
+                        color: "#fff",
+                        padding: "10px 20px",
+                        borderRadius: "5px",
+                        border: "none",
+                        opacity:
+                          selectedIssue.status === status || submitting
+                            ? 0.6
+                            : 1,
+                      }}
+                    >
+                      {status.replace("_", " ").charAt(0).toUpperCase() +
+                        status.replace("_", " ").slice(1)}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1036,7 +868,6 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
         setError("Failed to load profile data. Please try again.");
         if (err.response?.status === 401) {
           setError("Session expired. Please log in again.");
-          // Avoid logout here to prevent loop
         }
       } finally {
         setLoading(false);
@@ -1078,36 +909,9 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
           className="profile-header"
           style={{ display: "flex", alignItems: "center", gap: "15px" }}
         >
-          <div className="profile-avatar">
-            {profile.profile_picture ? (
-              <img
-                src={profile.profile_picture}
-                alt="Profile"
-                style={{ width: "80px", height: "80px", borderRadius: "50%" }}
-              />
-            ) : (
-              <div
-                className="avatar-placeholder"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  backgroundColor: "#008000",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "30px",
-                }}
-              >
-                {profile.first_name ? profile.first_name.charAt(0) : "L"}
-              </div>
-            )}
-          </div>
           <div className="profile-name">
             <h2 style={{ color: "#1A1A1A" }}>
-              {profile.title || ""} {profile.first_name || ""}{" "}
-              {profile.last_name || ""}
+              {profile.first_name || ""} {profile.last_name || ""}
             </h2>
             <p className="profile-role" style={{ color: "#008000" }}>
               Lecturer
@@ -1118,16 +922,9 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
         <div className="profile-details" style={{ marginTop: "20px" }}>
           {[
             { label: "Email", value: profile.email || "Not provided" },
-            { label: "Phone", value: profile.phone || "Not provided" },
             {
               label: "Department",
               value: profile.department || "Not provided",
-            },
-            { label: "Faculty", value: profile.faculty || "Not provided" },
-            { label: "Staff ID", value: profile.staff_id || "Not provided" },
-            {
-              label: "Office Location",
-              value: profile.office_location || "Not provided",
             },
           ].map(({ label, value }) => (
             <div
@@ -1147,41 +944,6 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
             </div>
           ))}
         </div>
-
-        <div className="profile-bio" style={{ marginTop: "20px" }}>
-          <h3 style={{ color: "#1A1A1A" }}>Bio</h3>
-          <p
-            style={{
-              color: "#1A1A1A",
-              backgroundColor: "#f4f4f4",
-              padding: "10px",
-              borderRadius: "5px",
-            }}
-          >
-            {profile.bio || "No bio information available."}
-          </p>
-        </div>
-
-        {profile.courses?.length > 0 && (
-          <div className="profile-courses" style={{ marginTop: "20px" }}>
-            <h3 style={{ color: "#1A1A1A" }}>Courses</h3>
-            <ul
-              className="courses-list"
-              style={{ listStyle: "none", padding: 0 }}
-            >
-              {profile.courses.map((course, index) => (
-                <li key={index} style={{ margin: "5px 0", color: "#1A1A1A" }}>
-                  <span className="course-code" style={{ fontWeight: "bold" }}>
-                    {course.course_code}
-                  </span>
-                  <span className="course-name" style={{ marginLeft: "10px" }}>
-                    {course.course_name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
