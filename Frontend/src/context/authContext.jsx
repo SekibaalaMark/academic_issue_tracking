@@ -1,97 +1,178 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios"; // Import axios for API calls
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import axios from "axios";
+import { useNavigate, useLocation } from "react-router-dom";
 
-// Create the auth context and export it
 export const AuthContext = createContext(null);
 
-// Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // State for error handling
-  const navigate = useNavigate(); // Initialize useNavigate for redirection
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Corrected function name
       try {
         const token = localStorage.getItem("accessToken");
         if (token) {
-
-          const response = await axios.post(
-
-            "https://academic-6ea365e4b745.herokuapp.com/api/token/",
+          const response = await axios.get(
+            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-          console.log("User data fetched:", response.data); // Log the user data
-          setUser(response.data); // Set user data from response
-        } else {
-          console.error("No token found, user may need to log in.");
+          setUser(response.data);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
-        setError("Failed to fetch user data.");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("userRole");
+          navigate("/login");
+        } else {
+          setError("Failed to fetch user data. Please try refreshing.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    // Check if user is authenticated on component mount
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
     if (isAuthenticated) {
-      fetchUserData(); // Call the corrected function
+      fetchUserData();
     } else {
-      setLoading(false); // If not authenticated, just set loading to false
+      setLoading(false);
     }
   }, []);
 
-  // Login function
-  const login = (userData) => {
+  const login = (userData, role) => {
     setUser(userData);
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("authToken", userData.token); // Store token if available
-    navigate("/dashboard"); // Redirect to dashboard after login
+    localStorage.setItem("accessToken", userData.token);
+    if (userData.user_role) {
+      localStorage.setItem("userRole", userData.user_role);
+    }
+    const userRole = userData.user_role || "student";
+    switch (userRole) {
+      case "student":
+        navigate("/students");
+        break;
+      case "lecturer":
+        navigate("/lecturers");
+        break;
+      case "academicregistrar":
+        navigate("/registrar");
+        break;
+      default:
+        navigate("/dashboard");
+    }
   };
 
-  // Logout function
   const logout = () => {
     setUser(null);
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-    localStorage.removeItem("authToken"); // Clear token on logout
-    navigate("/login"); // Redirect to login page after logout
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userRole");
+    navigate("/login");
   };
 
-  // Register function
   const register = (userData) => {
-    // You might want to add more logic here
     login(userData);
   };
 
-  // Auth context value
+  const handleFormSubmission = async (
+    url,
+    data,
+    method = "post",
+    successCallback = null
+  ) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("No access token found. Please log in.");
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      };
+
+      let response;
+      if (method.toLowerCase() === "post") {
+        response = await axios.post(url, data, config);
+      } else if (method.toLowerCase() === "put") {
+        response = await axios.put(url, data, config);
+      } else if (method.toLowerCase() === "patch") {
+        response = await axios.patch(url, data, config);
+      } else {
+        throw new Error("Unsupported method");
+      }
+
+      if (successCallback) {
+        successCallback(response.data);
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      console.error("Form submission error:", err);
+      return {
+        success: false,
+        error: err.response?.data || "An error occurred during submission",
+      };
+    }
+  };
+
+  const assignIssue = async (issueId, lecturerId) => {
+    try {
+      const response = await handleFormSubmission(
+        `https://academic-6ea365e4b745.herokuapp.com/api/issues/${issueId}/assign`,
+        { lecturer_id: lecturerId },
+        "patch",
+        (data) => {
+          console.log("Issue assigned:", data);
+        }
+      );
+      return response;
+    } catch (err) {
+      console.error("Issue assignment error:", err);
+      return {
+        success: false,
+        error: err.response?.data || "Failed to assign issue.",
+      };
+    }
+  };
+
   const value = {
     user,
     login,
     logout,
     register,
     loading,
-    error, // Include error in context value
+    error,
+    handleFormSubmission,
+    assignIssue,
+    currentPath: location.pathname,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading ? children : <div>Loading...</div>}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook for child components to get the auth object and re-render when it changes
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

