@@ -29,7 +29,7 @@
     border-radius: 6px;
     width: 100%;
     color: white; /* Set text color to white */
-    background-color: #388e3c; /* Optional: Set background color for input */
+    /* Optional: Set background color for input */
     transition: box-shadow 0.3s ease-in-out;
 }
 

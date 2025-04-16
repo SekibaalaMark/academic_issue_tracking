@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  Component,
+} from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Lecturers.css";
@@ -9,7 +15,6 @@ const ENDPOINTS = {
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
   lecturerDashboard:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
-  userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
   lecturerProfile:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
 };
@@ -556,7 +561,10 @@ const Lecturer = () => {
                       ].map((header) => (
                         <th
                           key={header}
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           {header}
                         </th>
@@ -574,27 +582,42 @@ const Lecturer = () => {
                         }}
                       >
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           {issue.id}
                         </td>
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           {issue.course_code}: {issue.course_name}
                         </td>
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           {issue.student}
                         </td>
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           {new Date(issue.created_at).toLocaleDateString()}
                         </td>
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           <span
                             className={`status-badge ${issue.status}`}
@@ -616,7 +639,10 @@ const Lecturer = () => {
                           </span>
                         </td>
                         <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                          style={{
+                            padding: "10px",
+                            border: "1px solid #ddd",
+                          }}
                         >
                           <button
                             className="view-btn"
@@ -806,7 +832,9 @@ const Lecturer = () => {
                   {["pending", "in_progress", "resolved"].map((status) => (
                     <button
                       key={status}
-                      className={`status-btn ${status} ${selectedIssue.status === status ? "active" : ""}`}
+                      className={`status-btn ${status} ${
+                        selectedIssue.status === status ? "active" : ""
+                      }`}
                       onClick={() =>
                         handleStatusUpdate(selectedIssue.id, status)
                       }
@@ -865,10 +893,13 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
         setProfile(response.data);
       } catch (err) {
         console.error("Error fetching profile:", err);
-        setError("Failed to load profile data. Please try again.");
-        if (err.response?.status === 401) {
-          setError("Session expired. Please log in again.");
-        }
+        setError(
+          err.response?.status === 404
+            ? "Profile endpoint not found. Contact support."
+            : err.response?.status === 401
+              ? "Session expired. Please log in again."
+              : "Failed to load profile data. Please try again."
+        );
       } finally {
         setLoading(false);
       }
@@ -891,7 +922,9 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
 
   if (!profile) {
     return (
-      <p style={{ color: "#1A1A1A" }}>No profile information available.</p>
+      <p style={{ color: "#1A1A1A" }}>
+        Unable to load profile. Please try again later.
+      </p>
     );
   }
 
@@ -911,7 +944,7 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
         >
           <div className="profile-name">
             <h2 style={{ color: "#1A1A1A" }}>
-              {profile.first_name || ""} {profile.last_name || ""}
+              {profile.first_name || "N/A"} {profile.last_name || ""}
             </h2>
             <p className="profile-role" style={{ color: "#008000" }}>
               Lecturer
@@ -926,6 +959,7 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
               label: "Department",
               value: profile.department || "Not provided",
             },
+            { label: "Username", value: profile.username || "Not provided" },
           ].map(({ label, value }) => (
             <div
               key={label}
@@ -934,7 +968,11 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
             >
               <span
                 className="detail-label"
-                style={{ width: "150px", color: "#1A1A1A", fontWeight: "bold" }}
+                style={{
+                  width: "150px",
+                  color: "#1A1A1A",
+                  fontWeight: "bold",
+                }}
               >
                 {label}:
               </span>
@@ -949,4 +987,52 @@ const ProfileContent = ({ createAuthAxios, setError }) => {
   );
 };
 
-export default Lecturer;
+// Error Boundary Component
+class ErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error caught in ErrorBoundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          className="error-boundary"
+          style={{ padding: "20px", textAlign: "center", color: "#1A1A1A" }}
+        >
+          <h2>Something went wrong.</h2>
+          <p>{this.state.error?.message || "An unexpected error occurred."}</p>
+          <button
+            className="action-btn"
+            onClick={() => window.location.reload()}
+            style={{
+              backgroundColor: "#008000",
+              color: "#fff",
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function LecturerWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <Lecturer />
+    </ErrorBoundary>
+  );
+}
