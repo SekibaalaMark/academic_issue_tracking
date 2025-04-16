@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useCallback,
-  Component,
-} from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Lecturers.css";
@@ -24,7 +18,6 @@ const MESSAGE_TIMEOUT = 5000;
 const Lecturer = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-
   const [issues, setIssues] = useState([]);
   const [dashboardData, setDashboardData] = useState({
     total_assigned: 0,
@@ -108,10 +101,14 @@ const Lecturer = () => {
   }, [createAuthAxios]);
 
   useEffect(() => {
-    fetchLecturerData();
-    const interval = setInterval(fetchLecturerData, 30000);
-    return () => clearInterval(interval);
-  }, [fetchLecturerData]);
+    if (user && user.user_role === "lecturer") {
+      fetchLecturerData();
+      const interval = setInterval(fetchLecturerData, 30000);
+      return () => clearInterval(interval);
+    } else if (user && user.user_role !== "lecturer") {
+      navigate("/login");
+    }
+  }, [user, fetchLecturerData, navigate]);
 
   const handleLogout = useCallback(() => {
     console.log("Logging out...");
@@ -237,7 +234,7 @@ const Lecturer = () => {
       return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div
         className="loading"
@@ -247,6 +244,11 @@ const Lecturer = () => {
         <p>Loading Lecturer Dashboard...</p>
       </div>
     );
+  }
+
+  if (user.user_role !== "lecturer") {
+    navigate("/login");
+    return null;
   }
 
   return (
@@ -268,13 +270,18 @@ const Lecturer = () => {
                 cursor: "pointer",
                 padding: "10px",
               }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                (tab === "logout" ? handleLogout() : setSelectedTab(tab))
+              }
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </li>
           ))}
         </ul>
       </aside>
-
       <main className="main-content" style={{ padding: "20px" }}>
         {successMsg && (
           <div
@@ -283,13 +290,16 @@ const Lecturer = () => {
               backgroundColor: "#008000",
               color: "#fff",
               padding: "10px",
+              borderRadius: "5px",
+              position: "relative",
             }}
           >
             <p>{successMsg}</p>
             <button
               className="close-btn"
               onClick={() => setSuccessMsg("")}
-              style={{ color: "#fff" }}
+              style={{ color: "#fff", background: "none", border: "none" }}
+              aria-label="Close success message"
             >
               ×
             </button>
@@ -302,13 +312,16 @@ const Lecturer = () => {
               backgroundColor: "#ff0000",
               color: "#fff",
               padding: "10px",
+              borderRadius: "5px",
+              position: "relative",
             }}
           >
             <p>{error}</p>
             <button
               className="close-btn"
               onClick={() => setError("")}
-              style={{ color: "#fff" }}
+              style={{ color: "#fff", background: "none", border: "none" }}
+              aria-label="Close error message"
             >
               ×
             </button>
@@ -336,24 +349,27 @@ const Lecturer = () => {
             <div className="user-welcome">
               <p style={{ color: "#1A1A1A" }}>
                 Welcome,{" "}
-                {user?.name || localStorage.getItem("username") || "Lecturer"}
+                {typeof user?.name === "string"
+                  ? user.name
+                  : typeof user?.username === "string"
+                    ? user.username
+                    : "Lecturer"}
               </p>
             </div>
-
             <div
               className="dashboard-summary"
-              style={{ display: "flex", gap: "20px" }}
+              style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}
             >
               {[
                 {
                   label: "Total Assigned",
-                  value: dashboardData.total_assigned,
+                  value: dashboardData.total_assigned || 0,
                 },
                 {
                   label: "In Progress",
-                  value: dashboardData.in_progress_count,
+                  value: dashboardData.in_progress_count || 0,
                 },
-                { label: "Resolved", value: dashboardData.resolved_count },
+                { label: "Resolved", value: dashboardData.resolved_count || 0 },
               ].map(({ label, value }) => (
                 <div
                   key={label}
@@ -363,6 +379,7 @@ const Lecturer = () => {
                     padding: "15px",
                     borderRadius: "5px",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    minWidth: "150px",
                   }}
                 >
                   <span className="summary-label" style={{ color: "#1A1A1A" }}>
@@ -377,7 +394,6 @@ const Lecturer = () => {
                 </div>
               ))}
             </div>
-
             <div className="recent-issues">
               <h2 className="section-title" style={{ color: "#1A1A1A" }}>
                 Recent Issues
@@ -389,12 +405,17 @@ const Lecturer = () => {
               ) : (
                 <div
                   className="issues-grid"
-                  style={{ display: "grid", gap: "15px" }}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(250px, 1fr))",
+                    gap: "15px",
+                  }}
                 >
                   {issues.slice(0, 4).map((issue) => (
                     <div
                       key={issue.id}
-                      className={`issue-card ${issue.status}`}
+                      className={`issue-card ${issue.status || ""}`}
                       style={{
                         backgroundColor:
                           issue.status === "pending" ? "#e6ffe6" : "#fff",
@@ -408,13 +429,20 @@ const Lecturer = () => {
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
+                          alignItems: "center",
                         }}
                       >
                         <h3 style={{ color: "#1A1A1A" }}>
-                          {issue.course_code}: {issue.course_name}
+                          {typeof issue.course_code === "string"
+                            ? issue.course_code
+                            : "N/A"}
+                          :{" "}
+                          {typeof issue.course_name === "string"
+                            ? issue.course_name
+                            : "N/A"}
                         </h3>
                         <span
-                          className={`status-badge ${issue.status}`}
+                          className={`status-badge ${issue.status || ""}`}
                           style={{
                             backgroundColor:
                               issue.status === "resolved"
@@ -429,27 +457,34 @@ const Lecturer = () => {
                             borderRadius: "12px",
                           }}
                         >
-                          {issue.status.replace("_", " ")}
+                          {typeof issue.status === "string"
+                            ? issue.status.replace("_", " ")
+                            : "Unknown"}
                         </span>
                       </div>
                       <p
                         className="issue-description"
                         style={{ color: "#1A1A1A" }}
                       >
-                        {issue.description?.substring(0, 100)}...
+                        {typeof issue.description === "string"
+                          ? issue.description.substring(0, 100) + "..."
+                          : "No description available"}
                       </p>
                       <div
                         className="issue-footer"
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
+                          alignItems: "center",
                         }}
                       >
                         <span
                           className="student-name"
                           style={{ color: "#1A1A1A" }}
                         >
-                          {issue.student}
+                          {typeof issue.student === "string"
+                            ? issue.student
+                            : "Unknown"}
                         </span>
                         <button
                           className="view-btn"
@@ -534,7 +569,6 @@ const Lecturer = () => {
                 </select>
               </div>
             </div>
-
             {filteredIssues.length === 0 ? (
               <p className="no-issues" style={{ color: "#1A1A1A" }}>
                 No issues match your search criteria.
@@ -561,10 +595,7 @@ const Lecturer = () => {
                       ].map((header) => (
                         <th
                           key={header}
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
                           {header}
                         </th>
@@ -575,52 +606,47 @@ const Lecturer = () => {
                     {filteredIssues.map((issue) => (
                       <tr
                         key={issue.id}
-                        className={issue.status}
+                        className={issue.status || ""}
                         style={{
                           backgroundColor:
                             issue.status === "pending" ? "#e6ffe6" : "#fff",
                         }}
                       >
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
                           {issue.id}
                         </td>
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
-                          {issue.course_code}: {issue.course_name}
+                          {typeof issue.course_code === "string"
+                            ? issue.course_code
+                            : "N/A"}
+                          :{" "}
+                          {typeof issue.course_name === "string"
+                            ? issue.course_name
+                            : "N/A"}
                         </td>
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
-                          {issue.student}
+                          {typeof issue.student === "string"
+                            ? issue.student
+                            : "Unknown"}
                         </td>
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
-                          {new Date(issue.created_at).toLocaleDateString()}
+                          {issue.created_at
+                            ? new Date(issue.created_at).toLocaleDateString()
+                            : "N/A"}
                         </td>
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
                           <span
-                            className={`status-badge ${issue.status}`}
+                            className={`status-badge ${issue.status || ""}`}
                             style={{
                               backgroundColor:
                                 issue.status === "resolved"
@@ -635,14 +661,13 @@ const Lecturer = () => {
                               borderRadius: "12px",
                             }}
                           >
-                            {issue.status.replace("_", " ")}
+                            {typeof issue.status === "string"
+                              ? issue.status.replace("_", " ")
+                              : "Unknown"}
                           </span>
                         </td>
                         <td
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                          }}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
                         >
                           <button
                             className="view-btn"
@@ -690,7 +715,6 @@ const Lecturer = () => {
                 Issue Details
               </h1>
             </div>
-
             <div className="issue-info">
               <div
                 className="info-section"
@@ -698,60 +722,74 @@ const Lecturer = () => {
                   backgroundColor: "#fff",
                   padding: "15px",
                   borderRadius: "5px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 }}
               >
                 <h2 style={{ color: "#1A1A1A" }}>
-                  {selectedIssue.course_code}: {selectedIssue.course_name}
+                  {typeof selectedIssue.course_code === "string"
+                    ? selectedIssue.course_code
+                    : "N/A"}
+                  :{" "}
+                  {typeof selectedIssue.course_name === "string"
+                    ? selectedIssue.course_name
+                    : "N/A"}
                 </h2>
-                {[
-                  {
-                    label: "Status",
-                    value: (
-                      <span
-                        className={`status-badge ${selectedIssue.status}`}
-                        style={{
-                          backgroundColor:
-                            selectedIssue.status === "resolved"
-                              ? "#008000"
-                              : selectedIssue.status === "pending"
-                                ? "#ff9900"
-                                : selectedIssue.status === "in_progress"
-                                  ? "#0066cc"
-                                  : "#ff0000",
-                          color: "#fff",
-                          padding: "5px 10px",
-                          borderRadius: "12px",
-                        }}
-                      >
-                        {selectedIssue.status.replace("_", " ")}
-                      </span>
-                    ),
-                  },
-                  {
-                    label: "Student",
-                    value: selectedIssue.student || "N/A",
-                  },
-                  {
-                    label: "Date Submitted",
-                    value: new Date(selectedIssue.created_at).toLocaleString(),
-                  },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="info-row"
-                    style={{ margin: "10px 0" }}
+                <div className="info-row" style={{ margin: "10px 0" }}>
+                  <span
+                    className="info-label"
+                    style={{ color: "#1A1A1A", fontWeight: "bold" }}
                   >
-                    <span
-                      className="info-label"
-                      style={{ color: "#1A1A1A", fontWeight: "bold" }}
-                    >
-                      {label}:
-                    </span>
-                    <span style={{ color: "#1A1A1A" }}>{value}</span>
-                  </div>
-                ))}
+                    Status:
+                  </span>
+                  <span
+                    className={`status-badge ${selectedIssue.status || ""}`}
+                    style={{
+                      backgroundColor:
+                        selectedIssue.status === "resolved"
+                          ? "#008000"
+                          : selectedIssue.status === "pending"
+                            ? "#ff9900"
+                            : selectedIssue.status === "in_progress"
+                              ? "#0066cc"
+                              : "#ff0000",
+                      color: "#fff",
+                      padding: "5px 10px",
+                      borderRadius: "12px",
+                      marginLeft: "10px",
+                    }}
+                  >
+                    {typeof selectedIssue.status === "string"
+                      ? selectedIssue.status.replace("_", " ")
+                      : "Unknown"}
+                  </span>
+                </div>
+                <div className="info-row" style={{ margin: "10px 0" }}>
+                  <span
+                    className="info-label"
+                    style={{ color: "#1A1A1A", fontWeight: "bold" }}
+                  >
+                    Student:
+                  </span>
+                  <span style={{ color: "#1A1A1A", marginLeft: "10px" }}>
+                    {typeof selectedIssue.student === "string"
+                      ? selectedIssue.student
+                      : "Unknown"}
+                  </span>
+                </div>
+                <div className="info-row" style={{ margin: "10px 0" }}>
+                  <span
+                    className="info-label"
+                    style={{ color: "#1A1A1A", fontWeight: "bold" }}
+                  >
+                    Date Submitted:
+                  </span>
+                  <span style={{ color: "#1A1A1A", marginLeft: "10px" }}>
+                    {selectedIssue.created_at
+                      ? new Date(selectedIssue.created_at).toLocaleString()
+                      : "N/A"}
+                  </span>
+                </div>
               </div>
-
               <div
                 className="description-section"
                 style={{ marginTop: "20px" }}
@@ -763,19 +801,21 @@ const Lecturer = () => {
                     backgroundColor: "#fff",
                     padding: "10px",
                     borderRadius: "5px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   }}
                 >
-                  {selectedIssue.description || "No description provided."}
+                  {typeof selectedIssue.description === "string"
+                    ? selectedIssue.description
+                    : "No description provided"}
                 </p>
               </div>
-
               <div
                 className="registrar-communication"
                 style={{ marginTop: "20px" }}
               >
                 <h3 style={{ color: "#1A1A1A" }}>Contact Registrar</h3>
                 <textarea
-                  placeholder="Enter your message to the academic registrar (e.g., need clarification)..."
+                  placeholder="Enter your message to the academic registrar..."
                   value={emailMessage}
                   onChange={(e) => setEmailMessage(e.target.value)}
                   disabled={submitting}
@@ -799,12 +839,12 @@ const Lecturer = () => {
                     borderRadius: "5px",
                     border: "none",
                     marginTop: "10px",
+                    opacity: !emailMessage.trim() || submitting ? 0.6 : 1,
                   }}
                 >
                   {submitting ? "Sending..." : "Send Email to Registrar"}
                 </button>
               </div>
-
               <div
                 className="status-update-section"
                 style={{ marginTop: "20px" }}
@@ -867,10 +907,90 @@ const Lecturer = () => {
             <h1 className="page-title" style={{ color: "#1A1A1A" }}>
               Lecturer Profile
             </h1>
-            <ProfileContent
-              createAuthAxios={createAuthAxios}
-              setError={setError}
-            />
+            <div
+              className="profile-card"
+              style={{
+                backgroundColor: "#fff",
+                padding: "20px",
+                borderRadius: "5px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                maxWidth: "600px",
+                margin: "0 auto",
+              }}
+            >
+              <h2 style={{ color: "#1A1A1A" }}>
+                {typeof user?.first_name === "string" &&
+                typeof user?.last_name === "string"
+                  ? `${user.first_name} ${user.last_name}`
+                  : typeof user?.name === "string"
+                    ? user.name
+                    : typeof user?.username === "string"
+                      ? user.username
+                      : "Lecturer"}
+              </h2>
+              <div className="profile-details" style={{ marginTop: "20px" }}>
+                <div
+                  className="detail-row"
+                  style={{ display: "flex", margin: "10px 0" }}
+                >
+                  <span
+                    className="detail-label"
+                    style={{
+                      width: "150px",
+                      color: "#1A1A1A",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Email:
+                  </span>
+                  <span className="detail-value" style={{ color: "#1A1A1A" }}>
+                    {typeof user?.email === "string"
+                      ? user.email
+                      : "Not provided"}
+                  </span>
+                </div>
+                <div
+                  className="detail-row"
+                  style={{ display: "flex", margin: "10px 0" }}
+                >
+                  <span
+                    className="detail-label"
+                    style={{
+                      width: "150px",
+                      color: "#1A1A1A",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Username:
+                  </span>
+                  <span className="detail-value" style={{ color: "#1A1A1A" }}>
+                    {typeof user?.username === "string"
+                      ? user.username
+                      : "Not provided"}
+                  </span>
+                </div>
+                <div
+                  className="detail-row"
+                  style={{ display: "flex", margin: "10px 0" }}
+                >
+                  <span
+                    className="detail-label"
+                    style={{
+                      width: "150px",
+                      color: "#1A1A1A",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Role:
+                  </span>
+                  <span className="detail-value" style={{ color: "#1A1A1A" }}>
+                    {typeof user?.user_role === "string"
+                      ? user.user_role
+                      : "Not provided"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>
@@ -878,161 +998,4 @@ const Lecturer = () => {
   );
 };
 
-const ProfileContent = ({ createAuthAxios, setError }) => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const authAxios = createAuthAxios();
-        console.log("Fetching lecturer profile...");
-        const response = await authAxios.get(ENDPOINTS.lecturerProfile);
-        console.log("Profile response:", response.data);
-        setProfile(response.data);
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError(
-          err.response?.status === 404
-            ? "Profile endpoint not found. Contact support."
-            : err.response?.status === 401
-              ? "Session expired. Please log in again."
-              : "Failed to load profile data. Please try again."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [createAuthAxios, setError]);
-
-  if (loading) {
-    return (
-      <div
-        className="loading"
-        style={{ color: "#1A1A1A", textAlign: "center" }}
-      >
-        <div className="spinner"></div>
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <p style={{ color: "#1A1A1A" }}>
-        Unable to load profile. Please try again later.
-      </p>
-    );
-  }
-
-  return (
-    <div className="profile-content">
-      <div
-        className="profile-card"
-        style={{
-          backgroundColor: "#fff",
-          padding: "20px",
-          borderRadius: "5px",
-        }}
-      >
-        <div
-          className="profile-header"
-          style={{ display: "flex", alignItems: "center", gap: "15px" }}
-        >
-          <div className="profile-name">
-            <h2 style={{ color: "#1A1A1A" }}>
-              {profile.first_name || "N/A"} {profile.last_name || ""}
-            </h2>
-            <p className="profile-role" style={{ color: "#008000" }}>
-              Lecturer
-            </p>
-          </div>
-        </div>
-
-        <div className="profile-details" style={{ marginTop: "20px" }}>
-          {[
-            { label: "Email", value: profile.email || "Not provided" },
-            {
-              label: "Department",
-              value: profile.department || "Not provided",
-            },
-            { label: "Username", value: profile.username || "Not provided" },
-          ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="detail-row"
-              style={{ display: "flex", margin: "10px 0" }}
-            >
-              <span
-                className="detail-label"
-                style={{
-                  width: "150px",
-                  color: "#1A1A1A",
-                  fontWeight: "bold",
-                }}
-              >
-                {label}:
-              </span>
-              <span className="detail-value" style={{ color: "#1A1A1A" }}>
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Error Boundary Component
-class ErrorBoundary extends Component {
-  state = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Error caught in ErrorBoundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div
-          className="error-boundary"
-          style={{ padding: "20px", textAlign: "center", color: "#1A1A1A" }}
-        >
-          <h2>Something went wrong.</h2>
-          <p>{this.state.error?.message || "An unexpected error occurred."}</p>
-          <button
-            className="action-btn"
-            onClick={() => window.location.reload()}
-            style={{
-              backgroundColor: "#008000",
-              color: "#fff",
-              padding: "10px 20px",
-              borderRadius: "5px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            Reload Page
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-export default function LecturerWithErrorBoundary() {
-  return (
-    <ErrorBoundary>
-      <Lecturer />
-    </ErrorBoundary>
-  );
-}
+export default Lecturer;

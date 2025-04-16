@@ -1,56 +1,73 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 
 class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  state = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+  };
 
   static getDerivedStateFromError(error) {
     // Update state so the next render shows the fallback UI
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log the error to an error reporting service
+    // Log the error for debugging
     console.error("Error caught in ErrorBoundary:", error, errorInfo);
-    // Optionally, send error to a logging service here
+    this.setState({ errorInfo });
   }
-
-  handleRetry = () => {
-    // Reset the error state to allow retrying
-    this.setState({ hasError: false });
-  };
 
   render() {
     if (this.state.hasError) {
-      // Render fallback UI with retry button and customizable error message
+      // Fallback UI when an error occurs
       return (
         <div
-          style={{ textAlign: "center", marginTop: "20px" }}
-          role="alert"
-          aria-live="assertive"
+          style={{
+            padding: "20px",
+            textAlign: "center",
+            color: "#1A1A1A",
+            backgroundColor: "#fff",
+            borderRadius: "5px",
+            margin: "20px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
         >
-          <h1>
-            {this.props.errorMessage ||
-              "Something went wrong. Please try again later."}
-          </h1>
-          <button onClick={this.handleRetry} style={{ marginTop: "10px" }}>
-            Retry
+          <h2 style={{ color: "#ff0000" }}>Something went wrong</h2>
+          <p>
+            An unexpected error occurred. Please try refreshing the page or
+            contact support if the issue persists.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              backgroundColor: "#008000",
+              color: "#fff",
+              padding: "10px 20px",
+              borderRadius: "5px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Refresh Page
           </button>
+          {process.env.NODE_ENV === "development" && (
+            <details style={{ marginTop: "20px", textAlign: "left" }}>
+              <summary>Error Details</summary>
+              <pre style={{ color: "#1A1A1A" }}>
+                {this.state.error && this.state.error.toString()}
+                <br />
+                {this.state.errorInfo && this.state.errorInfo.componentStack}
+              </pre>
+            </details>
+          )}
         </div>
       );
     }
 
+    // Render children if no error
     return this.props.children;
   }
 }
-
-// PropTypes for validation
-ErrorBoundary.propTypes = {
-  errorMessage: PropTypes.string,
-  children: PropTypes.node.isRequired,
-};
 
 export default ErrorBoundary;
