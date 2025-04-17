@@ -3,12 +3,18 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/authContext";
+import "./lecturers.css";
 
 // API endpoints
 const API_ENDPOINTS = {
-  lecturerIssues: "/lecturer-issue-management/",
-  lecturerDashboard: "/lecturer-dashboard/",
-  lecturerProfile: "/lecturer-profile/",
+  lecturerIssues:
+    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
+  lecturerDashboard:
+    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
+  lecturerProfile:
+    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
+  notificationEndpoint:
+    "https://academic-6ea365e4b745.herokuapp.com/api/notifications/",
 };
 
 // Main Lecturer Component
@@ -38,6 +44,9 @@ const Lecturer = () => {
   const [yearFilter, setYearFilter] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [feedback, setFeedback] = useState("");
+  const [hasNewAssignments, setHasNewAssignments] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -96,9 +105,69 @@ const Lecturer = () => {
     }
   };
 
+  // Create authenticated axios instance
+  const createAuthAxios = useCallback(() => {
+    const token = auth?.user?.token || localStorage.getItem("accessToken");
+
+    return axios.create({
+      headers: {
+        Authorization: token ? `Bearer ${token}` : undefined,
+        "Content-Type": "application/json",
+      },
+      timeout: 10000,
+    });
+  }, [auth]);
+
+  // Check for new assignments
+  const checkForNewAssignments = useCallback(async () => {
+    if (!isOnline) return;
+
+    try {
+      const authAxios = createAuthAxios();
+      const lastCheckTime = localStorage.getItem("lastAssignmentCheck") || 0;
+
+      // Fetch notifications
+      const notificationsResponse = await authAxios.get(
+        `${API_ENDPOINTS.notificationEndpoint}?since=${lastCheckTime}`
+      );
+
+      if (
+        Array.isArray(notificationsResponse.data) &&
+        notificationsResponse.data.length > 0
+      ) {
+        // Filter for assignment notifications
+        const assignmentNotifications = notificationsResponse.data.filter(
+          (notification) =>
+            notification.type === "assignment" ||
+            notification.message.includes("assigned")
+        );
+
+        if (assignmentNotifications.length > 0) {
+          setHasNewAssignments(true);
+          setNotifications((prev) =>
+            [...assignmentNotifications, ...prev].slice(0, 10)
+          ); // Keep last 10 notifications
+
+          // Show notification to user
+          if (Notification.permission === "granted") {
+            new Notification("New Issue Assigned", {
+              body: "You have been assigned a new issue to resolve.",
+              icon: "/favicon.ico",
+            });
+          }
+        }
+      }
+
+      // Update last check time
+      localStorage.setItem("lastAssignmentCheck", Date.now().toString());
+    } catch (err) {
+      console.error("Error checking for new assignments:", err);
+    }
+  }, [isOnline, createAuthAxios]);
+
   // Fetch data from API
   const fetchData = useCallback(async () => {
-    if (!auth || !auth.createAuthAxios) {
+    if (!auth) {
       setError("Authentication context not available");
       setLoading(false);
       return;
@@ -108,7 +177,7 @@ const Lecturer = () => {
 
     try {
       // Check API availability first
-      const isApiAvailable = await auth.checkApiAvailability();
+      const isApiAvailable = await checkApiAvailability();
 
       if (!isApiAvailable) {
         setError(
@@ -136,14 +205,31 @@ const Lecturer = () => {
       }
 
       // API is available, fetch fresh data
-      const authAxios = auth.createAuthAxios();
+      const authAxios = createAuthAxios();
 
       try {
         // Fetch issues
         const issuesResponse = await authAxios.get(
           API_ENDPOINTS.lecturerIssues
         );
+
         if (Array.isArray(issuesResponse.data)) {
+          // Check if there are new assignments since last fetch
+          const previousIssues = JSON.parse(
+            localStorage.getItem("lecturer_issues") || "[]"
+          );
+          const newIssues = issuesResponse.data.filter(
+            (newIssue) =>
+              !previousIssues.some((oldIssue) => oldIssue.id === newIssue.id)
+          );
+
+          if (newIssues.length > 0) {
+            setHasNewAssignments(true);
+            setSuccessMsg(
+              `You have ${newIssues.length} new issue(s) assigned to you.`
+            );
+          }
+
           setIssues(issuesResponse.data);
           // Cache issues for offline use
           localStorage.setItem(
@@ -189,6 +275,9 @@ const Lecturer = () => {
         }
       }
 
+      // Check for new assignments
+      await checkForNewAssignments();
+
       setLastRefreshed(new Date());
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -201,7 +290,29 @@ const Lecturer = () => {
     } finally {
       setLoading(false);
     }
-  }, [auth]);
+  }, [auth, createAuthAxios, checkForNewAssignments]);
+
+  // Check API availability
+  const checkApiAvailability = async () => {
+    try {
+      const response = await fetch(
+        "https://academic-6ea365e4b745.herokuapp.com/api/health-check/",
+        {
+          method: "GET",
+          mode: "cors",
+          cache: "no-cache",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 5000,
+        }
+      );
+      return response.status === 200;
+    } catch (error) {
+      console.warn("API health check failed:", error.message);
+      return false;
+    }
+  };
 
   // Initial data loading
   useEffect(() => {
@@ -209,30 +320,39 @@ const Lecturer = () => {
 
     // Set up auto-refresh every 2 minutes if online
     const intervalId = setInterval(() => {
-      if (isOnline && auth?.apiAvailable) {
+      if (isOnline) {
         fetchData();
       }
     }, 120000);
 
+    // Request notification permission
+    if (
+      Notification.permission !== "granted" &&
+      Notification.permission !== "denied"
+    ) {
+      Notification.requestPermission();
+    }
+
     return () => clearInterval(intervalId);
-  }, [fetchData, isOnline, auth]);
+  }, [fetchData, isOnline]);
 
   // Handle issue view
   const handleViewIssue = (issueId) => {
     const issue = issues.find((i) => i.id === issueId);
     setSelectedIssue(issue);
     setSelectedTab("issueDetail");
+    setFeedback("");
+
+    // Mark as read if it was a new assignment
+    if (hasNewAssignments) {
+      setHasNewAssignments(false);
+    }
   };
 
   // Handle status update
   const handleStatusUpdate = async (issueId, status) => {
-    if (!auth || !auth.createAuthAxios) {
-      setError("Authentication context not available");
-      return;
-    }
-
-    if (!auth.apiAvailable) {
-      setError("Cannot update issue status while API is unavailable");
+    if (!isOnline) {
+      setError("Cannot update issue status while offline");
       return;
     }
 
@@ -241,12 +361,12 @@ const Lecturer = () => {
     setSuccessMsg("");
 
     try {
-      const authAxios = auth.createAuthAxios();
+      const authAxios = createAuthAxios();
 
       // Send update to API
       await authAxios.patch(`${API_ENDPOINTS.lecturerIssues}${issueId}/`, {
         status,
-        feedback: `Issue ${status.replace("_", " ")} by lecturer.`,
+        feedback: feedback || `Issue ${status.replace("_", " ")} by lecturer.`,
       });
 
       // Update local state
@@ -290,8 +410,14 @@ const Lecturer = () => {
       }
 
       setSuccessMsg(
-        `Issue ${status}. Automatic emails sent to student and registrar.`
+        status === "resolved"
+          ? "Issue resolved. Emails sent to student and registrar."
+          : status === "in_progress"
+            ? "Issue set to in progress. Email sent to student."
+            : "Issue status updated successfully."
       );
+
+      setFeedback("");
 
       // Refresh data to ensure everything is in sync
       fetchData();
@@ -310,8 +436,8 @@ const Lecturer = () => {
 
   // Handle bulk resolve
   const handleBulkResolve = async () => {
-    if (!auth || !auth.apiAvailable) {
-      setError("Cannot perform bulk resolve while API is unavailable");
+    if (!isOnline) {
+      setError("Cannot perform bulk resolve while offline");
       return;
     }
 
@@ -331,7 +457,7 @@ const Lecturer = () => {
 
       for (const issue of pendingIssues) {
         try {
-          const authAxios = auth.createAuthAxios();
+          const authAxios = createAuthAxios();
 
           // Send update to API
           await authAxios.patch(`${API_ENDPOINTS.lecturerIssues}${issue.id}/`, {
@@ -449,18 +575,12 @@ const Lecturer = () => {
   // Render loading state
   if (loading && !issues.length) {
     return (
-      <div style={{ textAlign: "center", padding: "50px" }}>
+      <div className="loading">
+        <div className="spinner"></div>
         <p>Loading Lecturer Dashboard...</p>
         <button
           onClick={() => window.location.reload()}
-          style={{
-            backgroundColor: "#008000",
-            color: "#fff",
-            padding: "10px 20px",
-            borderRadius: "5px",
-            border: "none",
-            marginTop: "20px",
-          }}
+          className="btn btn-primary"
         >
           Refresh Page
         </button>
@@ -471,101 +591,43 @@ const Lecturer = () => {
   // Main render
   return (
     <div className="lecturer-dashboard">
-      <aside
-        className="sidebar"
-        style={{
-          backgroundColor: "#f4f4f4",
-          padding: "20px",
-          width: "200px",
-          height: "100vh",
-          position: "fixed",
-        }}
-      >
-        <h2 style={{ color: "#1A1A1A", marginBottom: "20px" }}>
-          Lecturer Dashboard
-        </h2>
-        <ul style={{ listStyle: "none", padding: 0 }}>
+      <aside className="sidebar">
+        <h2 className="sidebar-title">Lecturer Dashboard</h2>
+        <ul className="sidebar-nav">
           {["home", "issues", "profile", "logout"].map((tab) => (
             <li
               key={tab}
               onClick={() =>
                 tab === "logout" ? handleLogout() : setSelectedTab(tab)
               }
-              style={{
-                color: selectedTab === tab ? "#008000" : "#1A1A1A",
-                cursor: "pointer",
-                padding: "10px",
-                marginBottom: "5px",
-                backgroundColor:
-                  selectedTab === tab ? "#e6f7e6" : "transparent",
-                borderRadius: "5px",
-              }}
+              className={selectedTab === tab ? "active" : ""}
             >
+              {tab === "issues" && hasNewAssignments && (
+                <span className="notification-badge">New</span>
+              )}
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </li>
           ))}
         </ul>
       </aside>
 
-      <main style={{ marginLeft: "220px", padding: "20px" }}>
+      <main className="main-content">
         {!isOnline && (
-          <div
-            style={{
-              backgroundColor: "#ff9900",
-              color: "#fff",
-              padding: "10px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-            }}
-          >
-            <p style={{ margin: 0 }}>
+          <div className="alert alert-warning">
+            <p>
               <strong>You are offline.</strong> Some features may be limited.
               Changes will be synchronized when you're back online.
             </p>
           </div>
         )}
 
-        {isOnline && !auth?.apiAvailable && (
-          <div
-            style={{
-              backgroundColor: "#ff9900",
-              color: "#fff",
-              padding: "10px",
-              borderRadius: "5px",
-              marginBottom: "15px",
-            }}
-          >
-            <p style={{ margin: 0 }}>
-              <strong>API is currently unavailable.</strong> Showing cached
-              data. Some features may be limited.
-            </p>
-          </div>
-        )}
-
         {successMsg && (
-          <div
-            style={{
-              backgroundColor: "#008000",
-              color: "#fff",
-              padding: "10px",
-              borderRadius: "5px",
-              position: "relative",
-              marginBottom: "15px",
-            }}
-          >
+          <div className="alert alert-success">
             <p>{successMsg}</p>
             <button
               onClick={() => setSuccessMsg("")}
-              style={{
-                position: "absolute",
-                top: "5px",
-                right: "10px",
-                color: "#fff",
-                background: "none",
-                border: "none",
-                fontSize: "18px",
-                cursor: "pointer",
-              }}
+              className="alert-close"
+              aria-label="Close"
             >
               ×
             </button>
@@ -573,29 +635,12 @@ const Lecturer = () => {
         )}
 
         {error && (
-          <div
-            style={{
-              backgroundColor: "#ff0000",
-              color: "#fff",
-              padding: "10px",
-              borderRadius: "5px",
-              position: "relative",
-              marginBottom: "15px",
-            }}
-          >
+          <div className="alert alert-danger">
             <p>{error}</p>
             <button
               onClick={() => setError("")}
-              style={{
-                position: "absolute",
-                top: "5px",
-                right: "10px",
-                color: "#fff",
-                background: "none",
-                border: "none",
-                fontSize: "18px",
-                cursor: "pointer",
-              }}
+              className="alert-close"
+              aria-label="Close"
             >
               ×
             </button>
@@ -604,32 +649,13 @@ const Lecturer = () => {
 
         {selectedTab === "home" && (
           <div>
-            <h1 style={{ marginBottom: "20px" }}>Lecturer Dashboard</h1>
+            <h1>Lecturer Dashboard</h1>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginBottom: "20px",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="filters-container">
               <button
                 onClick={fetchData}
-                disabled={loading || !isOnline || !auth?.apiAvailable}
-                style={{
-                  backgroundColor: "#008000",
-                  color: "#fff",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  border: "none",
-                  opacity:
-                    loading || !isOnline || !auth?.apiAvailable ? 0.7 : 1,
-                  cursor:
-                    loading || !isOnline || !auth?.apiAvailable
-                      ? "not-allowed"
-                      : "pointer",
-                }}
+                disabled={loading || !isOnline}
+                className="btn btn-primary"
               >
                 {loading ? "Refreshing..." : "Refresh Issues"}
               </button>
@@ -639,205 +665,109 @@ const Lecturer = () => {
                 disabled={
                   submitting ||
                   !issues.some((issue) => issue.status === "pending") ||
-                  !isOnline ||
-                  !auth?.apiAvailable
+                  !isOnline
                 }
-                style={{
-                  backgroundColor: "#8800cc",
-                  color: "#fff",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  border: "none",
-                  opacity:
-                    submitting ||
-                    !issues.some((issue) => issue.status === "pending") ||
-                    !isOnline ||
-                    !auth?.apiAvailable
-                      ? 0.7
-                      : 1,
-                  cursor:
-                    submitting ||
-                    !issues.some((issue) => issue.status === "pending") ||
-                    !isOnline ||
-                    !auth?.apiAvailable
-                      ? "not-allowed"
-                      : "pointer",
-                }}
+                className="btn btn-secondary"
               >
                 {submitting ? "Processing..." : "Bulk Resolve All Pending"}
               </button>
             </div>
 
-            <div style={{ marginBottom: "20px" }}>
+            <div className="user-welcome">
               <p>
                 Welcome,{" "}
                 {auth?.user?.username ||
                   localStorage.getItem("username") ||
                   "Lecturer"}
               </p>
-              <p style={{ color: "#666", fontSize: "14px" }}>
+              <p className="text-light">
                 Last refreshed: {formatDate(lastRefreshed)}
               </p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "20px",
-                marginBottom: "30px",
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                {
-                  label: "Total Assigned",
-                  value: dashboardData.total_assigned || 0,
-                  color: "#0066cc",
-                },
-                {
-                  label: "In Progress",
-                  value: dashboardData.in_progress_count || 0,
-                  color: "#ff9900",
-                },
-                {
-                  label: "Resolved",
-                  value: dashboardData.resolved_count || 0,
-                  color: "#008000",
-                },
-              ].map(({ label, value, color }) => (
-                <div
-                  key={label}
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: "15px",
-                    borderRadius: "5px",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                    minWidth: "150px",
-                    borderLeft: `4px solid ${color}`,
-                  }}
+            {hasNewAssignments && (
+              <div className="alert alert-info">
+                <p>
+                  <strong>New assignments!</strong> You have new issues assigned
+                  to you that need your attention.
+                </p>
+                <button
+                  onClick={() => setSelectedTab("issues")}
+                  className="btn btn-primary btn-sm"
+                  style={{ marginTop: "10px" }}
                 >
-                  <span style={{ color: "#1A1A1A" }}>{label}:</span>
-                  <span
-                    style={{
-                      color,
-                      fontWeight: "bold",
-                      fontSize: "24px",
-                      display: "block",
-                    }}
-                  >
-                    {value}
-                  </span>
-                </div>
-              ))}
+                  View Issues
+                </button>
+              </div>
+            )}
+
+            <div className="dashboard-summary">
+              <div className="summary-card total">
+                <span className="summary-label">Total Assigned</span>
+                <span className="summary-value total">
+                  {dashboardData.total_assigned || 0}
+                </span>
+              </div>
+
+              <div className="summary-card in-progress">
+                <span className="summary-label">In Progress</span>
+                <span className="summary-value in-progress">
+                  {dashboardData.in_progress_count || 0}
+                </span>
+              </div>
+
+              <div className="summary-card resolved">
+                <span className="summary-label">Resolved</span>
+                <span className="summary-value resolved">
+                  {dashboardData.resolved_count || 0}
+                </span>
+              </div>
             </div>
 
             <div>
-              <h2 style={{ marginBottom: "15px" }}>Recent Issues</h2>
+              <h2 className="section-title">Recent Issues</h2>
 
               {issues.length === 0 ? (
-                <p
-                  style={{
-                    padding: "20px",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: "5px",
-                    textAlign: "center",
-                  }}
-                >
-                  No issues assigned to you yet.
-                </p>
+                <div className="card">
+                  <p className="text-center">No issues assigned to you yet.</p>
+                </div>
               ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "15px",
-                  }}
-                >
+                <div className="issues-grid">
                   {issues.slice(0, 4).map((issue) => (
                     <div
                       key={issue.id}
-                      style={{
-                        backgroundColor:
-                          issue.status === "pending" ? "#fff8e6" : "#fff",
-                        padding: "15px",
-                        borderRadius: "5px",
-                        border: "1px solid #ddd",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                      }}
+                      className={`issue-card ${issue.status}`}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        <h3 style={{ margin: 0, fontSize: "16px" }}>
+                      {issue.isNew && <span className="new-badge">New</span>}
+                      <div className="issue-header">
+                        <h3 className="issue-title">
                           {issue.course_code || "N/A"}:{" "}
                           {issue.course_name || "N/A"}
                         </h3>
-                        <span
-                          style={{
-                            backgroundColor:
-                              issue.status === "resolved"
-                                ? "#008000"
-                                : issue.status === "pending"
-                                  ? "#ff9900"
-                                  : "#0066cc",
-                            color: "#fff",
-                            padding: "5px 10px",
-                            borderRadius: "12px",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }}
-                        >
+                        <span className={`status-badge ${issue.status}`}>
                           {issue.status?.replace("_", " ") || "Unknown"}
                         </span>
                       </div>
 
-                      <p style={{ margin: "10px 0", fontSize: "14px" }}>
+                      <p className="issue-description">
                         {issue.description?.substring(0, 100) ||
                           "No description"}
                         {issue.description?.length > 100 ? "..." : ""}
                       </p>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: "15px",
-                        }}
-                      >
-                        <span style={{ color: "#666", fontSize: "13px" }}>
+                      <div className="issue-meta">
+                        <span className="student-name">
                           {issue.student?.username || "Unknown"}
                         </span>
                         <button
                           onClick={() => handleViewIssue(issue.id)}
-                          style={{
-                            backgroundColor: "#008000",
-                            color: "#fff",
-                            padding: "8px 15px",
-                            borderRadius: "5px",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "13px",
-                          }}
+                          className="btn btn-primary btn-sm"
                         >
                           View Details
                         </button>
                       </div>
 
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#888",
-                          marginTop: "10px",
-                          textAlign: "right",
-                        }}
-                      >
+                      <div className="issue-date">
                         {formatDate(issue.created_at)}
                       </div>
                     </div>
@@ -846,17 +776,10 @@ const Lecturer = () => {
               )}
 
               {issues.length > 4 && (
-                <div style={{ marginTop: "20px", textAlign: "center" }}>
+                <div className="text-center mt-4">
                   <button
                     onClick={() => setSelectedTab("issues")}
-                    style={{
-                      backgroundColor: "#008000",
-                      color: "#fff",
-                      padding: "10px 20px",
-                      borderRadius: "5px",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
+                    className="btn btn-primary"
                   >
                     View All Issues ({issues.length})
                   </button>
@@ -868,39 +791,18 @@ const Lecturer = () => {
 
         {selectedTab === "issues" && (
           <div>
-            <h1 style={{ marginBottom: "20px" }}>Manage Issues</h1>
+            <h1>Manage Issues</h1>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "15px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <p style={{ margin: 0 }}>
+            <div className="filters-container">
+              <p>
                 Showing {filteredIssues.length} of {issues.length} issues
               </p>
 
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div className="filter-actions">
                 <button
                   onClick={fetchData}
-                  disabled={loading || !isOnline || !auth?.apiAvailable}
-                  style={{
-                    backgroundColor: "#008000",
-                    color: "#fff",
-                    padding: "8px 15px",
-                    borderRadius: "5px",
-                    border: "none",
-                    opacity:
-                      loading || !isOnline || !auth?.apiAvailable ? 0.7 : 1,
-                    cursor:
-                      loading || !isOnline || !auth?.apiAvailable
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
+                  disabled={loading || !isOnline}
+                  className="btn btn-primary btn-sm"
                 >
                   {loading ? "Refreshing..." : "Refresh"}
                 </button>
@@ -910,68 +812,31 @@ const Lecturer = () => {
                   disabled={
                     submitting ||
                     !issues.some((issue) => issue.status === "pending") ||
-                    !isOnline ||
-                    !auth?.apiAvailable
+                    !isOnline
                   }
-                  style={{
-                    backgroundColor: "#8800cc",
-                    color: "#fff",
-                    padding: "8px 15px",
-                    borderRadius: "5px",
-                    border: "none",
-                    opacity:
-                      submitting ||
-                      !issues.some((issue) => issue.status === "pending") ||
-                      !isOnline ||
-                      !auth?.apiAvailable
-                        ? 0.7
-                        : 1,
-                    cursor:
-                      submitting ||
-                      !issues.some((issue) => issue.status === "pending") ||
-                      !isOnline ||
-                      !auth?.apiAvailable
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
+                  className="btn btn-secondary btn-sm"
                 >
                   {submitting ? "Processing..." : "Bulk Resolve All"}
                 </button>
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginBottom: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: "200px" }}>
+            <div className="filters-container">
+              <div className="search-box">
                 <input
                   type="text"
                   placeholder="Search by course, student, or description..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
+                  className="form-control"
                 />
               </div>
 
-              <div>
+              <div className="filter-item">
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  style={{
-                    padding: "10px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
+                  className="form-select"
                 >
                   <option value="">All Statuses</option>
                   <option value="pending">Pending</option>
@@ -980,15 +845,11 @@ const Lecturer = () => {
                 </select>
               </div>
 
-              <div>
+              <div className="filter-item">
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  style={{
-                    padding: "10px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
+                  className="form-select"
                 >
                   <option value="">All Categories</option>
                   {categories.map((category) => (
@@ -999,15 +860,11 @@ const Lecturer = () => {
                 </select>
               </div>
 
-              <div>
+              <div className="filter-item">
                 <select
                   value={yearFilter}
                   onChange={(e) => setYearFilter(e.target.value)}
-                  style={{
-                    padding: "10px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
+                  className="form-select"
                 >
                   <option value="">All Years</option>
                   {years.map((year) => (
@@ -1019,69 +876,41 @@ const Lecturer = () => {
               </div>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginBottom: "10px",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+            <div className="sort-controls">
+              <span className="sort-label">Sort by:</span>
+              <select
+                id="sortBy"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="form-select"
               >
-                <label htmlFor="sortBy">Sort by:</label>
-                <select
-                  id="sortBy"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  style={{
-                    padding: "8px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  <option value="created_at">Date</option>
-                  <option value="status">Status</option>
-                  <option value="course_code">Course</option>
-                  <option value="student">Student</option>
-                </select>
+                <option value="created_at">Date</option>
+                <option value="status">Status</option>
+                <option value="course_code">Course</option>
+                <option value="student">Student</option>
+              </select>
 
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                  style={{
-                    padding: "8px",
-                    borderRadius: "5px",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  <option value="desc">Descending</option>
-                  <option value="asc">Ascending</option>
-                </select>
-              </div>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="form-select"
+              >
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
             </div>
 
             {filteredIssues.length === 0 ? (
-              <p
-                style={{
-                  padding: "20px",
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: "5px",
-                  textAlign: "center",
-                }}
-              >
-                No issues match your search criteria.
-              </p>
+              <div className="card">
+                <p className="text-center">
+                  No issues match your search criteria.
+                </p>
+              </div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                  }}
-                >
+              <div className="table-container">
+                <table className="table">
                   <thead>
-                    <tr style={{ backgroundColor: "#f4f4f4" }}>
+                    <tr>
                       {[
                         "ID",
                         "Course",
@@ -1091,112 +920,46 @@ const Lecturer = () => {
                         "Status",
                         "Actions",
                       ].map((header) => (
-                        <th
-                          key={header}
-                          style={{
-                            padding: "10px",
-                            border: "1px solid #ddd",
-                            textAlign: "left",
-                          }}
-                        >
-                          {header}
-                        </th>
+                        <th key={header}>{header}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredIssues.map((issue) => (
-                      <tr
-                        key={issue.id}
-                        style={{
-                          backgroundColor:
-                            issue.status === "pending" ? "#fff8e6" : "#fff",
-                        }}
-                      >
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
-                          {issue.id}
-                        </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
+                      <tr key={issue.id} className={issue.status}>
+                        <td>{issue.id}</td>
+                        <td>
                           {issue.course_code || "N/A"}:{" "}
                           {issue.course_name || "N/A"}
                         </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
-                          {issue.student?.username || "Unknown"}
-                        </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
+                        <td>{issue.student?.username || "Unknown"}</td>
+                        <td>
                           {issue.category?.replace("_", " ") || "Unknown"}
                         </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
-                          {formatDate(issue.created_at)}
-                        </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
-                          <span
-                            style={{
-                              backgroundColor:
-                                issue.status === "resolved"
-                                  ? "#008000"
-                                  : issue.status === "pending"
-                                    ? "#ff9900"
-                                    : "#0066cc",
-                              color: "#fff",
-                              padding: "5px 10px",
-                              borderRadius: "12px",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              display: "inline-block",
-                            }}
-                          >
+                        <td>{formatDate(issue.created_at)}</td>
+                        <td>
+                          <span className={`status-badge ${issue.status}`}>
                             {issue.status?.replace("_", " ") || "Unknown"}
                           </span>
                         </td>
-                        <td
-                          style={{ padding: "10px", border: "1px solid #ddd" }}
-                        >
+                        <td>
                           <button
                             onClick={() => handleViewIssue(issue.id)}
-                            style={{
-                              backgroundColor: "#008000",
-                              color: "#fff",
-                              padding: "8px 15px",
-                              borderRadius: "5px",
-                              border: "none",
-                              cursor: "pointer",
-                            }}
+                            className="btn btn-primary btn-sm"
                           >
                             View
                           </button>
-                          {issue.status === "pending" &&
-                            isOnline &&
-                            auth?.apiAvailable && (
-                              <button
-                                onClick={() =>
-                                  handleStatusUpdate(issue.id, "resolved")
-                                }
-                                style={{
-                                  backgroundColor: "#0066cc",
-                                  color: "#fff",
-                                  padding: "8px 15px",
-                                  borderRadius: "5px",
-                                  border: "none",
-                                  marginLeft: "5px",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Quick Resolve
-                              </button>
-                            )}
+                          {issue.status === "pending" && isOnline && (
+                            <button
+                              onClick={() =>
+                                handleStatusUpdate(issue.id, "resolved")
+                              }
+                              className="btn btn-success btn-sm"
+                              style={{ marginLeft: "5px" }}
+                            >
+                              Quick Resolve
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1208,215 +971,99 @@ const Lecturer = () => {
         )}
 
         {selectedTab === "issueDetail" && selectedIssue && (
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                marginBottom: "20px",
-              }}
-            >
+          <div className="issue-detail">
+            <div className="detail-header">
               <button
                 onClick={() => setSelectedTab("issues")}
-                style={{
-                  backgroundColor: "#008000",
-                  color: "#fff",
-                  padding: "8px 15px",
-                  borderRadius: "5px",
-                  border: "none",
-                  cursor: "pointer",
-                }}
+                className="btn btn-outline back-btn"
               >
                 ← Back to Issues
               </button>
-              <h1 style={{ margin: 0 }}>Issue Details</h1>
+              <h1>Issue Details</h1>
             </div>
 
-            <div>
-              <div
-                style={{
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "5px",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  marginBottom: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
-                  <h2 style={{ margin: "0 0 15px 0" }}>
-                    {selectedIssue.course_code || "N/A"}:{" "}
-                    {selectedIssue.course_name || "N/A"}
-                  </h2>
-                  <span
-                    style={{
-                      backgroundColor:
-                        selectedIssue.status === "resolved"
-                          ? "#008000"
-                          : selectedIssue.status === "pending"
-                            ? "#ff9900"
-                            : "#0066cc",
-                      color: "#fff",
-                      padding: "5px 15px",
-                      borderRadius: "12px",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {selectedIssue.status?.replace("_", " ") || "Unknown"}
+            <div className="detail-section">
+              <div className="card-header">
+                <h2>
+                  {selectedIssue.course_code || "N/A"}:{" "}
+                  {selectedIssue.course_name || "N/A"}
+                </h2>
+                <span className={`status-badge ${selectedIssue.status}`}>
+                  {selectedIssue.status?.replace("_", " ") || "Unknown"}
+                </span>
+              </div>
+
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <span className="detail-label">Student:</span>
+                  <span className="detail-value">
+                    {selectedIssue.student?.username || "Unknown"}
                   </span>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "15px",
-                    marginTop: "20px",
-                  }}
-                >
-                  <div>
-                    <span
-                      style={{
-                        color: "#666",
-                        fontSize: "14px",
-                        display: "block",
-                      }}
-                    >
-                      Student:
-                    </span>
-                    <span style={{ fontWeight: "bold" }}>
-                      {selectedIssue.student?.username || "Unknown"}
-                    </span>
-                  </div>
+                <div className="detail-item">
+                  <span className="detail-label">Category:</span>
+                  <span className="detail-value">
+                    {selectedIssue.category?.replace("_", " ") || "Unknown"}
+                  </span>
+                </div>
 
-                  <div>
-                    <span
-                      style={{
-                        color: "#666",
-                        fontSize: "14px",
-                        display: "block",
-                      }}
-                    >
-                      Category:
-                    </span>
-                    <span style={{ fontWeight: "bold" }}>
-                      {selectedIssue.category?.replace("_", " ") || "Unknown"}
-                    </span>
-                  </div>
+                <div className="detail-item">
+                  <span className="detail-label">Year of Study:</span>
+                  <span className="detail-value">
+                    {selectedIssue.year_of_study?.replace("_", " ") ||
+                      "Unknown"}
+                  </span>
+                </div>
 
-                  <div>
-                    <span
-                      style={{
-                        color: "#666",
-                        fontSize: "14px",
-                        display: "block",
-                      }}
-                    >
-                      Year of Study:
-                    </span>
-                    <span style={{ fontWeight: "bold" }}>
-                      {selectedIssue.year_of_study?.replace("_", " ") ||
-                        "Unknown"}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span
-                      style={{
-                        color: "#666",
-                        fontSize: "14px",
-                        display: "block",
-                      }}
-                    >
-                      Date Submitted:
-                    </span>
-                    <span style={{ fontWeight: "bold" }}>
-                      {formatDate(selectedIssue.created_at)}
-                    </span>
-                  </div>
+                <div className="detail-item">
+                  <span className="detail-label">Date Submitted:</span>
+                  <span className="detail-value">
+                    {formatDate(selectedIssue.created_at)}
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <h3 style={{ marginBottom: "10px" }}>Issue Description</h3>
-                <p
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: "15px",
-                    borderRadius: "5px",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                    lineHeight: "1.6",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {selectedIssue.description || "No description provided"}
-                </p>
+            <div className="detail-section">
+              <h3>Issue Description</h3>
+              <div className="description-box">
+                {selectedIssue.description || "No description provided"}
+              </div>
+            </div>
+
+            <div className="detail-section">
+              <h3>Update Status</h3>
+              <p>
+                When you update an issue status, automatic notifications will be
+                sent to the student and registrar.
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Feedback</label>
+                <textarea
+                  placeholder="Enter feedback for this status update..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  disabled={submitting}
+                  className="form-textarea"
+                />
               </div>
 
-              <div style={{ marginTop: "20px" }}>
-                <h3 style={{ marginBottom: "10px" }}>Update Status</h3>
-                <p style={{ color: "#666", marginBottom: "15px" }}>
-                  When you update an issue status, automatic notifications will
-                  be sent to the student and registrar.
-                </p>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  {["pending", "in_progress", "resolved"].map((status) => (
-                    <button
-                      key={status}
-                      onClick={() =>
-                        handleStatusUpdate(selectedIssue.id, status)
-                      }
-                      disabled={
-                        selectedIssue.status === status ||
-                        submitting ||
-                        !isOnline ||
-                        !auth?.apiAvailable
-                      }
-                      style={{
-                        backgroundColor:
-                          selectedIssue.status === status
-                            ? "#ccc"
-                            : status === "resolved"
-                              ? "#008000"
-                              : status === "pending"
-                                ? "#ff9900"
-                                : "#0066cc",
-                        color: "#fff",
-                        padding: "12px 25px",
-                        borderRadius: "5px",
-                        border: "none",
-                        opacity:
-                          selectedIssue.status === status ||
-                          submitting ||
-                          !isOnline ||
-                          !auth?.apiAvailable
-                            ? 0.6
-                            : 1,
-                        cursor:
-                          selectedIssue.status === status ||
-                          submitting ||
-                          !isOnline ||
-                          !auth?.apiAvailable
-                            ? "not-allowed"
-                            : "pointer",
-                        fontWeight: "bold",
-                        fontSize: "14px",
-                      }}
-                    >
-                      {status.replace("_", " ").charAt(0).toUpperCase() +
-                        status.replace("_", " ").slice(1)}
-                    </button>
-                  ))}
-                </div>
+              <div className="status-buttons">
+                {["pending", "in_progress", "resolved"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusUpdate(selectedIssue.id, status)}
+                    disabled={
+                      selectedIssue.status === status || submitting || !isOnline
+                    }
+                    className={`status-btn ${status} ${selectedIssue.status === status ? "active" : ""}`}
+                  >
+                    {status.replace("_", " ").charAt(0).toUpperCase() +
+                      status.replace("_", " ").slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -1424,81 +1071,52 @@ const Lecturer = () => {
 
         {selectedTab === "profile" && (
           <div>
-            <h1 style={{ marginBottom: "20px" }}>Lecturer Profile</h1>
-            <div
-              style={{
-                backgroundColor: "#fff",
-                padding: "30px",
-                borderRadius: "5px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                maxWidth: "600px",
-                margin: "0 auto",
-              }}
-            >
-              <h2 style={{ marginBottom: "20px" }}>
-                {auth?.user?.name ||
-                  auth?.user?.username ||
-                  localStorage.getItem("username") ||
-                  "Lecturer"}
-              </h2>
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    margin: "15px 0",
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: "15px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "150px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Email:
-                  </span>
-                  <span>{auth?.user?.email || "Not available"}</span>
+            <h1>Lecturer Profile</h1>
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="profile-avatar">
+                  <span>👨‍🏫</span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    margin: "15px 0",
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: "15px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "150px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Username:
+                <div className="profile-info">
+                  <h2>
+                    {auth?.user?.name ||
+                      auth?.user?.username ||
+                      localStorage.getItem("username") ||
+                      "Lecturer"}
+                  </h2>
+                  <p className="profile-role">
+                    {auth?.user?.role
+                      ? auth.user.role.charAt(0).toUpperCase() +
+                        auth.user.role.slice(1)
+                      : localStorage.getItem("userRole")
+                        ? localStorage
+                            .getItem("userRole")
+                            .charAt(0)
+                            .toUpperCase() +
+                          localStorage.getItem("userRole").slice(1)
+                        : "Lecturer"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="profile-details">
+                <div className="profile-row">
+                  <span className="profile-label">Email:</span>
+                  <span className="profile-value">
+                    {auth?.user?.email || "Not available"}
                   </span>
-                  <span>
+                </div>
+                <div className="profile-row">
+                  <span className="profile-label">Username:</span>
+                  <span className="profile-value">
                     {auth?.user?.username ||
                       localStorage.getItem("username") ||
                       "Not available"}
                   </span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    margin: "15px 0",
-                    borderBottom: "1px solid #eee",
-                    paddingBottom: "15px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: "150px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Role:
-                  </span>
-                  <span>
+                <div className="profile-row">
+                  <span className="profile-label">Role:</span>
+                  <span className="profile-value">
                     {auth?.user?.role
                       ? auth.user.role.charAt(0).toUpperCase() +
                         auth.user.role.slice(1)
@@ -1512,38 +1130,14 @@ const Lecturer = () => {
                   </span>
                 </div>
                 {auth?.user?.staff_id && (
-                  <div
-                    style={{
-                      display: "flex",
-                      margin: "15px 0",
-                      borderBottom: "1px solid #eee",
-                      paddingBottom: "15px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: "150px",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Staff ID:
-                    </span>
-                    <span>{auth.user.staff_id}</span>
+                  <div className="profile-row">
+                    <span className="profile-label">Staff ID:</span>
+                    <span className="profile-value">{auth.user.staff_id}</span>
                   </div>
                 )}
               </div>
-              <div style={{ marginTop: "30px", textAlign: "center" }}>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    backgroundColor: "#ff0000",
-                    color: "#fff",
-                    padding: "10px 20px",
-                    borderRadius: "5px",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
+              <div className="text-center">
+                <button onClick={handleLogout} className="btn btn-danger">
                   Logout
                 </button>
               </div>
@@ -1571,31 +1165,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div
-          style={{
-            padding: "20px",
-            textAlign: "center",
-            maxWidth: "800px",
-            margin: "0 auto",
-            backgroundColor: "#fff8f8",
-            border: "1px solid #ffcccc",
-            borderRadius: "5px",
-          }}
-        >
-          <h2 style={{ color: "#cc0000" }}>Something went wrong.</h2>
+        <div className="error-boundary">
+          <h2>Something went wrong.</h2>
           <p>{this.state.error?.message || "An unexpected error occurred."}</p>
 
-          <div style={{ marginTop: "20px" }}>
+          <div className="error-actions">
             <button
               onClick={() => window.location.reload()}
-              style={{
-                backgroundColor: "#008000",
-                color: "#fff",
-                padding: "10px 20px",
-                borderRadius: "5px",
-                border: "none",
-                marginRight: "10px",
-              }}
+              className="btn btn-success"
             >
               Refresh Page
             </button>
@@ -1604,13 +1181,7 @@ class ErrorBoundary extends React.Component {
                 localStorage.clear();
                 window.location.href = "/login";
               }}
-              style={{
-                backgroundColor: "#cc0000",
-                color: "#fff",
-                padding: "10px 20px",
-                borderRadius: "5px",
-                border: "none",
-              }}
+              className="btn btn-danger"
             >
               Clear Data & Login
             </button>
