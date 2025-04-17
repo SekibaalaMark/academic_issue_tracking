@@ -1,14 +1,10 @@
 {
+  "version": 2,
   "builds": [
     {
-      "src": "./dist/**",
+      "src": "dist/**/*",
       "use": "@vercel/static"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ]
+  "outputDirectory": "dist"
 }
