@@ -29,7 +29,7 @@
     border-radius: 6px;
     width: 100%;
     color: white; /* Set text color to white */
-    background-color: #388e3c; /* Optional: Set background color for input */
+    background-color: #e6eee7; /* Optional: Set background color for input */
     transition: box-shadow 0.3s ease-in-out;
 }
 
@@ -44,14 +44,14 @@
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    background: #007bff;
+    background: green;
     color: #fff;
     font-weight: bold;
     transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .login-btn:hover {
-    background: #0056b3;
+    background: green;
     transform: scale(1.05);
 }
 
@@ -64,12 +64,12 @@
 .redirect-text a {
     text-decoration: none;
     font-weight: bold;
-    color: #007bff;
+    color: green;
     transition: color 0.3s ease-in-out;
 }
 
 .redirect-text a:hover {
-    color: #0056b3;
+    color: green;
 }
 
 .input-wrapper {
