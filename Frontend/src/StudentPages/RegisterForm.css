@@ -59,7 +59,7 @@ body {
 .register-form input:focus,
 .register-form select:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color:green;
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
@@ -80,7 +80,7 @@ body {
 }
 
 button {
-  background-color: #4a90e2;
+  background-color: green;
   color: white;
   border: none;
   padding: 12px;
@@ -93,7 +93,7 @@ button {
 }
 
 button:hover {
-  background-color: #3a7bc8;
+  background-color: green;
 }
 
 button:disabled {
@@ -109,7 +109,7 @@ button:disabled {
 }
 
 .register-footer a {
-  color: #4a90e2;
+  color: green;
   text-decoration: none;
   font-weight: 500;
 }
@@ -120,7 +120,7 @@ button:disabled {
 
 .resend-button {
   background: none;
-  color: #4a90e2;
+  color:green;
   padding: 0;
   margin-left: 5px;
   text-decoration: underline;
@@ -130,7 +130,7 @@ button:disabled {
 
 .resend-button:hover {
   background: none;
-  color: #3a7bc8;
+  color: green;
 }
 
 /* Responsive adjustments */
