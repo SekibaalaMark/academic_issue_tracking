@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { FaUserCircle, FaLock } from "react-icons/fa";
 import "./Login.css";
 import { AuthContext } from "../context/authContext";
 
 const Login = () => {
+  const { user, loading, login, error } = useContext(AuthContext);
+
+  // Prevent rendering Login if user is authenticated
+  if (!loading && user) {
+    return null; // AuthProvider handles navigation
+  }
+
   const [username, setUsername] = useState(
     localStorage.getItem("rememberedUsername") || ""
   );
@@ -15,37 +22,6 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(
     !!localStorage.getItem("rememberedUsername")
   );
-
-  const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
-
-  // If already logged in, redirect based on role
-  useEffect(() => {
-    const isAuth = localStorage.getItem("isAuthenticated") === "true";
-    const role = localStorage.getItem("userRole");
-
-    if (isAuth && role) {
-      navigateBasedOnRole(role);
-    }
-  }, [navigate]);
-
-  // Navigate based on user role - using lowercase routes for consistency
-  const navigateBasedOnRole = (role) => {
-    if (!role) return navigate("/dashboard");
-
-    switch (role.toLowerCase()) {
-      case "student":
-        return navigate("/students");
-      case "lecturer":
-        return navigate("/lecturers"); // Consistent with App.jsx routes
-      case "registrar":
-      case "academic_registrar":
-      case "academicregistrar":
-        return navigate("/academicregistrar");
-      default:
-        return navigate("/dashboard");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,17 +35,15 @@ const Login = () => {
       );
 
       const data = response.data;
-      console.log("Login response:", data);
+      console.log("Login response:", JSON.stringify(data, null, 2));
 
-      // Extract tokens with fallbacks
       const token = data.tokens?.access || data.token || data.access;
       const refresh = data.tokens?.refresh || data.refresh;
 
-      // Extract user role with fallbacks
-      let userRole = 
-        data.data?.user?.role || 
-        data.data?.role || 
-        data.user?.role || 
+      let userRole =
+        data.data?.user?.role ||
+        data.data?.role ||
+        data.user?.role ||
         data.role;
 
       if (!token) {
@@ -77,23 +51,28 @@ const Login = () => {
       }
 
       if (!userRole) {
-        console.warn("User role not found in response, defaulting to 'student'");
+        console.warn(
+          "User role not found in response, defaulting to 'student'"
+        );
         userRole = "student";
       }
 
-      // Update auth context
-      await login({
-        token,
-        refreshToken: refresh,
-        username,
-        role: userRole,
-      });
+      // Normalize role
+      userRole = userRole.toLowerCase().replace(/[_ ]/g, "");
+      if (userRole === "academicregistrar" || userRole === "registrar") {
+        userRole = "academicregistrar";
+      }
 
-      // Store authentication data
-      localStorage.setItem("accessToken", token);
-      if (refresh) localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("userRole", userRole);
-      localStorage.setItem("isAuthenticated", "true");
+      // Update auth context
+      await login(
+        {
+          token,
+          refresh,
+          username,
+          user_role: userRole,
+        },
+        userRole
+      );
 
       // Handle remember me
       if (rememberMe) {
@@ -102,20 +81,24 @@ const Login = () => {
         localStorage.removeItem("rememberedUsername");
       }
 
-      console.log("Login successful, navigating to:", userRole);
-      navigateBasedOnRole(userRole);
+      console.log("Login successful, role:", userRole);
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login error:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
 
-      // Error handling
       if (err.response) {
         const errorData = err.response.data;
         setErrorMessage(
           errorData.detail ||
-          errorData.message ||
-          errorData.error ||
-          "Invalid credentials. Please try again."
+            errorData.message ||
+            errorData.error ||
+            "Invalid credentials. Please try again."
         );
+      } else if (err.response?.status === 401) {
+        setErrorMessage("Invalid credentials. Please try again.");
       } else if (err.request) {
         setErrorMessage(
           "No response from server. Please check your internet connection."
@@ -134,7 +117,6 @@ const Login = () => {
         <form className="login-form" onSubmit={handleSubmit}>
           <h1>Login</h1>
 
-          {/* Username */}
           <div className="input-wrapper">
             <label htmlFor="username" className="form-label">
               Username
@@ -153,7 +135,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Password */}
           <div className="input-wrapper">
             <label htmlFor="password" className="form-label">
               Password
@@ -172,7 +153,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Remember me */}
           <div className="remember-me">
             <label className="remember-checkbox">
               <input
@@ -187,10 +167,9 @@ const Login = () => {
             </Link>
           </div>
 
-          {/* Error */}
+          {error && <p className="error-message">{error}</p>}
           {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-          {/* Submit */}
           <button type="submit" className="login-btn" disabled={isLoading}>
             {isLoading ? (
               <>

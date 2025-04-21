@@ -51,7 +51,6 @@ const ProtectedLayout = () => {
         return <Navigate to="/coverpage" replace />;
     }
   }
-  
 
   return <Outlet />;
 };
