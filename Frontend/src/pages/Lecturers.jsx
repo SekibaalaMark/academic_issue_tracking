@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./Lecturers.css";
 import { AuthContext } from "@/context/authContext";
-import "./lecturers.css";
 
-// API endpoints
-const API_ENDPOINTS = {
+const ENDPOINTS = {
   lecturerIssues:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
   lecturerDashboard:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
+  userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
   lecturerProfile:
     "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
-  notificationEndpoint:
-    "https://academic-6ea365e4b745.herokuapp.com/api/notifications/",
 };
 
-// Main Lecturer Component
+const MESSAGE_TIMEOUT = 5000;
+
 const Lecturer = () => {
-  // Context and navigation
-  const auth = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // State management
   const [issues, setIssues] = useState([]);
   const [dashboardData, setDashboardData] = useState({
     total_assigned: 0,
@@ -36,466 +34,184 @@ const Lecturer = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [yearFilter, setYearFilter] = useState("");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("desc");
   const [feedback, setFeedback] = useState("");
-  const [hasNewAssignments, setHasNewAssignments] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Check if user is authenticated
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-    if (!isAuthenticated) {
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  // Online/offline detection
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      // Refresh data when coming back online
-      fetchData();
-    };
-
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  // Clear messages after timeout
   useEffect(() => {
     if (successMsg) {
-      const timer = setTimeout(() => setSuccessMsg(""), 5000);
+      const timer = setTimeout(() => setSuccessMsg(""), MESSAGE_TIMEOUT);
       return () => clearTimeout(timer);
     }
   }, [successMsg]);
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(""), 5000);
+      const timer = setTimeout(() => setError(""), MESSAGE_TIMEOUT);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
-  // Logout handler
-  const handleLogout = () => {
-    if (auth && auth.logout) {
-      auth.logout();
-    } else {
-      // Fallback if auth context is not available
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("username");
-      navigate("/login");
-    }
-  };
-
-  // Create authenticated axios instance
   const createAuthAxios = useCallback(() => {
-    const token = auth?.user?.token || localStorage.getItem("accessToken");
-
+    const token = user?.token || localStorage.getItem("accessToken");
+    console.log("Using token:", token ? "Present" : "Missing");
     return axios.create({
+      baseURL: "https://academic-6ea365e4b745.herokuapp.com",
       headers: {
         Authorization: token ? `Bearer ${token}` : undefined,
-        "Content-Type": "application/json",
       },
-      timeout: 10000,
     });
-  }, [auth]);
+  }, [user]);
 
-  // Check for new assignments
-  const checkForNewAssignments = useCallback(async () => {
-    if (!isOnline) return;
-
+  const fetchLecturerData = useCallback(async () => {
     try {
+      setLoading(true);
       const authAxios = createAuthAxios();
-      const lastCheckTime = localStorage.getItem("lastAssignmentCheck") || 0;
-
-      // Fetch notifications
-      const notificationsResponse = await authAxios.get(
-        `${API_ENDPOINTS.notificationEndpoint}?since=${lastCheckTime}`
-      );
-
-      if (
-        Array.isArray(notificationsResponse.data) &&
-        notificationsResponse.data.length > 0
-      ) {
-        // Filter for assignment notifications
-        const assignmentNotifications = notificationsResponse.data.filter(
-          (notification) =>
-            notification.type === "assignment" ||
-            notification.message.includes("assigned")
-        );
-
-        if (assignmentNotifications.length > 0) {
-          setHasNewAssignments(true);
-          setNotifications((prev) =>
-            [...assignmentNotifications, ...prev].slice(0, 10)
-          ); // Keep last 10 notifications
-
-          // Show notification to user
-          if (Notification.permission === "granted") {
-            new Notification("New Issue Assigned", {
-              body: "You have been assigned a new issue to resolve.",
-              icon: "/favicon.ico",
-            });
-          }
-        }
+      console.log("Fetching lecturer data...");
+      const [issuesRes, dashboardRes] = await Promise.all([
+        authAxios.get(ENDPOINTS.lecturerIssues),
+        authAxios.get(ENDPOINTS.lecturerDashboard),
+      ]);
+      console.log("Issues response:", issuesRes.data);
+      console.log("Dashboard response:", dashboardRes.data);
+      if (!Array.isArray(issuesRes.data)) {
+        console.warn("Issues response is not an array:", issuesRes.data);
+        setIssues([]);
+      } else {
+        setIssues(issuesRes.data);
       }
-
-      // Update last check time
-      localStorage.setItem("lastAssignmentCheck", Date.now().toString());
-    } catch (err) {
-      console.error("Error checking for new assignments:", err);
-    }
-  }, [isOnline, createAuthAxios]);
-
-  // Fetch data from API
-  const fetchData = useCallback(async () => {
-    if (!auth) {
-      setError("Authentication context not available");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Check API availability first
-      const isApiAvailable = await checkApiAvailability();
-
-      if (!isApiAvailable) {
-        setError(
-          "API is currently unavailable. Showing cached data if available."
-        );
-
-        // Try to load cached data from localStorage
-        try {
-          const cachedIssues = localStorage.getItem("lecturer_issues");
-          const cachedDashboard = localStorage.getItem("lecturer_dashboard");
-
-          if (cachedIssues) {
-            setIssues(JSON.parse(cachedIssues));
-          }
-
-          if (cachedDashboard) {
-            setDashboardData(JSON.parse(cachedDashboard));
-          }
-        } catch (e) {
-          console.error("Error loading cached data:", e);
-        }
-
-        setLoading(false);
-        return;
-      }
-
-      // API is available, fetch fresh data
-      const authAxios = createAuthAxios();
-
-      try {
-        // Fetch issues
-        const issuesResponse = await authAxios.get(
-          API_ENDPOINTS.lecturerIssues
-        );
-
-        if (Array.isArray(issuesResponse.data)) {
-          // Check if there are new assignments since last fetch
-          const previousIssues = JSON.parse(
-            localStorage.getItem("lecturer_issues") || "[]"
-          );
-          const newIssues = issuesResponse.data.filter(
-            (newIssue) =>
-              !previousIssues.some((oldIssue) => oldIssue.id === newIssue.id)
-          );
-
-          if (newIssues.length > 0) {
-            setHasNewAssignments(true);
-            setSuccessMsg(
-              `You have ${newIssues.length} new issue(s) assigned to you.`
-            );
-          }
-
-          setIssues(issuesResponse.data);
-          // Cache issues for offline use
-          localStorage.setItem(
-            "lecturer_issues",
-            JSON.stringify(issuesResponse.data)
-          );
-        } else {
-          console.warn("Issues response is not an array:", issuesResponse.data);
-          setIssues([]);
-        }
-      } catch (err) {
-        console.error("Error fetching issues:", err);
-        // Try to use cached issues
-        const cachedIssues = localStorage.getItem("lecturer_issues");
-        if (cachedIssues) {
-          setIssues(JSON.parse(cachedIssues));
-        }
-      }
-
-      try {
-        // Fetch dashboard data
-        const dashboardResponse = await authAxios.get(
-          API_ENDPOINTS.lecturerDashboard
-        );
-        const dashboardData = dashboardResponse.data.dashboard || {
+      setDashboardData(
+        dashboardRes.data.dashboard || {
           total_assigned: 0,
           in_progress_count: 0,
           resolved_count: 0,
-        };
-
-        setDashboardData(dashboardData);
-        // Cache dashboard data for offline use
-        localStorage.setItem(
-          "lecturer_dashboard",
-          JSON.stringify(dashboardData)
-        );
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        // Try to use cached dashboard data
-        const cachedDashboard = localStorage.getItem("lecturer_dashboard");
-        if (cachedDashboard) {
-          setDashboardData(JSON.parse(cachedDashboard));
         }
-      }
-
-      // Check for new assignments
-      await checkForNewAssignments();
-
-      setLastRefreshed(new Date());
+      );
     } catch (err) {
-      console.error("Error fetching data:", err);
-      setError("Failed to fetch data. Please try again later.");
-
+      console.error("Error fetching lecturer data:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+      setError("Failed to load dashboard data. Please try again.");
       if (err.response?.status === 401) {
-        setError("Your session has expired. Please log in again.");
+        setError("Session expired. Please log in again.");
         handleLogout();
       }
     } finally {
       setLoading(false);
     }
-  }, [auth, createAuthAxios, checkForNewAssignments]);
+  }, [createAuthAxios]);
 
-  // Check API availability
-  const checkApiAvailability = async () => {
-    try {
-      const response = await fetch(
-        "https://academic-6ea365e4b745.herokuapp.com/api/health-check/",
-        {
-          method: "GET",
-          mode: "cors",
-          cache: "no-cache",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          timeout: 5000,
-        }
-      );
-      return response.status === 200;
-    } catch (error) {
-      console.warn("API health check failed:", error.message);
-      return false;
-    }
-  };
-
-  // Initial data loading
   useEffect(() => {
-    fetchData();
+    fetchLecturerData();
+    const interval = setInterval(fetchLecturerData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchLecturerData]);
 
-    // Set up auto-refresh every 2 minutes if online
-    const intervalId = setInterval(() => {
-      if (isOnline) {
-        fetchData();
-      }
-    }, 120000);
-
-    // Request notification permission
-    if (
-      Notification.permission !== "granted" &&
-      Notification.permission !== "denied"
-    ) {
-      Notification.requestPermission();
+  const handleLogout = useCallback(() => {
+    console.log("Logging out...");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("username");
+    if (logout) {
+      logout();
     }
+    navigate("/login");
+  }, [logout, navigate]);
 
-    return () => clearInterval(intervalId);
-  }, [fetchData, isOnline]);
-
-  // Handle issue view
-  const handleViewIssue = (issueId) => {
-    const issue = issues.find((i) => i.id === issueId);
-    setSelectedIssue(issue);
-    setSelectedTab("issueDetail");
-    setFeedback("");
-
-    // Mark as read if it was a new assignment
-    if (hasNewAssignments) {
-      setHasNewAssignments(false);
-    }
-  };
-
-  // Handle status update
-  const handleStatusUpdate = async (issueId, status) => {
-    if (!isOnline) {
-      setError("Cannot update issue status while offline");
-      return;
-    }
-
-    setSubmitting(true);
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const authAxios = createAuthAxios();
-
-      // Send update to API
-      await authAxios.patch(`${API_ENDPOINTS.lecturerIssues}${issueId}/`, {
-        status,
-        feedback: feedback || `Issue ${status.replace("_", " ")} by lecturer.`,
-      });
-
-      // Update local state
-      const updatedIssues = issues.map((issue) =>
-        issue.id === issueId ? { ...issue, status } : issue
-      );
-
-      setIssues(updatedIssues);
-      localStorage.setItem("lecturer_issues", JSON.stringify(updatedIssues));
-
-      // Update dashboard counts
-      const newDashboard = { ...dashboardData };
-      const oldStatus = issues.find((i) => i.id === issueId)?.status;
-
-      // Decrement old status count
-      if (oldStatus === "in_progress") {
-        newDashboard.in_progress_count = Math.max(
-          0,
-          newDashboard.in_progress_count - 1
-        );
-      } else if (oldStatus === "resolved") {
-        newDashboard.resolved_count = Math.max(
-          0,
-          newDashboard.resolved_count - 1
-        );
-      }
-
-      // Increment new status count
-      if (status === "in_progress") {
-        newDashboard.in_progress_count += 1;
-      } else if (status === "resolved") {
-        newDashboard.resolved_count += 1;
-      }
-
-      setDashboardData(newDashboard);
-      localStorage.setItem("lecturer_dashboard", JSON.stringify(newDashboard));
-
-      // Update selected issue if it's the one being modified
-      if (selectedIssue && selectedIssue.id === issueId) {
-        setSelectedIssue({ ...selectedIssue, status });
-      }
-
-      setSuccessMsg(
-        status === "resolved"
-          ? "Issue resolved. Emails sent to student and registrar."
-          : status === "in_progress"
-            ? "Issue set to in progress. Email sent to student."
-            : "Issue status updated successfully."
-      );
-
+  const handleViewIssue = useCallback(
+    (issueId) => {
+      const issue = issues.find((i) => i.id === issueId);
+      setSelectedIssue(issue);
+      setSelectedTab("issueDetail");
       setFeedback("");
+      setEmailMessage("");
+    },
+    [issues]
+  );
 
-      // Refresh data to ensure everything is in sync
-      fetchData();
-    } catch (err) {
-      console.error("Error updating issue status:", err);
-      setError("Failed to update issue status. Please try again.");
-
-      if (err.response?.status === 401) {
-        setError("Your session has expired. Please log in again.");
-        handleLogout();
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Handle bulk resolve
-  const handleBulkResolve = async () => {
-    if (!isOnline) {
-      setError("Cannot perform bulk resolve while offline");
-      return;
-    }
-
-    const pendingIssues = issues.filter((issue) => issue.status === "pending");
-
-    if (pendingIssues.length === 0) {
-      setError("No pending issues to resolve.");
-      return;
-    }
-
-    setSubmitting(true);
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      let resolvedCount = 0;
-
-      for (const issue of pendingIssues) {
-        try {
-          const authAxios = createAuthAxios();
-
-          // Send update to API
-          await authAxios.patch(`${API_ENDPOINTS.lecturerIssues}${issue.id}/`, {
-            status: "resolved",
-            feedback: "Issue resolved in bulk operation by lecturer.",
-          });
-
-          resolvedCount++;
-        } catch (err) {
-          console.error(`Error resolving issue ${issue.id}:`, err);
+  const handleStatusUpdate = useCallback(
+    async (issueId, status) => {
+      setSubmitting(true);
+      setError("");
+      setSuccessMsg("");
+      try {
+        const authAxios = createAuthAxios();
+        console.log("Updating issue status:", { issueId, status, feedback });
+        await authAxios.patch(`${ENDPOINTS.lecturerIssues}${issueId}/`, {
+          status,
+          feedback: feedback || "Status updated by lecturer.",
+        });
+        setSuccessMsg(
+          status === "resolved"
+            ? "Issue resolved. Emails sent to you, student, and registrar."
+            : status === "in_progress"
+              ? "Issue set to in progress. Emails sent to you and student."
+              : status === "pending"
+                ? "Issue set to pending. Emails sent to you and student."
+                : "Issue updated successfully."
+        );
+        await fetchLecturerData();
+        if (selectedIssue && selectedIssue.id === issueId) {
+          const updatedIssue = await authAxios.get(
+            `${ENDPOINTS.lecturerIssues}${issueId}/`
+          );
+          setSelectedIssue(updatedIssue.data);
         }
+        setFeedback("");
+      } catch (err) {
+        console.error("Error updating issue:", err);
+        setError("Failed to update issue. Please try again.");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          handleLogout();
+        }
+      } finally {
+        setSubmitting(false);
       }
+    },
+    [feedback, createAuthAxios, fetchLecturerData, selectedIssue]
+  );
 
-      setSuccessMsg(
-        `Successfully resolved ${resolvedCount} of ${pendingIssues.length} issues.`
-      );
+  const handleSendRegistrarEmail = useCallback(
+    async (issueId) => {
+      if (!emailMessage.trim()) {
+        setError("Email message cannot be empty.");
+        return;
+      }
+      setSubmitting(true);
+      setError("");
+      setSuccessMsg("");
+      try {
+        const authAxios = createAuthAxios();
+        console.log("Sending email to registrar for issue:", issueId);
+        await authAxios.post(
+          `${ENDPOINTS.lecturerIssues}${issueId}/send-registrar-email/`,
+          {
+            message: emailMessage,
+          }
+        );
+        setSuccessMsg("Email sent to registrar successfully.");
+        setEmailMessage("");
+      } catch (err) {
+        console.error("Error sending email:", err);
+        setError("Failed to send email to registrar. Please try again.");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          handleLogout();
+        }
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [emailMessage, createAuthAxios]
+  );
 
-      // Refresh data to get updated state
-      fetchData();
-    } catch (err) {
-      console.error("Bulk resolve error:", err);
-      setError("Failed to resolve some issues. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Get unique categories and years for filters
-  const categories = [
-    ...new Set(issues.map((issue) => issue.category).filter(Boolean)),
-  ];
-  const years = [
-    ...new Set(issues.map((issue) => issue.year_of_study).filter(Boolean)),
-  ];
-
-  // Filter issues
   const filteredIssues = issues
     .filter((issue) => {
-      // Search term filter
       const matchesSearch =
         searchTerm === "" ||
         (issue.course_code || "")
@@ -504,142 +220,91 @@ const Lecturer = () => {
         (issue.course_name || "")
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        (issue.student?.username || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (issue.description || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-      // Status filter
+        (issue.student || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus =
         filterStatus === "" || (issue.status || "") === filterStatus;
-
-      // Category filter
-      const matchesCategory =
-        categoryFilter === "" || (issue.category || "") === categoryFilter;
-
-      // Year filter
-      const matchesYear =
-        yearFilter === "" || (issue.year_of_study || "") === yearFilter;
-
-      return matchesSearch && matchesStatus && matchesCategory && matchesYear;
+      return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      // Sort by the selected field
-      if (sortBy === "created_at") {
-        return sortOrder === "asc"
-          ? new Date(a.created_at || 0) - new Date(b.created_at || 0)
-          : new Date(b.created_at || 0) - new Date(a.created_at || 0);
-      }
-
-      if (sortBy === "course_code") {
-        return sortOrder === "asc"
-          ? (a.course_code || "").localeCompare(b.course_code || "")
-          : (b.course_code || "").localeCompare(a.course_code || "");
-      }
-
-      if (sortBy === "student") {
-        return sortOrder === "asc"
-          ? (a.student?.username || "").localeCompare(b.student?.username || "")
-          : (b.student?.username || "").localeCompare(
-              a.student?.username || ""
-            );
-      }
-
-      if (sortBy === "status") {
-        return sortOrder === "asc"
-          ? (a.status || "").localeCompare(b.status || "")
-          : (b.status || "").localeCompare(a.status || "");
-      }
-
-      // Default sort by date
-      return sortOrder === "asc"
-        ? new Date(a.created_at || 0) - new Date(b.created_at || 0)
-        : new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      if ((a.status || "") === "pending" && (b.status || "") !== "pending")
+        return -1;
+      if ((b.status || "") === "pending" && (a.status || "") !== "pending")
+        return 1;
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString();
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Render loading state
-  if (loading && !issues.length) {
+  if (loading) {
     return (
-      <div className="loading">
+      <div
+        className="loading"
+        style={{ color: "#1A1A1A", textAlign: "center" }}
+      >
         <div className="spinner"></div>
         <p>Loading Lecturer Dashboard...</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="btn btn-primary"
-        >
-          Refresh Page
-        </button>
       </div>
     );
   }
 
-  // Main render
   return (
     <div className="lecturer-dashboard">
-      <aside className="sidebar">
-        <h2 className="sidebar-title">Lecturer Dashboard</h2>
+      <aside className="sidebar" style={{ backgroundColor: "#f4f4f4" }}>
+        <h2 className="sidebar-title" style={{ color: "#1A1A1A" }}>
+          Lecturer Dashboard
+        </h2>
         <ul className="sidebar-nav">
           {["home", "issues", "profile", "logout"].map((tab) => (
             <li
               key={tab}
+              className={selectedTab === tab ? "active" : ""}
               onClick={() =>
                 tab === "logout" ? handleLogout() : setSelectedTab(tab)
               }
-              className={selectedTab === tab ? "active" : ""}
+              style={{
+                color: selectedTab === tab ? "#008000" : "#1A1A1A",
+                cursor: "pointer",
+                padding: "10px",
+              }}
             >
-              {tab === "issues" && hasNewAssignments && (
-                <span className="notification-badge">New</span>
-              )}
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </li>
           ))}
         </ul>
       </aside>
 
-      <main className="main-content">
-        {!isOnline && (
-          <div className="alert alert-warning">
-            <p>
-              <strong>You are offline.</strong> Some features may be limited.
-              Changes will be synchronized when you're back online.
-            </p>
-          </div>
-        )}
-
+      <main className="main-content" style={{ padding: "20px" }}>
         {successMsg && (
-          <div className="alert alert-success">
+          <div
+            className="success-message"
+            style={{
+              backgroundColor: "#008000",
+              color: "#fff",
+              padding: "10px",
+            }}
+          >
             <p>{successMsg}</p>
             <button
+              className="close-btn"
               onClick={() => setSuccessMsg("")}
-              className="alert-close"
-              aria-label="Close"
+              style={{ color: "#fff" }}
             >
               ×
             </button>
           </div>
         )}
-
         {error && (
-          <div className="alert alert-danger">
+          <div
+            className="error-message"
+            style={{
+              backgroundColor: "#ff0000",
+              color: "#fff",
+              padding: "10px",
+            }}
+          >
             <p>{error}</p>
             <button
+              className="close-btn"
               onClick={() => setError("")}
-              className="alert-close"
-              aria-label="Close"
+              style={{ color: "#fff" }}
             >
               ×
             </button>
@@ -647,195 +312,216 @@ const Lecturer = () => {
         )}
 
         {selectedTab === "home" && (
-          <div>
-            <h1>Lecturer Dashboard</h1>
-
-            <div className="filters-container">
-              <button
-                onClick={fetchData}
-                disabled={loading || !isOnline}
-                className="btn btn-primary"
-              >
-                {loading ? "Refreshing..." : "Refresh Issues"}
-              </button>
-
-              <button
-                onClick={handleBulkResolve}
-                disabled={
-                  submitting ||
-                  !issues.some((issue) => issue.status === "pending") ||
-                  !isOnline
-                }
-                className="btn btn-secondary"
-              >
-                {submitting ? "Processing..." : "Bulk Resolve All Pending"}
-              </button>
-            </div>
-
+          <div className="dashboard-home">
+            <h1 className="page-title" style={{ color: "#1A1A1A" }}>
+              Lecturer Dashboard
+            </h1>
+            <button
+              onClick={fetchLecturerData}
+              style={{
+                backgroundColor: "#008000",
+                color: "#fff",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                border: "none",
+                marginBottom: "20px",
+              }}
+            >
+              Refresh Issues
+            </button>
             <div className="user-welcome">
-              <p>
+              <p style={{ color: "#1A1A1A" }}>
                 Welcome,{" "}
-                {auth?.user?.username ||
-                  localStorage.getItem("username") ||
-                  "Lecturer"}
-              </p>
-              <p className="text-light">
-                Last refreshed: {formatDate(lastRefreshed)}
+                {user?.name || localStorage.getItem("username") || "Lecturer"}
               </p>
             </div>
 
-            {hasNewAssignments && (
-              <div className="alert alert-info">
-                <p>
-                  <strong>New assignments!</strong> You have new issues assigned
-                  to you that need your attention.
-                </p>
-                <button
-                  onClick={() => setSelectedTab("issues")}
-                  className="btn btn-primary btn-sm"
-                  style={{ marginTop: "10px" }}
+            <div
+              className="dashboard-summary"
+              style={{ display: "flex", gap: "20px" }}
+            >
+              {[
+                {
+                  label: "Total Assigned",
+                  value: dashboardData.total_assigned,
+                },
+                {
+                  label: "In Progress",
+                  value: dashboardData.in_progress_count,
+                },
+                { label: "Resolved", value: dashboardData.resolved_count },
+              ].map(({ label, value }) => (
+                <div
+                  key={label}
+                  className="summary-item"
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: "15px",
+                    borderRadius: "5px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
                 >
-                  View Issues
-                </button>
-              </div>
-            )}
-
-            <div className="dashboard-summary">
-              <div className="summary-card total">
-                <span className="summary-label">Total Assigned</span>
-                <span className="summary-value total">
-                  {dashboardData.total_assigned || 0}
-                </span>
-              </div>
-
-              <div className="summary-card in-progress">
-                <span className="summary-label">In Progress</span>
-                <span className="summary-value in-progress">
-                  {dashboardData.in_progress_count || 0}
-                </span>
-              </div>
-
-              <div className="summary-card resolved">
-                <span className="summary-label">Resolved</span>
-                <span className="summary-value resolved">
-                  {dashboardData.resolved_count || 0}
-                </span>
-              </div>
+                  <span className="summary-label" style={{ color: "#1A1A1A" }}>
+                    {label}:
+                  </span>
+                  <span
+                    className="summary-value"
+                    style={{ color: "#008000", fontWeight: "bold" }}
+                  >
+                    {value}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <div>
-              <h2 className="section-title">Recent Issues</h2>
-
+            <div className="recent-issues">
+              <h2 className="section-title" style={{ color: "#1A1A1A" }}>
+                Recent Issues
+              </h2>
               {issues.length === 0 ? (
-                <div className="card">
-                  <p className="text-center">No issues assigned to you yet.</p>
-                </div>
+                <p className="no-issues" style={{ color: "#1A1A1A" }}>
+                  No issues assigned to you yet.
+                </p>
               ) : (
-                <div className="issues-grid">
+                <div
+                  className="issues-grid"
+                  style={{ display: "grid", gap: "15px" }}
+                >
                   {issues.slice(0, 4).map((issue) => (
                     <div
                       key={issue.id}
                       className={`issue-card ${issue.status}`}
+                      style={{
+                        backgroundColor:
+                          issue.status === "pending" ? "#e6ffe6" : "#fff",
+                        padding: "15px",
+                        borderRadius: "5px",
+                        border: "1px solid #ddd",
+                      }}
                     >
-                      {issue.isNew && <span className="new-badge">New</span>}
-                      <div className="issue-header">
-                        <h3 className="issue-title">
-                          {issue.course_code || "N/A"}:{" "}
-                          {issue.course_name || "N/A"}
+                      <div
+                        className="issue-header"
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <h3 style={{ color: "#1A1A1A" }}>
+                          {issue.course_code}: {issue.course_name}
                         </h3>
-                        <span className={`status-badge ${issue.status}`}>
-                          {issue.status?.replace("_", " ") || "Unknown"}
+                        <span
+                          className={`status-badge ${issue.status}`}
+                          style={{
+                            backgroundColor:
+                              issue.status === "resolved"
+                                ? "#008000"
+                                : issue.status === "pending"
+                                  ? "#ff9900"
+                                  : issue.status === "in_progress"
+                                    ? "#0066cc"
+                                    : "#ff0000",
+                            color: "#fff",
+                            padding: "5px 10px",
+                            borderRadius: "12px",
+                          }}
+                        >
+                          {issue.status.replace("_", " ")}
                         </span>
                       </div>
-
-                      <p className="issue-description">
-                        {issue.description?.substring(0, 100) ||
-                          "No description"}
-                        {issue.description?.length > 100 ? "..." : ""}
+                      <p
+                        className="issue-description"
+                        style={{ color: "#1A1A1A" }}
+                      >
+                        {issue.description?.substring(0, 100)}...
                       </p>
-
-                      <div className="issue-meta">
-                        <span className="student-name">
-                          {issue.student?.username || "Unknown"}
+                      <div
+                        className="issue-footer"
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span
+                          className="student-name"
+                          style={{ color: "#1A1A1A" }}
+                        >
+                          {issue.student}
                         </span>
                         <button
+                          className="view-btn"
                           onClick={() => handleViewIssue(issue.id)}
-                          className="btn btn-primary btn-sm"
+                          style={{
+                            backgroundColor: "#008000",
+                            color: "#fff",
+                            padding: "8px 15px",
+                            borderRadius: "5px",
+                            border: "none",
+                          }}
                         >
                           View Details
                         </button>
-                      </div>
-
-                      <div className="issue-date">
-                        {formatDate(issue.created_at)}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-
               {issues.length > 4 && (
-                <div className="text-center mt-4">
-                  <button
-                    onClick={() => setSelectedTab("issues")}
-                    className="btn btn-primary"
-                  >
-                    View All Issues ({issues.length})
-                  </button>
-                </div>
+                <button
+                  className="view-all-btn"
+                  onClick={() => setSelectedTab("issues")}
+                  style={{
+                    backgroundColor: "#008000",
+                    color: "#fff",
+                    padding: "10px 20px",
+                    borderRadius: "5px",
+                    border: "none",
+                    marginTop: "15px",
+                  }}
+                >
+                  View All Issues
+                </button>
               )}
             </div>
           </div>
         )}
 
         {selectedTab === "issues" && (
-          <div>
-            <h1>Manage Issues</h1>
-
-            <div className="filters-container">
-              <p>
-                Showing {filteredIssues.length} of {issues.length} issues
-              </p>
-
-              <div className="filter-actions">
-                <button
-                  onClick={fetchData}
-                  disabled={loading || !isOnline}
-                  className="btn btn-primary btn-sm"
-                >
-                  {loading ? "Refreshing..." : "Refresh"}
-                </button>
-
-                <button
-                  onClick={handleBulkResolve}
-                  disabled={
-                    submitting ||
-                    !issues.some((issue) => issue.status === "pending") ||
-                    !isOnline
-                  }
-                  className="btn btn-secondary btn-sm"
-                >
-                  {submitting ? "Processing..." : "Bulk Resolve All"}
-                </button>
-              </div>
-            </div>
-
-            <div className="filters-container">
-              <div className="search-box">
+          <div className="issues-management">
+            <h1 className="page-title" style={{ color: "#1A1A1A" }}>
+              Manage Issues
+            </h1>
+            <p style={{ color: "#1A1A1A" }}>
+              Showing {filteredIssues.length} of {issues.length} issues
+            </p>
+            <div
+              className="filter-container"
+              style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
+            >
+              <div className="search-box" style={{ flex: 1 }}>
                 <input
                   type="text"
-                  placeholder="Search by course, student, or description..."
+                  placeholder="Search by course or student..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-control"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                  }}
                 />
               </div>
-
-              <div className="filter-item">
+              <div className="status-filter">
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="form-select"
+                  style={{
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                  }}
                 >
                   <option value="">All Statuses</option>
                   <option value="pending">Pending</option>
@@ -843,122 +529,109 @@ const Lecturer = () => {
                   <option value="resolved">Resolved</option>
                 </select>
               </div>
-
-              <div className="filter-item">
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="filter-item">
-                <select
-                  value={yearFilter}
-                  onChange={(e) => setYearFilter(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="">All Years</option>
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="sort-controls">
-              <span className="sort-label">Sort by:</span>
-              <select
-                id="sortBy"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="form-select"
-              >
-                <option value="created_at">Date</option>
-                <option value="status">Status</option>
-                <option value="course_code">Course</option>
-                <option value="student">Student</option>
-              </select>
-
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="form-select"
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
             </div>
 
             {filteredIssues.length === 0 ? (
-              <div className="card">
-                <p className="text-center">
-                  No issues match your search criteria.
-                </p>
-              </div>
+              <p className="no-issues" style={{ color: "#1A1A1A" }}>
+                No issues match your search criteria.
+              </p>
             ) : (
-              <div className="table-container">
-                <table className="table">
+              <div className="issues-table-container">
+                <table
+                  className="issues-table"
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    color: "#1A1A1A",
+                  }}
+                >
                   <thead>
-                    <tr>
+                    <tr style={{ backgroundColor: "#f4f4f4" }}>
                       {[
                         "ID",
                         "Course",
                         "Student",
-                        "Category",
                         "Date Submitted",
                         "Status",
                         "Actions",
                       ].map((header) => (
-                        <th key={header}>{header}</th>
+                        <th
+                          key={header}
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {header}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredIssues.map((issue) => (
-                      <tr key={issue.id} className={issue.status}>
-                        <td>{issue.id}</td>
-                        <td>
-                          {issue.course_code || "N/A"}:{" "}
-                          {issue.course_name || "N/A"}
+                      <tr
+                        key={issue.id}
+                        className={issue.status}
+                        style={{
+                          backgroundColor:
+                            issue.status === "pending" ? "#e6ffe6" : "#fff",
+                        }}
+                      >
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {issue.id}
                         </td>
-                        <td>{issue.student?.username || "Unknown"}</td>
-                        <td>
-                          {issue.category?.replace("_", " ") || "Unknown"}
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {issue.course_code}: {issue.course_name}
                         </td>
-                        <td>{formatDate(issue.created_at)}</td>
-                        <td>
-                          <span className={`status-badge ${issue.status}`}>
-                            {issue.status?.replace("_", " ") || "Unknown"}
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {issue.student}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          {new Date(issue.created_at).toLocaleDateString()}
+                        </td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
+                          <span
+                            className={`status-badge ${issue.status}`}
+                            style={{
+                              backgroundColor:
+                                issue.status === "resolved"
+                                  ? "#008000"
+                                  : issue.status === "pending"
+                                    ? "#ff9900"
+                                    : issue.status === "in_progress"
+                                      ? "#0066cc"
+                                      : "#ff0000",
+                              color: "#fff",
+                              padding: "5px 10px",
+                              borderRadius: "12px",
+                            }}
+                          >
+                            {issue.status.replace("_", " ")}
                           </span>
                         </td>
-                        <td>
+                        <td
+                          style={{ padding: "10px", border: "1px solid #ddd" }}
+                        >
                           <button
+                            className="view-btn"
                             onClick={() => handleViewIssue(issue.id)}
-                            className="btn btn-primary btn-sm"
+                            style={{
+                              backgroundColor: "#008000",
+                              color: "#fff",
+                              padding: "8px 15px",
+                              borderRadius: "5px",
+                              border: "none",
+                            }}
                           >
                             View
                           </button>
-                          {issue.status === "pending" && isOnline && (
-                            <button
-                              onClick={() =>
-                                handleStatusUpdate(issue.id, "resolved")
-                              }
-                              className="btn btn-success btn-sm"
-                              style={{ marginLeft: "5px" }}
-                            >
-                              Quick Resolve
-                            </button>
-                          )}
                         </td>
                       </tr>
                     ))}
@@ -971,98 +644,192 @@ const Lecturer = () => {
 
         {selectedTab === "issueDetail" && selectedIssue && (
           <div className="issue-detail">
-            <div className="detail-header">
+            <div
+              className="detail-header"
+              style={{ display: "flex", alignItems: "center", gap: "10px" }}
+            >
               <button
+                className="back-btn"
                 onClick={() => setSelectedTab("issues")}
-                className="btn btn-outline back-btn"
+                style={{
+                  backgroundColor: "#008000",
+                  color: "#fff",
+                  padding: "8px 15px",
+                  borderRadius: "5px",
+                  border: "none",
+                }}
               >
                 ← Back to Issues
               </button>
-              <h1>Issue Details</h1>
+              <h1 className="page-title" style={{ color: "#1A1A1A" }}>
+                Issue Details
+              </h1>
             </div>
 
-            <div className="detail-section">
-              <div className="card-header">
-                <h2>
-                  {selectedIssue.course_code || "N/A"}:{" "}
-                  {selectedIssue.course_name || "N/A"}
+            <div className="issue-info">
+              <div
+                className="info-section"
+                style={{
+                  backgroundColor: "#fff",
+                  padding: "15px",
+                  borderRadius: "5px",
+                }}
+              >
+                <h2 style={{ color: "#1A1A1A" }}>
+                  {selectedIssue.course_code}: {selectedIssue.course_name}
                 </h2>
-                <span className={`status-badge ${selectedIssue.status}`}>
-                  {selectedIssue.status?.replace("_", " ") || "Unknown"}
-                </span>
+                {[
+                  {
+                    label: "Status",
+                    value: (
+                      <span
+                        className={`status-badge ${selectedIssue.status}`}
+                        style={{
+                          backgroundColor:
+                            selectedIssue.status === "resolved"
+                              ? "#008000"
+                              : selectedIssue.status === "pending"
+                                ? "#ff9900"
+                                : selectedIssue.status === "in_progress"
+                                  ? "#0066cc"
+                                  : "#ff0000",
+                          color: "#fff",
+                          padding: "5px 10px",
+                          borderRadius: "12px",
+                        }}
+                      >
+                        {selectedIssue.status.replace("_", " ")}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: "Student",
+                    value: selectedIssue.student || "N/A",
+                  },
+                  {
+                    label: "Date Submitted",
+                    value: new Date(selectedIssue.created_at).toLocaleString(),
+                  },
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="info-row"
+                    style={{ margin: "10px 0" }}
+                  >
+                    <span
+                      className="info-label"
+                      style={{ color: "#1A1A1A", fontWeight: "bold" }}
+                    >
+                      {label}:
+                    </span>
+                    <span style={{ color: "#1A1A1A" }}>{value}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <span className="detail-label">Student:</span>
-                  <span className="detail-value">
-                    {selectedIssue.student?.username || "Unknown"}
-                  </span>
-                </div>
-
-                <div className="detail-item">
-                  <span className="detail-label">Category:</span>
-                  <span className="detail-value">
-                    {selectedIssue.category?.replace("_", " ") || "Unknown"}
-                  </span>
-                </div>
-
-                <div className="detail-item">
-                  <span className="detail-label">Year of Study:</span>
-                  <span className="detail-value">
-                    {selectedIssue.year_of_study?.replace("_", " ") ||
-                      "Unknown"}
-                  </span>
-                </div>
-
-                <div className="detail-item">
-                  <span className="detail-label">Date Submitted:</span>
-                  <span className="detail-value">
-                    {formatDate(selectedIssue.created_at)}
-                  </span>
-                </div>
+              <div
+                className="description-section"
+                style={{ marginTop: "20px" }}
+              >
+                <h3 style={{ color: "#1A1A1A" }}>Issue Description</h3>
+                <p
+                  style={{
+                    color: "#1A1A1A",
+                    backgroundColor: "#fff",
+                    padding: "10px",
+                    borderRadius: "5px",
+                  }}
+                >
+                  {selectedIssue.description || "No description provided."}
+                </p>
               </div>
-            </div>
 
-            <div className="detail-section">
-              <h3>Issue Description</h3>
-              <div className="description-box">
-                {selectedIssue.description || "No description provided"}
+              <div
+                className="registrar-communication"
+                style={{ marginTop: "20px" }}
+              >
+                <h3 style={{ color: "#1A1A1A" }}>Contact Registrar</h3>
+                <textarea
+                  placeholder="Enter your message to the academic registrar (e.g., need clarification)..."
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  disabled={submitting}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                    minHeight: "100px",
+                  }}
+                />
+                <button
+                  className="send-email-btn"
+                  onClick={() => handleSendRegistrarEmail(selectedIssue.id)}
+                  disabled={!emailMessage.trim() || submitting}
+                  style={{
+                    backgroundColor: "#008000",
+                    color: "#fff",
+                    padding: "10px 20px",
+                    borderRadius: "5px",
+                    border: "none",
+                    marginTop: "10px",
+                  }}
+                >
+                  {submitting ? "Sending..." : "Send Email to Registrar"}
+                </button>
               </div>
-            </div>
 
-            <div className="detail-section">
-              <h3>Update Status</h3>
-              <p>
-                When you update an issue status, automatic notifications will be
-                sent to the student and registrar.
-              </p>
-
-              <div className="form-group">
-                <label className="form-label">Feedback</label>
+              <div
+                className="status-update-section"
+                style={{ marginTop: "20px" }}
+              >
+                <h3 style={{ color: "#1A1A1A" }}>Update Status</h3>
                 <textarea
                   placeholder="Enter feedback for this status update..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   disabled={submitting}
-                  className="form-textarea"
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    border: "1px solid #ddd",
+                    color: "#1A1A1A",
+                    minHeight: "80px",
+                    marginBottom: "10px",
+                  }}
                 />
-              </div>
-
-              <div className="status-buttons">
-                {["pending", "in_progress", "resolved"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => handleStatusUpdate(selectedIssue.id, status)}
-                    disabled={
-                      selectedIssue.status === status || submitting || !isOnline
-                    }
-                    className={`status-btn ${status} ${selectedIssue.status === status ? "active" : ""}`}
-                  >
-                    {status.replace("_", " ").charAt(0).toUpperCase() +
-                      status.replace("_", " ").slice(1)}
-                  </button>
-                ))}
+                <div
+                  className="status-buttons"
+                  style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
+                >
+                  {["pending", "in_progress", "resolved"].map((status) => (
+                    <button
+                      key={status}
+                      className={`status-btn ${status} ${selectedIssue.status === status ? "active" : ""}`}
+                      onClick={() =>
+                        handleStatusUpdate(selectedIssue.id, status)
+                      }
+                      disabled={selectedIssue.status === status || submitting}
+                      style={{
+                        backgroundColor:
+                          selectedIssue.status === status ? "#ccc" : "#008000",
+                        color: "#fff",
+                        padding: "10px 20px",
+                        borderRadius: "5px",
+                        border: "none",
+                        opacity:
+                          selectedIssue.status === status || submitting
+                            ? 0.6
+                            : 1,
+                      }}
+                    >
+                      {status.replace("_", " ").charAt(0).toUpperCase() +
+                        status.replace("_", " ").slice(1)}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1148,55 +915,103 @@ const Lecturer = () => {
   );
 };
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  state = { hasError: false, error: null, errorInfo: null };
+const ProfileContent = ({ createAuthAxios, setError }) => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const authAxios = createAuthAxios();
+        console.log("Fetching lecturer profile...");
+        const response = await authAxios.get(ENDPOINTS.lecturerProfile);
+        console.log("Profile response:", response.data);
+        setProfile(response.data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError("Failed to load profile data. Please try again.");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [createAuthAxios, setError]);
+
+  if (loading) {
+    return (
+      <div
+        className="loading"
+        style={{ color: "#1A1A1A", textAlign: "center" }}
+      >
+        <div className="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    );
   }
 
-  componentDidCatch(error, errorInfo) {
-    console.error("Error caught in ErrorBoundary:", error, errorInfo);
-    this.setState({ errorInfo });
+  if (!profile) {
+    return (
+      <p style={{ color: "#1A1A1A" }}>No profile information available.</p>
+    );
   }
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="error-boundary">
-          <h2>Something went wrong.</h2>
-          <p>{this.state.error?.message || "An unexpected error occurred."}</p>
-
-          <div className="error-actions">
-            <button
-              onClick={() => window.location.reload()}
-              className="btn btn-success"
-            >
-              Refresh Page
-            </button>
-            <button
-              onClick={() => {
-                localStorage.clear();
-                window.location.href = "/login";
-              }}
-              className="btn btn-danger"
-            >
-              Clear Data & Login
-            </button>
+  return (
+    <div className="profile-content">
+      <div
+        className="profile-card"
+        style={{
+          backgroundColor: "#fff",
+          padding: "20px",
+          borderRadius: "5px",
+        }}
+      >
+        <div
+          className="profile-header"
+          style={{ display: "flex", alignItems: "center", gap: "15px" }}
+        >
+          <div className="profile-name">
+            <h2 style={{ color: "#1A1A1A" }}>
+              {profile.first_name || ""} {profile.last_name || ""}
+            </h2>
+            <p className="profile-role" style={{ color: "#008000" }}>
+              Lecturer
+            </p>
           </div>
         </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
-// Export the component with error boundary
-export default function LecturerWithErrorBoundary() {
-  return (
-    <ErrorBoundary>
-      <Lecturer />
-    </ErrorBoundary>
+        <div className="profile-details" style={{ marginTop: "20px" }}>
+          {[
+            { label: "Email", value: profile.email || "Not provided" },
+            {
+              label: "Department",
+              value: profile.department || "Not provided",
+            },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="detail-row"
+              style={{ display: "flex", margin: "10px 0" }}
+            >
+              <span
+                className="detail-label"
+                style={{ width: "150px", color: "#1A1A1A", fontWeight: "bold" }}
+              >
+                {label}:
+              </span>
+              <span className="detail-value" style={{ color: "#1A1A1A" }}>
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default Lecturer;

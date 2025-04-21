@@ -1,299 +1,109 @@
-/* Reset default margins and paddings */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Container for the entire login page */
 .container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f4f4f4; /* Light gray for contrast */
-  padding: 1rem; /* Prevent edge clipping on small screens */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    max-width: 450px;
+    background: linear-gradient(to right, #f0f4f8, #d9e2ec);
 }
 
-/* Login container */
 .login-container {
-  background-color: #ffffff; /* White background */
-  padding: clamp(1.5rem, 5vw, 2.5rem); /* Responsive padding */
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: min(400px, 90vw); /* Responsive width */
+    width: 100%; /* Set the width to half the page */
+    padding: 40px; /* Increase padding for better spacing */
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
 }
 
-/* Login form */
 .login-form {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1rem, 3vw, 1.5rem); /* Responsive gap */
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-/* Form heading */
-.login-form h1 {
-  font-size: clamp(1.5rem, 5vw, 2rem); /* Responsive font size */
-  color: #000000; /* Black text */
-  text-align: center;
-  margin-bottom: clamp(0.5rem, 2vw, 1rem);
-  font-weight: 600;
-}
-
-/* Input wrapper */
-.input-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* Form labels */
-.form-label {
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem); /* Responsive font size */
-  color: #000000; /* Black text */
-  font-weight: 500;
-}
-
-/* Input icon container */
-.input-icon-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-/* Form inputs */
 .form-input {
-  width: 100%;
-  padding: clamp(0.6rem, 2vw, 0.75rem) clamp(0.8rem, 2.5vw, 1rem);
-  font-size: clamp(0.9rem, 2.5vw, 1rem); /* Responsive font size */
-  color: #000000; /* Black text */
-  background-color: #ffffff; /* White background */
-  border: 1px solid #cccccc;
-  border-radius: 5px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    color: white; /* Set text color to white */
+    background-color: #e6eee7; /* Optional: Set background color for input */
+    transition: box-shadow 0.3s ease-in-out;
 }
 
 .form-input:focus {
-  outline: none;
-  border-color: #008000; /* Green border on focus */
-  box-shadow: 0 0 5px rgba(0, 128, 0, 0.3);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    outline: none;
 }
 
-.form-input::placeholder {
-  color: #888888;
-}
-
-/* Input with icon */
-.form-input.with-icon {
-  padding-right: clamp(2rem, 6vw, 2.5rem); /* Space for icon */
-}
-
-/* Input icons */
-.input-icon {
-  position: absolute;
-  right: clamp(0.6rem, 2vw, 0.75rem);
-  color: #008000; /* Green icon */
-  font-size: clamp(1rem, 3vw, 1.2rem); /* Responsive icon size */
-}
-
-/* Remember me and forgot password container */
-.remember-me {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: clamp(0.75rem, 2.2vw, 0.85rem); /* Responsive font size */
-  color: #000000; /* Black text */
-  flex-wrap: wrap; /* Allow wrapping on small screens */
-  gap: 0.5rem;
-}
-
-/* Remember me checkbox */
-.remember-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.checkbox-text {
-  color: #000000; /* Black text */
-}
-
-/* Checkbox styling */
-input[type="checkbox"] {
-  accent-color: #008000; /* Green checkbox */
-  width: clamp(0.9rem, 2.5vw, 1rem);
-  height: clamp(0.9rem, 2.5vw, 1rem);
-  cursor: pointer;
-}
-
-/* Forgot password link */
-.forgot-password-link {
-  color: #008000; /* Green link */
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.forgot-password-link:hover {
-  color: #006600; /* Darker green on hover */
-  text-decoration: underline;
-}
-
-/* Error message */
-.error-message {
-  color: #d32f2f; /* Red for errors */
-  font-size: clamp(0.75rem, 2.2vw, 0.85rem); /* Responsive font size */
-  text-align: center;
-  background-color: #ffebee;
-  padding: 0.5rem;
-  border-radius: 5px;
-}
-
-/* Login button */
 .login-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  padding: clamp(0.6rem, 2vw, 0.75rem);
-  font-size: clamp(0.9rem, 2.5vw, 1rem); /* Responsive font size */
-  font-weight: 500;
-  color: #ffffff; /* White text */
-  background-color: #008000; /* Green background */
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+    padding: 12px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: green;
+    color: #fff;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .login-btn:hover {
-  background-color: #006600; /* Darker green on hover */
-  transform: translateY(-2px);
+    background: green;
+    transform: scale(1.05);
 }
 
-.login-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Spinner for loading state */
-.spinner {
-  border: 2px solid #ffffff;
-  border-top: 2px solid #008000;
-  border-radius: 50%;
-  width: clamp(1rem, 3vw, 1.2rem);
-  height: clamp(1rem, 3vw, 1.2rem);
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Redirect text (Register link) */
 .redirect-text {
-  text-align: center;
-  font-size: clamp(0.8rem, 2.3vw, 0.9rem); /* Responsive font size */
-  color: #000000; /* Black text */
-}
-
-.redirect-text p {
-  margin: 0;
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 .redirect-text a {
-  color: #008000; /* Green link */
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
+    text-decoration: none;
+    font-weight: bold;
+    color: green;
+    transition: color 0.3s ease-in-out;
 }
 
 .redirect-text a:hover {
-  color: #006600; /* Darker green on hover */
-  text-decoration: underline;
+    color: green;
 }
 
-/* Responsive design for tablets and smaller screens */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-  .login-container {
-    max-width: 95vw;
-    padding: clamp(1.2rem, 4vw, 2rem);
-  }
+    .login-container {
+        width: 90%;
+        padding: 20px;
+    }
 
-  .login-form h1 {
-    font-size: clamp(1.3rem, 4.5vw, 1.8rem);
-  }
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
 
-  .form-input {
-    padding: clamp(0.5rem, 1.8vw, 0.65rem) clamp(0.7rem, 2vw, 0.9rem);
-  }
+    .login-header p {
+        font-size: 0.85rem;
+    }
 
-  .login-btn {
-    padding: clamp(0.5rem, 1.8vw, 0.65rem);
-  }
+    .form-input {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
 
-  .remember-me {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-}
+    .login-btn {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
 
-/* Responsive design for mobile screens */
-@media (max-width: 480px) {
-  .login-container {
-    margin: clamp(0.5rem, 2vw, 1rem);
-    padding: clamp(1rem, 3.5vw, 1.5rem);
-  }
-
-  .login-form {
-    gap: clamp(0.8rem, 2.5vw, 1.2rem);
-  }
-
-  .login-form h1 {
-    font-size: clamp(1.2rem, 4vw, 1.5rem);
-  }
-
-  .form-label {
-    font-size: clamp(0.75rem, 2.2vw, 0.85rem);
-  }
-
-  .form-input {
-    font-size: clamp(0.85rem, 2.3vw, 0.95rem);
-    padding: clamp(0.45rem, 1.5vw, 0.6rem) clamp(0.6rem, 1.8vw, 0.8rem);
-  }
-
-  .input-icon {
-    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-    right: clamp(0.5rem, 1.8vw, 0.65rem);
-  }
-
-  .form-input.with-icon {
-    padding-right: clamp(1.8rem, 5vw, 2.2rem);
-  }
-
-  .login-btn {
-    font-size: clamp(0.85rem, 2.3vw, 0.95rem);
-    padding: clamp(0.45rem, 1.5vw, 0.6rem);
-  }
-
-  .error-message {
-    font-size: clamp(0.7rem, 2vw, 0.8rem);
-    padding: clamp(0.4rem, 1.2vw, 0.45rem);
-  }
-
-  .remember-me {
-    gap: 0.5rem;
-  }
-
-  .redirect-text {
-    font-size: clamp(0.75rem, 2.2vw, 0.85rem);
-  }
+    .redirect-text {
+        font-size: 0.8rem;
+    }
 }

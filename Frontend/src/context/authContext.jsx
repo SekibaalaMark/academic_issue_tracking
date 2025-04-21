@@ -1,66 +1,64 @@
-"use client";
-
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Initialize user from localStorage on mount
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-    if (isAuthenticated) {
+    const fetchUserData = async () => {
       try {
-        // Try to get user data from localStorage instead of API
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        } else {
-          // Create a mock user based on available data
-          const username = localStorage.getItem("username");
-          const userRole = localStorage.getItem("userRole");
-          const token = localStorage.getItem("accessToken");
-
-          if (username || userRole || token) {
-            setUser({
-              username: username || "user",
-              role: userRole || "lecturer",
-              token: token,
-              email: `${username || "user"}@example.com`,
-            });
-          }
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          const response = await axios.get(
+            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setUser(response.data);
         }
       } catch (err) {
-        console.error("Error parsing stored user data:", err);
+        console.error("Error fetching user data:", err);
+        if (err.response?.status === 401) {
+          setError("Session expired. Please log in again.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("isAuthenticated");
+          localStorage.removeItem("userRole");
+          navigate("/login");
+        } else {
+          setError("Failed to fetch user data. Please try refreshing.");
+        }
+      } finally {
+        setLoading(false);
       }
+    };
+
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    if (isAuthenticated) {
+      fetchUserData();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (userData, role) => {
-    // Set user data in state
     setUser(userData);
-
-    // Store authentication data
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("accessToken", userData.token);
-
-    if (userData.username) {
-      localStorage.setItem("username", userData.username);
+    if (userData.user_role) {
+      localStorage.setItem("userRole", userData.user_role);
     }
-
-    // Store role with fallbacks
-    const userRole = userData.user_role || userData.role || role || "student";
-    localStorage.setItem("userRole", userRole);
-
-    // Navigate based on role
+    const userRole = userData.user_role || "student";
     switch (userRole) {
       case "student":
         navigate("/students");
@@ -82,7 +80,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userRole");
-    localStorage.removeItem("username");
     navigate("/login");
   };
 
@@ -90,7 +87,6 @@ export const AuthProvider = ({ children }) => {
     login(userData);
   };
 
-  // Mock implementation that doesn't rely on API
   const handleFormSubmission = async (
     url,
     data,
@@ -98,45 +94,64 @@ export const AuthProvider = ({ children }) => {
     successCallback = null
   ) => {
     try {
-      console.log(
-        `Mock ${method.toUpperCase()} request to ${url} with data:`,
-        data
-      );
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("No access token found. Please log in.");
+      }
 
-      // Create a mock response
-      const mockResponse = {
-        success: true,
-        message: "Operation completed successfully",
-        data: { ...data, id: Math.floor(Math.random() * 1000) },
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       };
 
+      let response;
+      if (method.toLowerCase() === "post") {
+        response = await axios.post(url, data, config);
+      } else if (method.toLowerCase() === "put") {
+        response = await axios.put(url, data, config);
+      } else if (method.toLowerCase() === "patch") {
+        response = await axios.patch(url, data, config);
+      } else {
+        throw new Error("Unsupported method");
+      }
+
       if (successCallback) {
-        successCallback(mockResponse);
+        successCallback(response.data);
       }
 
       return {
         success: true,
-        data: mockResponse,
+        data: response.data,
       };
     } catch (err) {
       console.error("Form submission error:", err);
       return {
         success: false,
-        error: "An error occurred during submission",
+        error: err.response?.data || "An error occurred during submission",
       };
     }
   };
 
-  // Mock implementation
   const assignIssue = async (issueId, lecturerId) => {
-    return handleFormSubmission(
-      `mock-api/issues/${issueId}/assign`,
-      { lecturer_id: lecturerId },
-      "patch",
-      (data) => {
-        console.log("Issue assigned:", data);
-      }
-    );
+    try {
+      const response = await handleFormSubmission(
+        `https://academic-6ea365e4b745.herokuapp.com/api/issues/${issueId}/assign`,
+        { lecturer_id: lecturerId },
+        "patch",
+        (data) => {
+          console.log("Issue assigned:", data);
+        }
+      );
+      return response;
+    } catch (err) {
+      console.error("Issue assignment error:", err);
+      return {
+        success: false,
+        error: err.response?.data || "Failed to assign issue.",
+      };
+    }
   };
 
   const value = {
