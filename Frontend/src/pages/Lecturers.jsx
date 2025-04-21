@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
-import axios from "axios";
+
 import { useNavigate } from "react-router-dom";
 import "./Lecturers.css";
 import { AuthContext } from "@/context/authContext";
