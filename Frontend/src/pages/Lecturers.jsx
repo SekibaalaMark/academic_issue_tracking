@@ -1,6 +1,5 @@
-
-
 import React, { useState, useEffect, useContext, useCallback } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "@/context/authContext";
 import "./lecturers.css";
@@ -1075,7 +1074,7 @@ const Lecturer = () => {
             <div className="profile-card">
               <div className="profile-header">
                 <div className="profile-avatar">
-                  <span>👨‍🏫</span>
+                  <span>👨🏫</span>
                 </div>
                 <div className="profile-info">
                   <h2>
