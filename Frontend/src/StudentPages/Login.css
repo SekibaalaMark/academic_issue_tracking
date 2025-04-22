@@ -28,7 +28,7 @@
     border: 1px solid #ccc;
     border-radius: 6px;
     width: 100%;
-    color: white; /* Set text color to white */
+    color: black; 
     background-color: #e6eee7; /* Optional: Set background color for input */
     transition: box-shadow 0.3s ease-in-out;
 }
