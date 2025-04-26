@@ -12,6 +12,50 @@ body {
   line-height: 1.6;
 }
 
+/* Sidebar Styles */
+.sidebar {
+  width: 250px;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  padding: 20px 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  padding: 0 20px;
+  margin-bottom: 30px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ecf0f1;
+  text-align: center;
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li {
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.sidebar-nav li:hover {
+  background-color: #34495e;
+  border-left-color: #3498db;
+}
+
+.sidebar-nav li.active {
+  background-color: #34495e;
+  border-left-color: #3498db;
+  font-weight: 600;
+}
 /* Container */
 .students-container {
   max-width: 1200px;
@@ -584,5 +628,59 @@ body {
   .action-btn {
     width: 100%;
     padding: 10px;
+  }
+}
+
+/* Dashboard Layout Structure */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main Content Adjustments */
+.main-content {
+  flex: 1;
+  margin-left: 250px; /* Same as sidebar width */
+  width: calc(100% - 250px);
+  overflow-y: auto;
+}
+
+/* Adjust students-container to work with the new layout */
+.students-container {
+  max-width: 100%;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Ensure the sidebar stays fixed */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .students-container {
+    border-radius: 0;
   }
 }

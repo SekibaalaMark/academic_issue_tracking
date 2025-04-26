@@ -30,11 +30,22 @@ const Tr = styled.tr`
   }
 `;
 
+const TableContainer = styled.div`
+  overflow-x: auto;
+  width: 100%;
+`;
+
+// Add media queries to your styled components
 const FilterContainer = styled.div`
   margin-top: 1rem;
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap; /* Ensures the controls wrap on smaller screens */
+  flex-wrap: wrap;
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const Button = styled.button`
@@ -75,6 +86,7 @@ const PageButton = styled.button`
     opacity: 0.5;
   }
 `;
+
 
 function AcademicRegistrar() {
   const [issues, setIssues] = useState([]);
@@ -201,50 +213,53 @@ function AcademicRegistrar() {
       </FilterContainer>
 
       {/* Issues Table */}
-      <Table>
-        <thead>
-          <tr>
-            <Th>ID</Th>
-            <Th>Course Code</Th>
-            <Th>Issue Type</Th>
-            <Th>Description</Th>
-            <Th>Status</Th>
-            <Th>Assigned Lecturer</Th>
-            <Th>Actions</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentIssues.length > 0 ? (
-            currentIssues.map((issue) => (
-              <Tr key={issue.id}>
-                <Td>{issue.id}</Td>
-                <Td>{issue.courseCode}</Td>
-                <Td>{issue.issueType}</Td>
-                <Td>{issue.description}</Td>
-                <Td>{issue.status}</Td>
-                <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
-                <Td>
-                  <select onChange={(e) => handleAssign(issue.id, e.target.value)}>
-                    <option value="">Select Lecturer</option>
-                    {lecturers.map((lecturer) => (
-                      <option key={lecturer.id} value={lecturer.id}>
-                        {lecturer.name}
-                      </option>
-                    ))}
-                  </select>
-                  {issue.status !== "resolved" && (
-                    <Button onClick={() => handleResolve(issue.id)}>Resolve</Button>
-                  )}
-                </Td>
-              </Tr>
-            ))
-          ) : (
-            <tr>
-              <Td colSpan="7">No issues found.</Td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+<TableContainer>
+  <Table>
+    <thead>
+      <tr>
+        <Th>ID</Th>
+        <Th>Course Code</Th>
+        <Th>Issue Type</Th>
+        <Th>Description</Th>
+        <Th>Status</Th>
+        <Th>Assigned Lecturer</Th>
+        <Th>Actions</Th>
+      </tr>
+    </thead>
+    <tbody>
+      {currentIssues.length > 0 ? (
+        currentIssues.map((issue) => (
+          <Tr key={issue.id}>
+            <Td>{issue.id}</Td>
+            <Td>{issue.courseCode}</Td>
+            <Td>{issue.issueType}</Td>
+            <Td>{issue.description}</Td>
+            <Td>{issue.status}</Td>
+            <Td>{issue.assignedLecturer || "Not Assigned"}</Td>
+            <Td>
+              <select onChange={(e) => handleAssign(issue.id, e.target.value)}>
+                <option value="">Select Lecturer</option>
+                {lecturers.map((lecturer) => (
+                  <option key={lecturer.id} value={lecturer.id}>
+                    {lecturer.name}
+                  </option>
+                ))}
+              </select>
+              {issue.status !== "resolved" && (
+                <Button onClick={() => handleResolve(issue.id)}>Resolve</Button>
+              )}
+            </Td>
+          </Tr>
+        ))
+      ) : (
+        <tr>
+          <Td colSpan="7">No issues found.</Td>
+        </tr>
+      )}
+    </tbody>
+  </Table>
+</TableContainer>
+
 
       {/* Pagination */}
       <Pagination>
