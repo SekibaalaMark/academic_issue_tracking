@@ -22,11 +22,62 @@
   gap: 1.5rem;
 }
 
+<<<<<<< HEAD
 .login-form h1 {
   text-align: center;
   color: #2e7d32;
   margin-bottom: 1rem;
   font-size: 2rem;
+=======
+.form-input {
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    color: black; 
+    background-color: #e6eee7; /* Optional: Set background color for input */
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.form-input:focus {
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+.login-btn {
+    padding: 12px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: green;
+    color: #fff;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.login-btn:hover {
+    background: green;
+    transform: scale(1.05);
+}
+
+.redirect-text {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.redirect-text a {
+    text-decoration: none;
+    font-weight: bold;
+    color: green;
+    transition: color 0.3s ease-in-out;
+}
+
+.redirect-text a:hover {
+    color: green;
+>>>>>>> 39cd8c461b93f77411de00f95fce4af2e0ce2299
 }
 
 .input-wrapper {
