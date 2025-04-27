@@ -11,6 +11,7 @@ const ENDPOINTS = {
     "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
   lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
   users: "https://academic-6ea365e4b745.herokuapp.com/api/users/",
+  assign: "https://academic-6ea365e4b745.herokuapp.com/api/assignlecturer/", // Added correct endpoint
 };
 
 // Styled Components
@@ -209,6 +210,7 @@ const AcademicRegistrar = () => {
         const formattedLecturers = lecturersResponse.data.map((lecturer) => ({
           id: lecturer.id,
           name: `${lecturer.first_name} ${lecturer.last_name}`,
+          username: lecturer.username, // Added username for assignment
         }));
 
         // Cache the lecturers data
@@ -238,14 +240,23 @@ const AcademicRegistrar = () => {
           Array.isArray(alternativeLecturersResponse.data) &&
           alternativeLecturersResponse.data.length > 0
         ) {
+          // Add username to alternative endpoint data (assuming it includes username)
+          const formattedLecturers = alternativeLecturersResponse.data.map(
+            (lecturer) => ({
+              id: lecturer.id,
+              name: `${lecturer.first_name} ${lecturer.last_name}`,
+              username: lecturer.username || lecturer.id, // Fallback to id if username missing
+            })
+          );
+
           // Cache the lecturers data
           localStorage.setItem(
             "cachedLecturers",
-            JSON.stringify(alternativeLecturersResponse.data)
+            JSON.stringify(formattedLecturers)
           );
 
-          setLecturers(alternativeLecturersResponse.data);
-          return alternativeLecturersResponse.data;
+          setLecturers(formattedLecturers);
+          return formattedLecturers;
         } else {
           throw new Error("No lecturers found in alternative endpoint");
         }
@@ -288,21 +299,28 @@ const AcademicRegistrar = () => {
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // IMPORTANT: This function will update the UI immediately and try to sync with server
+  // Updated handleAssign to use correct endpoint and payload
   const handleAssign = async (issueId, lecturerId) => {
     if (!lecturerId) return;
 
     setIsAssigning(true);
 
-    // Find the lecturer name for display
+    // Find the lecturer for username and display name
     const lecturer = lecturers.find((l) => l.id === lecturerId);
     const lecturerName = lecturer ? lecturer.name : "Selected Lecturer";
+    const lecturerUsername = lecturer ? lecturer.username : null;
+
+    if (!lecturerUsername) {
+      setError("Invalid lecturer selected.");
+      setIsAssigning(false);
+      return;
+    }
 
     // Immediately update the UI (optimistic update)
     setIssues((prevIssues) =>
       prevIssues.map((issue) =>
         issue.id === issueId
-          ? { ...issue, assignedLecturer: lecturerName, status: "in progress" }
+          ? { ...issue, assignedLecturer: lecturerName, status: "in_progress" }
           : issue
       )
     );
@@ -313,49 +331,48 @@ const AcademicRegistrar = () => {
     );
     const updatedCachedIssues = cachedIssues.map((issue) =>
       issue.id === issueId
-        ? { ...issue, assignedLecturer: lecturerName, status: "in progress" }
+        ? { ...issue, assignedLecturer: lecturerName, status: "in_progress" }
         : issue
     );
     localStorage.setItem("cachedIssues", JSON.stringify(updatedCachedIssues));
 
-    // Try to sync with server in the background
+    // Try to sync with server
     try {
       if (!offlineMode) {
         const authAxios = createAuthAxios();
-
-        // Try different endpoint formats
-        try {
-          await authAxios.patch(`${ENDPOINTS.issues}${issueId}/assign/`, {
-            assigned_to: lecturerId,
-          });
-          console.log("Server sync successful");
-        } catch (err1) {
-          console.error("First assignment attempt failed:", err1);
-
-          try {
-            await authAxios.patch(`${ENDPOINTS.issues}${issueId}/`, {
-              assigned_to: lecturerId,
-              status: "in progress",
-            });
-            console.log("Server sync successful (alternative endpoint)");
-          } catch (err2) {
-            console.error("Second assignment attempt failed:", err2);
-            // We don't need to revert the UI since we're prioritizing user experience
-            console.log("Continuing with local changes only");
-          }
-        }
+        await authAxios.patch(`${ENDPOINTS.assign}${issueId}/`, {
+          lecturer: lecturerUsername, // Correct payload
+        });
+        console.log("Issue assigned successfully to", lecturerUsername);
+        await fetchIssues(); // Sync with server
+        alert("Issue assigned successfully!");
       } else {
         console.log("In offline mode - changes saved locally only");
+        alert(
+          "Issue assigned locally. Changes will sync when connection is restored."
+        );
       }
-
-      alert("Issue assigned successfully!");
     } catch (err) {
-      console.error("Error syncing with server:", err);
-      alert(
-        "Issue assigned locally. Changes will sync when connection is restored."
+      console.error("Assignment error:", err.response?.data || err.message);
+      setError(
+        `Failed to assign issue: ${
+          err.response?.data?.detail ||
+          err.response?.data?.lecturer?.[0] ||
+          err.message
+        }`
       );
+      // Revert optimistic update
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) =>
+          issue.id === issueId
+            ? { ...issue, assignedLecturer: null, status: "pending" }
+            : issue
+        )
+      );
+      alert("Failed to assign issue. Please try again.");
     } finally {
       setIsAssigning(false);
+      localStorage.removeItem("currentlyAssigningIssue");
     }
   };
 

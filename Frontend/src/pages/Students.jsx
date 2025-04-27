@@ -20,9 +20,9 @@ const DEPT_CHOICES = [
 ];
 
 const CATEGORY_CHOICES = [
-  { value: "missing_marks", label: "Missing Marks" },
-  { value: "wrong_marks", label: "Wrong Marks" },
-  { value: "registration", label: "Registration Issue" },
+  { value: "Missing_Marks", label: "Missing marks" },
+  { value: "Wrong_grading", label: "Wrong grading" },
+  { value: "wrong_marks", label: "Wrong marks" },
   { value: "other", label: "Other" },
 ];
 
@@ -35,10 +35,10 @@ const Students = () => {
   const [formData, setFormData] = useState({
     course_name: "",
     course_code: "",
-    year_of_study: "year_1",
-    category: "missing_marks",
+    year_of_study: "",
+    category: "",
     description: "",
-    department: "computer_science",
+    department: "",
     attachment: null,
     registrar: "",
     programme: "",
@@ -149,22 +149,6 @@ const Students = () => {
     }
   }, [user, dataFetched]);
 
-  // Initialize form data
-  useEffect(() => {
-    if (
-      registrars.length > 0 &&
-      programmes.length > 0 &&
-      !formData.registrar &&
-      !formData.programme
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        registrar: registrars[0]?.value || "",
-        programme: programmes[0]?.value || "",
-      }));
-    }
-  }, [registrars, programmes, formData.registrar, formData.programme]);
-
   // Fetch profile data
   const fetchProfileData = useCallback(() => {
     if (user && user.token && !profileData) {
@@ -252,13 +236,13 @@ const Students = () => {
       setFormData({
         course_name: "",
         course_code: "",
-        year_of_study: "year_1",
-        category: "missing_marks",
+        year_of_study: "",
+        category: "",
         description: "",
-        department: "computer_science",
+        department: "",
         attachment: null,
-        registrar: registrars[0]?.value || "",
-        programme: programmes[0]?.value || "",
+        registrar: "",
+        programme: "",
       });
 
       // Refresh issues list
@@ -515,6 +499,9 @@ const Students = () => {
                     onChange={handleChange}
                     disabled={submitting}
                   >
+                    <option value="" disabled>
+                      Select an option
+                    </option>
                     <option value="year_1">Year 1</option>
                     <option value="year_2">Year 2</option>
                     <option value="year_3">Year 3</option>
@@ -530,6 +517,9 @@ const Students = () => {
                     onChange={handleChange}
                     disabled={submitting}
                   >
+                    <option value="" disabled>
+                      Select an option
+                    </option>
                     {CATEGORY_CHOICES.map((cat) => (
                       <option key={cat.value} value={cat.value}>
                         {cat.label}
@@ -548,6 +538,9 @@ const Students = () => {
                   required
                   disabled={submitting}
                 >
+                  <option value="" disabled>
+                    Select an option
+                  </option>
                   {DEPT_CHOICES.map((dept) => (
                     <option key={dept.value} value={dept.value}>
                       {dept.label}
@@ -566,7 +559,9 @@ const Students = () => {
                     required
                     disabled={loading || submitting}
                   >
-                    <option value="">Select a registrar</option>
+                    <option value="" disabled>
+                      Select an option
+                    </option>
                     {registrars.map((reg) => (
                       <option key={reg.value} value={reg.value}>
                         {reg.label}
@@ -584,7 +579,9 @@ const Students = () => {
                     required
                     disabled={loading || submitting}
                   >
-                    <option value="">Select a programme</option>
+                    <option value="" disabled>
+                      Select an option
+                    </option>
                     {programmes.map((prog) => (
                       <option key={prog.value} value={prog.value}>
                         {prog.label}
@@ -763,7 +760,6 @@ const Students = () => {
 
 // Error Boundary Component
 
-
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
 
@@ -787,10 +783,7 @@ class ErrorBoundary extends React.Component {
           <button
             className="action-btn"
             onClick={() => window.location.reload()}
-            
-          >
-            
-          </button>
+          ></button>
         </div>
       );
     }
