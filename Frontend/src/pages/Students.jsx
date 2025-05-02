@@ -88,7 +88,7 @@ const Students = () => {
           } catch (error) {
             console.error("Error fetching registrars:", error);
             setError("Failed to fetch registrars. Using fallback data.");
-            setRegistrars([{ value: "Emmanuella", label: "Emmanuella" }]);
+            setRegistrars([{ value: "SsegirinyaIsaaq", label: "Ssegirinya Isaaq" }]);
           }
 
           // Fetch programmes
