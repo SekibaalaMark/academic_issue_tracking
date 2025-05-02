@@ -33,7 +33,6 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     is_email_verified = models.BooleanField(default=False)
     username=models.CharField(max_length=100,unique=True)
-    #programme = models.ForeignKey(Programme,related_name='programme',on_delete=models.CASCADE,null=True,blank=True)
     def __str__(self):
         return self.username
     
