@@ -77,13 +77,13 @@ class Issue(models.Model):
         ('year_5','Year 5')
     ]
 
-
     PROGRAMME_CHOICES = [
         ('computer_science','Bachelor of Science in Computer Science'),
         ('software_engineering','Bachelor of Science in Software Engineering'),
         ('BIST','Bachelor Information Systems and Technology'),
         ('BLIS','Bachelor of Library and Information Sciences')
     ]
+    
     DEPT_CHOICES = [
         ('computer_science', 'Computer Science Department'),
         ('networks', 'Networks Department'),
