@@ -7,11 +7,10 @@ import "./AcademicRegistrar.css";
 
 // API Endpoints
 const ENDPOINTS = {
-  issues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/registrar-issues-management/",
-  lecturers: "https://academic-6ea365e4b745.herokuapp.com/api/lecturers/",
-  users: "https://academic-6ea365e4b745.herokuapp.com/api/users/",
-  assign: "https://academic-6ea365e4b745.herokuapp.com/api/assignlecturer/", // Added correct endpoint
+  issues: "https://aits2-backend.onrender.com/api/registrar-issues-management/",
+  lecturers: "https://aits2-backend.onrender.com/api/lecturers/",
+  users: "https://aits2-backend.onrender.com/api/users/",
+  assign: "https://aits2-backend.onrender.com/api/assignlecturer/", // Added correct endpoint
 };
 
 // Styled Components

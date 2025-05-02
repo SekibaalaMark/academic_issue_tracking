@@ -30,7 +30,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://academic-6ea365e4b745.herokuapp.com/api/login/",
+        "https://aits2-backend.onrender.com/api/login/",
         { username, password }
       );
 

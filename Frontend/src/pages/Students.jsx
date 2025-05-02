@@ -5,11 +5,10 @@ import "./Students.css";
 import { AuthContext } from "@/context/authContext";
 
 const ENDPOINTS = {
-  studentIssues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/student-issues/",
-  raiseIssue: "https://academic-6ea365e4b745.herokuapp.com/api/raise-issue/",
-  registrars: "https://academic-6ea365e4b745.herokuapp.com/api/registrars/", // Verify endpoint
-  programmes: "https://academic-6ea365e4b745.herokuapp.com/api/programmes/", // Verify endpoint
+  studentIssues: "https://aits2-backend.onrender.com/api/student-issues/",
+  raiseIssue: "https://aits2-backend.onrender.com/api/raise-issue/",
+  registrars: "https://aits2-backend.onrender.com/api/registrars/", // Verify endpoint
+  programmes: "https://aits2-backend.onrender.com/api/programmes/", // Verify endpoint
 };
 
 const DEPT_CHOICES = [

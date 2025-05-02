@@ -62,12 +62,12 @@ class ErrorBoundary extends React.Component {
 
 const ENDPOINTS = {
   lecturerIssues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-issue-management/",
+    "https://aits2-backend.onrender.com/api/lecturer-issue-management/",
   lecturerDashboard:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-dashboard/",
-  userProfile: "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
+    "https://aits2-backend.onrender.com/api/lecturer-dashboard/",
+  userProfile: "https://aits2-backend.onrender.com/api/user/profile/",
   lecturerProfile:
-    "https://academic-6ea365e4b745.herokuapp.com/api/lecturer-profile/",
+    "https://aits2-backend.onrender.com/api/lecturer-profile/",
 };
 
 const MESSAGE_TIMEOUT = 5000;
@@ -142,7 +142,7 @@ const Lecturer = () => {
     const token = user?.token || localStorage.getItem("accessToken");
     console.log("Using token:", token ? "Present" : "Missing");
     return axios.create({
-      baseURL: "https://academic-6ea365e4b745.herokuapp.com",
+      baseURL: "https://aits2-backend.onrender.com/",
       headers: {
         Authorization: token ? `Bearer ${token}` : undefined,
       },
