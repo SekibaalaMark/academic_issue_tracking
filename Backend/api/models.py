@@ -85,8 +85,14 @@ class Issue(models.Model):
         ('BIST','Bachelor Information Systems and Technology'),
         ('BLIS','Bachelor of Library and Information Sciences')
     ]
+    DEPT_CHOICES = [
+        ('computer_science', 'Computer Science Department'),
+        ('networks', 'Networks Department'),
+        ('information_systems', 'Information Systems'),
+        ('information_technology', 'Information Technology'),
+    ]
     student = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
-    programme = models.ForeignKey(Programme,related_name='programmes',on_delete=models.CASCADE,null=True,blank=True)
+    programme = models.CharField(max_length=200,choices=PROGRAMME_CHOICES)
     course_name = models.CharField(max_length=150,null=True,help_text="course name")
     course_code = models.CharField(max_length=50,null=True,help_text="course code")
     year_of_study = models.CharField(max_length=50,choices=YEAR_CHOICES,help_text="your year of study")
@@ -95,7 +101,7 @@ class Issue(models.Model):
     description = models.TextField()
     attachment = models.ImageField(upload_to='issue_pics',null=True,blank=True)
     registrar= models.ForeignKey(CustomUser,related_name='registra_issues',on_delete=models.CASCADE,limit_choices_to={'role':'registrar'})
-    department = models.ForeignKey(Department,related_name='department_issues',on_delete=models.CASCADE)
+    department= models.CharField(max_length=200,choices=DEPT_CHOICES)
     status = models.CharField(max_length=100,choices=STATUS_CHOICES,default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
