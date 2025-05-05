@@ -8,7 +8,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/profile/', {
+        const response = await axios.get('https://aits2-backend.onrender.com/api/users/profile/', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },

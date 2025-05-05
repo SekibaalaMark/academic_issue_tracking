@@ -4,6 +4,23 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import "./AcademicRegistrar.css";
+import {
+  ProfileCard,
+  ProfileHeader,
+  ProfileAvatar,
+  ProfileTitle,
+  RoleBadge,
+  ProfileDetails,
+  DetailItem,
+  DetailLabel,
+  DetailValue,
+  StatusActive,
+  ProfileSummary,
+  SummaryStats,
+  SummaryStat,
+  StatValue,
+  StatLabel
+} from "@/Services/Registrarprofile";
 
 // API Endpoints
 const ENDPOINTS = {
@@ -11,6 +28,7 @@ const ENDPOINTS = {
   lecturers: "https://aits2-backend.onrender.com/api/lecturers/",
   users: "https://aits2-backend.onrender.com/api/users/",
   assign: "https://aits2-backend.onrender.com/api/assignlecturer/", // Added correct endpoint
+  profile: "https://aits2-backend.onrender.com/api/users/profile/", // Profile endpoint
 };
 
 // Styled Components
@@ -62,6 +80,19 @@ const PageButton = styled.button`
   }
 `;
 
+const PageNumber = styled.button`
+  padding: 5px 10px;
+  margin: 0 2px;
+  border: 1px solid #ddd;
+  background-color: ${props => props.active ? '#007bff' : '#f2f2f2'};
+  color: ${props => props.active ? 'white' : 'black'};
+  border-radius: 3px;
+  cursor: pointer;
+  &:hover {
+    background-color: ${props => props.active ? '#0056b3' : '#ddd'};
+  }
+`;
+
 const Button = styled.button`
   margin: 0 0.5px;
   padding: 6px 12px;
@@ -88,6 +119,9 @@ const AcademicRegistrar = () => {
   const [itemsPerPage] = useState(5);
   const [isAssigning, setIsAssigning] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -95,7 +129,6 @@ const AcademicRegistrar = () => {
   const createAuthAxios = () => {
     const token =
       localStorage.getItem("accessToken") || localStorage.getItem("authToken");
-
     return axios.create({
       headers: {
         Authorization: `Bearer ${token}`,
@@ -107,20 +140,17 @@ const AcademicRegistrar = () => {
 
   useEffect(() => {
     console.log("AcademicRegistrar component mounted");
-
     const checkAuthAndRedirect = () => {
       const token =
         localStorage.getItem("accessToken") ||
         localStorage.getItem("authToken");
       const userRole = localStorage.getItem("userRole");
       const isAuthenticated = localStorage.getItem("isAuthenticated");
-
       if (!token || !isAuthenticated) {
         console.log("Not authenticated, redirecting to login");
         navigate("/login");
         return false;
       }
-
       if (
         userRole &&
         userRole !== "academic_registrar" &&
@@ -131,7 +161,6 @@ const AcademicRegistrar = () => {
           "User is not a registrar, redirecting based on role:",
           userRole
         );
-
         if (userRole === "student") {
           navigate("/students");
         } else if (userRole === "lecturer") {
@@ -148,7 +177,6 @@ const AcademicRegistrar = () => {
       if (!checkAuthAndRedirect()) {
         return;
       }
-
       try {
         // Try to fetch data from the server
         await fetchIssues();
@@ -156,11 +184,9 @@ const AcademicRegistrar = () => {
         setOfflineMode(false);
       } catch (err) {
         console.error("Error fetching data:", err);
-
         // If we can't fetch data, check if we have cached data
         const cachedIssues = localStorage.getItem("cachedIssues");
         const cachedLecturers = localStorage.getItem("cachedLecturers");
-
         if (cachedIssues && cachedLecturers) {
           console.log("Using cached data due to network error");
           setIssues(JSON.parse(cachedIssues));
@@ -179,29 +205,24 @@ const AcademicRegistrar = () => {
 
   const fetchIssues = async () => {
     const authAxios = createAuthAxios();
-
     console.log("Fetching registrar issues");
     const issuesResponse = await authAxios.get(ENDPOINTS.issues);
     const issuesData = Array.isArray(issuesResponse.data)
       ? issuesResponse.data
       : [];
-
     // Cache the issues data
     localStorage.setItem("cachedIssues", JSON.stringify(issuesData));
-
     setIssues(issuesData);
     return issuesData;
   };
 
   const fetchLecturers = async () => {
     const authAxios = createAuthAxios();
-
     try {
       console.log("Fetching lecturers from users endpoint");
       const lecturersResponse = await authAxios.get(
         `${ENDPOINTS.users}?role=lecturer`
       );
-
       if (
         Array.isArray(lecturersResponse.data) &&
         lecturersResponse.data.length > 0
@@ -211,13 +232,11 @@ const AcademicRegistrar = () => {
           name: `${lecturer.first_name} ${lecturer.last_name}`,
           username: lecturer.username, // Added username for assignment
         }));
-
         // Cache the lecturers data
         localStorage.setItem(
           "cachedLecturers",
           JSON.stringify(formattedLecturers)
         );
-
         setLecturers(formattedLecturers);
         return formattedLecturers;
       } else {
@@ -228,13 +247,11 @@ const AcademicRegistrar = () => {
         "Error fetching lecturers from users endpoint:",
         lecturerErr
       );
-
       try {
         console.log("Trying alternative lecturers endpoint");
         const alternativeLecturersResponse = await authAxios.get(
           ENDPOINTS.lecturers
         );
-
         if (
           Array.isArray(alternativeLecturersResponse.data) &&
           alternativeLecturersResponse.data.length > 0
@@ -247,13 +264,11 @@ const AcademicRegistrar = () => {
               username: lecturer.username || lecturer.id, // Fallback to id if username missing
             })
           );
-
           // Cache the lecturers data
           localStorage.setItem(
             "cachedLecturers",
             JSON.stringify(formattedLecturers)
           );
-
           setLecturers(formattedLecturers);
           return formattedLecturers;
         } else {
@@ -265,6 +280,51 @@ const AcademicRegistrar = () => {
       }
     }
   };
+
+  // Fetch profile data
+  const fetchProfileData = async () => {
+    setProfileLoading(true);
+    setProfileError("");
+    try {
+      const authAxios = createAuthAxios();
+      // Try to fetch from API first
+      try {
+        const response = await authAxios.get(ENDPOINTS.profile);
+        if (response.data) {
+          setProfileData(response.data);
+          return;
+        }
+      } catch (apiError) {
+        console.error("Error fetching profile from API:", apiError);
+        // Fall back to local data if API fails
+      }
+          
+      // If API fails or no data, use local storage data
+      const username = localStorage.getItem("username") || "Academic Registrar";
+      const email = localStorage.getItem("email") || "registrar@example.com";
+      const userRole = localStorage.getItem("userRole") || "academic_registrar";
+          
+      setProfileData({
+        username: username,
+        email: email,
+        role: userRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        registrarId: "REG" + Math.floor(Math.random() * 10000),
+        department: "Academic Affairs",
+        joinDate: new Date().toISOString().split('T')[0],
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setProfileError("Failed to load profile data");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTab === "profile" && !profileData) {
+      fetchProfileData();
+    }
+  }, [selectedTab, profileData]);
 
   // Calculate summary counts
   const totalIssues = issues.length;
@@ -296,19 +356,17 @@ const AcademicRegistrar = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentIssues = filteredIssues.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Updated handleAssign to use correct endpoint and payload
   const handleAssign = async (issueId, lecturerId) => {
     if (!lecturerId) return;
-
     setIsAssigning(true);
-
     // Find the lecturer for username and display name
     const lecturer = lecturers.find((l) => l.id === lecturerId);
     const lecturerName = lecturer ? lecturer.name : "Selected Lecturer";
     const lecturerUsername = lecturer ? lecturer.username : null;
-
     if (!lecturerUsername) {
       setError("Invalid lecturer selected.");
       setIsAssigning(false);
@@ -400,7 +458,6 @@ const AcademicRegistrar = () => {
       try {
         if (!offlineMode) {
           const authAxios = createAuthAxios();
-
           // Try different endpoint formats
           try {
             await authAxios.patch(`${ENDPOINTS.issues}${issueId}/resolve/`, {
@@ -409,7 +466,6 @@ const AcademicRegistrar = () => {
             console.log("Server sync successful for resolve");
           } catch (err1) {
             console.error("First resolve attempt failed:", err1);
-
             try {
               await authAxios.patch(`${ENDPOINTS.issues}${issueId}/`, {
                 status: "resolved",
@@ -426,7 +482,6 @@ const AcademicRegistrar = () => {
         } else {
           console.log("In offline mode - resolve changes saved locally only");
         }
-
         alert("Issue marked as resolved.");
       } catch (err) {
         console.error("Error syncing resolve with server:", err);
@@ -507,6 +562,12 @@ const AcademicRegistrar = () => {
           >
             Issue Management
           </li>
+          <li
+            className={selectedTab === "profile" ? "active" : ""}
+            onClick={() => setSelectedTab("profile")}
+          >
+            My Profile
+          </li>
           <li onClick={handleLogout}>Logout</li>
         </ul>
       </aside>
@@ -537,6 +598,79 @@ const AcademicRegistrar = () => {
             </div>
           </div>
         )}
+              
+        {selectedTab === "profile" && (
+          <section className="tab-content">
+            <h2>My Profile</h2>
+            {profileLoading ? (
+              <div className="loading-spinner">Loading profile...</div>
+            ) : profileError ? (
+              <div className="error-message">{profileError}</div>
+            ) : profileData ? (
+              <ProfileCard>
+                <ProfileHeader>
+                  <ProfileAvatar>
+                    {profileData.username ? profileData.username[0].toUpperCase() : "R"}
+                  </ProfileAvatar>
+                  <ProfileTitle>
+                    <h3>{profileData.username}</h3>
+                    <RoleBadge>{profileData.role}</RoleBadge>
+                  </ProfileTitle>
+                </ProfileHeader>
+                <ProfileDetails>
+                  <DetailItem>
+                    <DetailLabel>Email:</DetailLabel>
+                    <DetailValue>{profileData.email}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Registrar ID:</DetailLabel>
+                    <DetailValue>{profileData.registrarId}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Department:</DetailLabel>
+                    <DetailValue>{profileData.department}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Join Date:</DetailLabel>
+                    <DetailValue>{profileData.joinDate}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Account Status:</DetailLabel>
+                    <DetailValue>
+                      <StatusActive>Active</StatusActive>
+                    </DetailValue>
+                  </DetailItem>
+                </ProfileDetails>
+                <ProfileSummary>
+                  <h4>Issues Summary</h4>
+                  <SummaryStats>
+                    <SummaryStat>
+                      <StatValue>{totalIssues}</StatValue>
+                      <StatLabel>Total Issues</StatLabel>
+                    </SummaryStat>
+                    <SummaryStat>
+                      <StatValue>{pendingIssues}</StatValue>
+                      <StatLabel>Pending</StatLabel>
+                    </SummaryStat>
+                    <SummaryStat>
+                      <StatValue>{inProgressIssues}</StatValue>
+                      <StatLabel>In Progress</StatLabel>
+                    </SummaryStat>
+                    <SummaryStat>
+                      <StatValue>{resolvedIssues}</StatValue>
+                      <StatLabel>Resolved</StatLabel>
+                    </SummaryStat>
+                  </SummaryStats>
+                </ProfileSummary>
+              </ProfileCard>
+            ) : (
+              <div className="no-profile">
+                Profile information not available
+              </div>
+            )}
+          </section>
+        )}
+              
         {selectedTab === "management" && (
           <div className="management-section">
             <div className="filter-container">
@@ -661,24 +795,23 @@ const AcademicRegistrar = () => {
                     >
                       Previous
                     </PageButton>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <PageButton
-                          key={page}
-                          onClick={() => paginate(page)}
-                          style={{
-                            backgroundColor:
-                              currentPage === page ? "#007bff" : "#f2f2f2",
-                            color: currentPage === page ? "white" : "black",
-                          }}
-                        >
-                          {page}
-                        </PageButton>
-                      )
-                    )}
+                    {Array.from({
+                      length: Math.ceil(filteredIssues.length / itemsPerPage),
+                    }).map((_, index) => (
+                      <PageNumber
+                        key={index}
+                        onClick={() => paginate(index + 1)}
+                        active={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PageNumber>
+                    ))}
                     <PageButton
                       onClick={() => paginate(currentPage + 1)}
-                      disabled={currentPage === totalPages || totalPages === 0}
+                      disabled={
+                        currentPage ===
+                        Math.ceil(filteredIssues.length / itemsPerPage)
+                      }
                     >
                       Next
                     </PageButton>
