@@ -529,7 +529,6 @@ const Students = () => {
                       </select>
                     </div>
                   </div>
-
                   <div className="form-group">
                     <label htmlFor="department">Department</label>
                     <select
@@ -668,7 +667,6 @@ const Students = () => {
                   </div>
                 )}
               </section>
-
             )}
             {selectedTab === "myIssues" && (
               <section className="tab-content">
@@ -797,4 +795,6 @@ export default function StudentsWithErrorBoundary() {
     </ErrorBoundary>
   );
 }
+
+
 
