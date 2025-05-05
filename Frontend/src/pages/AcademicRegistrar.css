@@ -1,11 +1,12 @@
 /* Overall Layout */
 .academic-registrar-dashboard {
   display: flex;
-  min-height: 100vh;
+  min-height: 200vh;
+  min-width: 100%;
   background-color: #f9f9f9;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 16px; /* Base font size for scaling */
-  color: #1A1A1A; /* Black text */
+  color: #1a1a1a; /* Black text */
   box-sizing: border-box;
   flex-direction: row; /* Default row layout */
   overflow-x: hidden; /* Prevent horizontal scroll issues */
@@ -118,7 +119,7 @@
 .page-title {
   font-size: clamp(1.5rem, 4vw, 1.75rem);
   margin-bottom: clamp(1rem, 3vw, 1.5rem);
-  color: #1A1A1A;
+  color: #1a1a1a;
   font-weight: 600;
 }
 
@@ -149,7 +150,7 @@
 
 .summary-value {
   font-size: clamp(1rem, 3vw, 1.25rem);
-  color: #1A1A1A;
+  color: #1a1a1a;
   margin-top: 0.25rem;
 }
 
@@ -164,7 +165,7 @@
 
 .filter-container label {
   font-weight: 600;
-  color: #1A1A1A;
+  color: #1a1a1a;
   display: flex;
   flex-direction: column;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
@@ -226,7 +227,9 @@
   color: #fff;
   cursor: pointer;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
 }
 
 .resolve-btn:hover {
@@ -374,4 +377,6 @@
     height: auto;
   }
 }
+
+
 

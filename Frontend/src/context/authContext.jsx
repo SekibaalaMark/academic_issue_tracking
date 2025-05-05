@@ -15,25 +15,39 @@ export const AuthProvider = ({ children }) => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        if (token) {
-          const response = await axios.get(
-            "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get(
+          "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data) {
           setUser(response.data);
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
+
+        // Handle token expiration or authentication errors
         if (err.response?.status === 401) {
           setError("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
           localStorage.removeItem("isAuthenticated");
           localStorage.removeItem("userRole");
-          navigate("/login");
+          localStorage.removeItem("username");
+
+          // Only navigate to login if not already there
+          if (location.pathname !== "/login") {
+            navigate("/login");
+          }
         } else {
           setError("Failed to fetch user data. Please try refreshing.");
         }
@@ -48,38 +62,55 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [navigate, location.pathname]);
 
   const login = (userData, role) => {
-    setUser(userData);
-    localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("accessToken", userData.token);
-    if (userData.user_role) {
-      localStorage.setItem("userRole", userData.user_role);
-    }
-    const userRole = userData.user_role || "student";
-    switch (userRole) {
-      case "student":
-        navigate("/students");
-        break;
-      case "lecturer":
-        navigate("/lecturers");
-        break;
-      case "academicregistrar":
-        navigate("/registrar");
-        break;
-      default:
-        navigate("/dashboard");
+    try {
+      if (!userData || !userData.token) {
+        throw new Error("Invalid login data received");
+      }
+
+      // Store user data
+      setUser(userData);
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("accessToken", userData.token);
+
+      // Store username for fallback display
+      if (userData.username) {
+        localStorage.setItem("username", userData.username);
+      }
+
+      // Determine and store user role
+      const userRole = userData.user_role || role || "student";
+      localStorage.setItem("userRole", userRole);
+
+      // Navigate based on role
+      switch (userRole) {
+        case "student":
+          navigate("/students");
+          break;
+        case "lecturer":
+          navigate("/lecturers");
+          break;
+        case "academicregistrar":
+          navigate("/registrar");
+          break;
+        default:
+          navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
     }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userRole");
+    localStorage.removeItem("username");
     navigate("/login");
   };
 
@@ -117,7 +148,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Unsupported method");
       }
 
-      if (successCallback) {
+      if (successCallback && typeof successCallback === "function") {
         successCallback(response.data);
       }
 
@@ -127,9 +158,17 @@ export const AuthProvider = ({ children }) => {
       };
     } catch (err) {
       console.error("Form submission error:", err);
+
+      // Handle authentication errors
+      if (err.response?.status === 401) {
+        logout();
+      }
+
       return {
         success: false,
-        error: err.response?.data || "An error occurred during submission",
+        error: err.response?.data || {
+          message: "An error occurred during submission",
+        },
       };
     }
   };
@@ -149,7 +188,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Issue assignment error:", err);
       return {
         success: false,
-        error: err.response?.data || "Failed to assign issue.",
+        error: err.response?.data || { message: "Failed to assign issue." },
       };
     }
   };

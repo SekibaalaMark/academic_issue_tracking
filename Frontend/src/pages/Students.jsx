@@ -5,11 +5,11 @@ import "./Students.css";
 import { AuthContext } from "@/context/authContext";
 
 const ENDPOINTS = {
-  studentIssues:
-    "https://academic-6ea365e4b745.herokuapp.com/api/student-issues/",
-  raiseIssue: "https://academic-6ea365e4b745.herokuapp.com/api/raise-issue/",
-  registrars: "https://academic-6ea365e4b745.herokuapp.com/api/registrars/",
-  programmes: "https://academic-6ea365e4b745.herokuapp.com/api/programmes/",
+  studentIssues: "https://aits2-backend.onrender.com/api/student-issues/",
+  raiseIssue: "https://aits2-backend.onrender.com/api/raise-issue/",
+  registrars: "https://aits2-backend.onrender.com/api/registrars/", // Verify endpoint
+  programmes: "https://aits2-backend.onrender.com/api/programmes/", // Verify endpoint
+
 };
 
 const DEPT_CHOICES = [
@@ -20,9 +20,9 @@ const DEPT_CHOICES = [
 ];
 
 const CATEGORY_CHOICES = [
-  { value: "missing_marks", label: "Missing Marks" },
-  { value: "wrong_marks", label: "Wrong Marks" },
-  { value: "registration", label: "Registration Issue" },
+  { value: "Missing_Marks", label: "Missing marks" },
+  { value: "Wrong_grading", label: "Wrong grading" },
+  { value: "wrong_marks", label: "Wrong marks" },
   { value: "other", label: "Other" },
 ];
 
@@ -35,10 +35,10 @@ const Students = () => {
   const [formData, setFormData] = useState({
     course_name: "",
     course_code: "",
-    year_of_study: "year_1",
-    category: "missing_marks",
+    year_of_study: "",
+    category: "",
     description: "",
-    department: "computer_science",
+    department: "",
     attachment: null,
     registrar: "",
     programme: "",
@@ -89,7 +89,7 @@ const Students = () => {
           } catch (error) {
             console.error("Error fetching registrars:", error);
             setError("Failed to fetch registrars. Using fallback data.");
-            setRegistrars([{ value: "Emmanuella", label: "Emmanuella" }]);
+            setRegistrars([{ value: "SsegirinyaIsaaq", label: "Ssegirinya Isaaq" }]);
           }
           // Fetch programmes
           try {
@@ -145,22 +145,6 @@ const Students = () => {
       fetchData();
     }
   }, [user, dataFetched]);
-
-  // Initialize form data
-  useEffect(() => {
-    if (
-      registrars.length > 0 &&
-      programmes.length > 0 &&
-      !formData.registrar &&
-      !formData.programme
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        registrar: registrars[0]?.value || "",
-        programme: programmes[0]?.value || "",
-      }));
-    }
-  }, [registrars, programmes, formData.registrar, formData.programme]);
 
   // Fetch profile data
   const fetchProfileData = useCallback(() => {
@@ -246,13 +230,13 @@ const Students = () => {
       setFormData({
         course_name: "",
         course_code: "",
-        year_of_study: "year_1",
-        category: "missing_marks",
+        year_of_study: "",
+        category: "",
         description: "",
-        department: "computer_science",
+        department: "",
         attachment: null,
-        registrar: registrars[0]?.value || "",
-        programme: programmes[0]?.value || "",
+        registrar: "",
+        programme: "",
       });
       // Refresh issues list
       try {
@@ -545,6 +529,7 @@ const Students = () => {
                       </select>
                     </div>
                   </div>
+
                   <div className="form-group">
                     <label htmlFor="department">Department</label>
                     <select
@@ -683,6 +668,7 @@ const Students = () => {
                   </div>
                 )}
               </section>
+
             )}
             {selectedTab === "myIssues" && (
               <section className="tab-content">
@@ -811,6 +797,4 @@ export default function StudentsWithErrorBoundary() {
     </ErrorBoundary>
   );
 }
-
-
 
