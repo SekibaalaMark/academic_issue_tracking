@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://academic-6ea365e4b745.herokuapp.com/api/";
+const API_URL = "https://aits2-backend.onrender.com/api/";
 
 export const fetchData = async () => {
   try {
