@@ -7,7 +7,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
-
+from urllib.parse import urlparse
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -91,14 +91,26 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Backend.wsgi.application'
-
+DATABASE_URL='postgresql://neondb_owner:npg_sM7Ifzar6DZk@ep-jolly-wind-a5s52ktv-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require'
+parsed_url = urlparse(DATABASE_URL)
 # Database
 # 
 # Replace the DATABASES configuration with this:
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': parsed_url.path[1:],
+        'USER':parsed_url.username,
+        'PASSWORD':parsed_url.password,
+        'HOST':parsed_url.hostname,
+        'PORT':5432
     }
 }
 
