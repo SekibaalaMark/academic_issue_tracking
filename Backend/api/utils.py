@@ -25,8 +25,8 @@ Course: {issue.course_name} ({issue.course_code})
 Category: {category_display}
 Description: {issue.description}
 Year of Study: {year_display}
-Programme: {issue.programme.programme_name if issue.programme else "Not specified"}
-Department: {issue.department.name}
+Programme: {issue.programme if issue.programme else "Not specified"}
+Department: {issue.department}
 Date Submitted: {issue.created_at.strftime("%d %b %Y, %H:%M")}
 
 Please review this issue and take appropriate action.
@@ -77,8 +77,8 @@ Course: {issue.course_name} ({issue.course_code})
 Category: {category_display}
 Description: {issue.description}
 Year of Study: {year_display}
-Programme: {issue.programme.programme_name if issue.programme else "Not specified"}
-Department: {issue.department.name}
+Programme: {issue.programme if issue.programme else "Not specified"}
+Department: {issue.department}
 Date Submitted: {issue.created_at.strftime("%d %b %Y, %H:%M")}
 
 Please review this issue and assign it to an appropriate lecturer.

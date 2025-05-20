@@ -92,8 +92,8 @@ class Issue(models.Model):
     ]
     student = models.ForeignKey(CustomUser, related_name='student_issues', on_delete=models.CASCADE,limit_choices_to={'role':'student'})
     programme = models.CharField(max_length=200,choices=PROGRAMME_CHOICES)
-    course_name = models.CharField(max_length=150,null=True,help_text="course name")
-    course_code = models.CharField(max_length=50,null=True,help_text="course code")
+    course_name = models.CharField(max_length=150)
+    course_code = models.CharField(max_length=50)
     year_of_study = models.CharField(max_length=50,choices=YEAR_CHOICES,help_text="your year of study")
     lecturer = models.ForeignKey(CustomUser,related_name='lecturer_issues',on_delete=models.CASCADE,limit_choices_to={'role':"lecturer"},null=True,blank=True)
     category = models.CharField(max_length=100,choices=CATEGORY_CHOICES)
