@@ -1,6 +1,9 @@
 from django.test import TestCase
 from api.serializers import DepartmentSerializer, ProgrammeSerializer, UserSerializer
-from api.models import Department, Programme, CustomUser
+from api.models import *
+from api.serializers import *
+
+
 
 class DepartmentSerializerTest(TestCase):
     def test_department_serialization(self):
@@ -81,3 +84,28 @@ class UserSerializerTest(TestCase):
         serializer = UserSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('role', serializer.errors)
+
+
+
+
+
+class LecturerUsernameSerializerTest(TestCase):
+    def setUp(self):
+        self.lecturer = CustomUser.objects.create_user(
+            username="lecturer001",
+            email="lecturer@example.com",
+            password="pass1234",
+            role="lecturer",
+            staff_id_or_student_no=770
+        )
+
+    def test_lecturer_username_serialization(self):
+        serializer = LecturerUsernameSerializer(self.lecturer)
+        self.assertEqual(serializer.data, {'username': 'lecturer001'})
+
+    def test_lecturer_username_deserialization(self):
+        data = {'username': 'lecturer002'}
+        serializer = LecturerUsernameSerializer(instance=self.lecturer, data=data, partial=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        updated_lecturer = serializer.save()
+        self.assertEqual(updated_lecturer.username, 'lecturer002')
