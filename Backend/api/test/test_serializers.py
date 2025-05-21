@@ -2,6 +2,9 @@ from django.test import TestCase
 from api.serializers import DepartmentSerializer, ProgrammeSerializer, UserSerializer
 from api.models import *
 from api.serializers import *
+from django.core.files.uploadedfile import SimpleUploadedFile
+from datetime import datetime
+from io import BytesIO
 
 
 
@@ -229,5 +232,75 @@ class RegistrarDashboardCountSerializerTest(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('total_issues', serializer.errors)
         self.assertIn('category_counts', serializer.errors)
+
+
+
+
+class IssueSerializerTest(TestCase):
+    def setUp(self):
+        self.registrar = CustomUser.objects.create_user(
+            username='registrar1',
+            email='registrar@example.com',
+            password='testpass123',
+            role='registrar',
+            staff_id_or_student_no=1001
+        )
+        self.student = CustomUser.objects.create_user(
+            username='student1',
+            email='student@example.com',
+            password='testpass123',
+            role='student',
+            staff_id_or_student_no=2001
+        )
+        self.lecturer = CustomUser.objects.create_user(
+            username='lecturer1',
+            email='lecturer@example.com',
+            password='testpass123',
+            role='lecturer',
+            staff_id_or_student_no=3001
+        )
+        self.department = Department.objects.create(name="computer_science")
+        self.programme = Programme.objects.create(programme_name="computer_science")
+        self.issue = Issue.objects.create(
+            student=self.student,
+            lecturer=self.lecturer,
+            registrar=self.registrar,
+            status="pending",
+            department=self.department,
+            description="Issue with system access",
+            category="Network",
+            year_of_study="Year 2",
+            course_code="CSC2104",
+            course_name="Operating Systems",
+            programme=self.programme
+        )
+
+    def test_issue_serialization(self):
+        serializer = IssueSerializer(self.issue)
+        data = serializer.data
+        self.assertEqual(data['status'], "pending")
+        self.assertEqual(data['description'], "Issue with system access")
+        self.assertEqual(data['course_code'], "CSC2104")
+        self.assertIn('student', data)
+        self.assertIn('lecturer', data)
+        self.assertIn('registrar', data)
+        self.assertEqual(data['student']['username'], self.student.username)
+        self.assertEqual(data['lecturer']['username'], self.lecturer.username)
+        self.assertEqual(data['registrar']['username'], self.registrar.username)
+
+    def test_issue_missing_required_fields(self):
+        invalid_data = {
+            "status": "pending",  # missing student, registrar, lecturer, department, etc.
+        }
+        serializer = IssueSerializer(data=invalid_data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("department", serializer.errors)
+        self.assertIn("description", serializer.errors)
+        self.assertIn("category", serializer.errors)
+
+    def test_read_only_fields(self):
+        serializer = IssueSerializer(self.issue)
+        for field in IssueSerializer.Meta.read_only_fields:
+            self.assertIn(field, serializer.data)
 
 

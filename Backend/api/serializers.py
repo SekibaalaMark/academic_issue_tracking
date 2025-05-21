@@ -59,8 +59,6 @@ class RegistrarDashboardCountSerializer(serializers.Serializer):
 
 
 class IssueSerializer(ModelSerializer):
-    #programme = ProgrammeSerializer()
-    #department =DepartmentSerializer()
     registrar = UserSerializer()
     student = UserSerializer()
     lecturer = UserSerializer()
