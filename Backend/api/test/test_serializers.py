@@ -304,3 +304,74 @@ class IssueSerializerTest(TestCase):
             self.assertIn(field, serializer.data)
 
 
+
+from django.test import TestCase
+from api.models import CustomUser, Issue
+from api.serializers import AssignIssueSerializer
+
+class AssignIssueSerializerTest(TestCase):
+
+    def setUp(self):
+        # Create users for roles
+        self.registrar = CustomUser.objects.create_user(
+            username='registrar1',
+            email='registrar1@example.com',
+            password='testpass123',
+            role='registrar'
+        )
+        self.student = CustomUser.objects.create_user(
+            username='student1',
+            email='student1@example.com',
+            password='testpass123',
+            role='student'
+        )
+        self.lecturer = CustomUser.objects.create_user(
+            username='lecturer1',
+            email='lecturer1@example.com',
+            password='testpass123',
+            role='lecturer'
+        )
+        self.non_lecturer = CustomUser.objects.create_user(
+            username='nonlecturer',
+            email='nonlecturer@example.com',
+            password='testpass123',
+            role='student'  # deliberately not lecturer
+        )
+
+        # Create an Issue without lecturer assigned
+        self.issue = Issue.objects.create(
+            student=self.student,
+            programme='computer_science',
+            course_name='Intro to CS',
+            course_code='CS101',
+            year_of_study='year_1',
+            category='Missing_Marks',
+            description='Missing marks in exam',
+            registrar=self.registrar,
+            department='computer_science',
+            status='pending'
+        )
+
+    def test_assign_lecturer_valid(self):
+        data = {'lecturer': self.lecturer.username}
+        serializer = AssignIssueSerializer(instance=self.issue, data=data, partial=True)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        updated_issue = serializer.save()
+        self.assertEqual(updated_issue.lecturer, self.lecturer)
+        self.assertEqual(updated_issue.status, 'in_progress')
+
+    '''def test_assign_lecturer_invalid_role(self):
+        data = {'lecturer': self.non_lecturer.username}
+        serializer = AssignIssueSerializer(instance=self.issue, data=data, partial=True)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('lecturer', serializer.errors)
+        self.assertEqual(serializer.errors['lecturer'][0], "The assigned user must be a lecturer.")'''
+
+    def test_assign_lecturer_missing(self):
+        # lecturer is required, so empty or null should be invalid
+        data = {'lecturer': None}
+        serializer = AssignIssueSerializer(instance=self.issue, data=data, partial=True)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('lecturer', serializer.errors)
+
