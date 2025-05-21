@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
+const BASE_URL = "https://academic-issue-tracking-now.onrender.com";
+
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -11,23 +13,24 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Fetch user data based on role
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
+          console.log("No token found, setting loading to false");
           setLoading(false);
           return;
         }
 
-        const response = await axios.get(
-          "https://academic-6ea365e4b745.herokuapp.com/api/user/profile/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${BASE_URL}/api/user/profile/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("User data fetched:", response.data);
 
         if (response.data) {
           setUser(response.data);
@@ -35,21 +38,39 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         console.error("Error fetching user data:", err);
 
-        // Handle token expiration or authentication errors
-        if (err.response?.status === 401) {
-          setError("Session expired. Please log in again.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("isAuthenticated");
-          localStorage.removeItem("userRole");
-          localStorage.removeItem("username");
+        if (err.response?.status === 404) {
+          console.error("API endpoint not found. Please check the backend.");
+          setError("Unable to fetch user data. Please contact support.");
+        } else if (err.response?.status === 401) {
+          console.log("Token expired, attempting to refresh...");
+          try {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+              // Retry fetching user data with the new token
+              const response = await axios.get(
+                `${BASE_URL}/api/user/profile/`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${newToken}`,
+                  },
+                }
+              );
 
-          // Only navigate to login if not already there
-          if (location.pathname !== "/login") {
-            navigate("/login");
+              console.log(
+                "User data fetched after token refresh:",
+                response.data
+              );
+
+              if (response.data) {
+                setUser(response.data);
+              }
+            }
+          } catch (refreshErr) {
+            console.error("Error refreshing token:", refreshErr);
+            logout();
           }
         } else {
-          setError("Failed to fetch user data. Please try refreshing.");
+          setUser(null);
         }
       } finally {
         setLoading(false);
@@ -64,6 +85,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [navigate, location.pathname]);
 
+  // Login function
   const login = (userData, role) => {
     try {
       if (!userData || !userData.token) {
@@ -104,6 +126,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Logout function
   const logout = () => {
     setUser(null);
     localStorage.removeItem("isAuthenticated");
@@ -114,10 +137,32 @@ export const AuthProvider = ({ children }) => {
     navigate("/login");
   };
 
-  const register = (userData) => {
-    login(userData);
+  // Refresh access token
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        throw new Error("No refresh token found");
+      }
+
+      console.log("Refreshing access token with refresh token:", refreshToken);
+
+      const response = await axios.post(`${BASE_URL}/token/refresh`, {
+        refresh: refreshToken,
+      });
+
+      const { access } = response.data;
+      console.log("New access token received:", access);
+
+      localStorage.setItem("accessToken", access);
+      return access;
+    } catch (err) {
+      console.error("Error refreshing access token:", err);
+      logout(); // Log the user out if the refresh fails
+    }
   };
 
+  // Handle form submissions
   const handleFormSubmission = async (
     url,
     data,
@@ -173,35 +218,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const assignIssue = async (issueId, lecturerId) => {
-    try {
-      const response = await handleFormSubmission(
-        `https://academic-6ea365e4b745.herokuapp.com/api/issues/${issueId}/assign`,
-        { lecturer_id: lecturerId },
-        "patch",
-        (data) => {
-          console.log("Issue assigned:", data);
-        }
-      );
-      return response;
-    } catch (err) {
-      console.error("Issue assignment error:", err);
-      return {
-        success: false,
-        error: err.response?.data || { message: "Failed to assign issue." },
-      };
-    }
-  };
-
   const value = {
     user,
     login,
     logout,
-    register,
     loading,
     error,
     handleFormSubmission,
-    assignIssue,
+    refreshAccessToken,
     currentPath: location.pathname,
   };
 

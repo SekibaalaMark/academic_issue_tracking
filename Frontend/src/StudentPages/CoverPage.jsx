@@ -5,11 +5,10 @@ import { Button, Container, Typography, Box } from "@mui/material";
 const CoverPage = () => {
   const navigate = useNavigate();
 
-
   const handleLogin = () => {
     navigate("/login");
   };
-  
+
   const handleRegister = () => {
     navigate("/register");
   };
@@ -38,7 +37,7 @@ const CoverPage = () => {
           zIndex: 0,
         }}
       />
-      
+
       {/* Overlay for better text readability */}
       <Box
         sx={{
@@ -51,7 +50,7 @@ const CoverPage = () => {
           zIndex: 1,
         }}
       />
-      
+
       {/* Content Container */}
       <Container
         maxWidth="sm"
@@ -76,7 +75,7 @@ const CoverPage = () => {
         >
           Welcome to Academic Issue Tracking
         </Typography>
-        
+
         <Typography
           variant="h6"
           gutterBottom
@@ -88,7 +87,7 @@ const CoverPage = () => {
         >
           Streamline your academic issue resolution process.
         </Typography>
-        
+
         <Button
           variant="contained"
           color="primary"
@@ -103,12 +102,12 @@ const CoverPage = () => {
             boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
             "&:hover": {
               boxShadow: "0 6px 8px rgba(0,0,0,0.3)",
-            }
+            },
           }}
         >
           Login
         </Button>
-        
+
         <Button
           variant="contained"
           color="secondary"
@@ -122,7 +121,7 @@ const CoverPage = () => {
             boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
             "&:hover": {
               boxShadow: "0 6px 8px rgba(0,0,0,0.3)",
-            }
+            },
           }}
         >
           Register
