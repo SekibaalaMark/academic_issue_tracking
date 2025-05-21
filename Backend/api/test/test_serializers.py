@@ -431,8 +431,6 @@ class CreateIssueSerializerTest(TestCase):
             serializer.is_valid(raise_exception=True)
 
 
-from django.test import TestCase
-from api.serializers import LoginSerializer
 
 class LoginSerializerTest(TestCase):
 
@@ -468,3 +466,49 @@ class LoginSerializerTest(TestCase):
         serializer = LoginSerializer(data=data)
         serializer.is_valid()
         self.assertNotIn('password', serializer.data)
+
+
+
+class VerifyEmailSerializerTest(TestCase):
+
+    def test_serializer_valid_data(self):
+        data = {
+            'code': 123456,
+            'email': 'user@example.com'
+        }
+        serializer = VerifyEmailSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_serializer_missing_code(self):
+        data = {
+            'email': 'user@example.com'
+        }
+        serializer = VerifyEmailSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('code', serializer.errors)
+
+    def test_serializer_missing_email(self):
+        data = {
+            'code': 123456
+        }
+        serializer = VerifyEmailSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('email', serializer.errors)
+
+    def test_serializer_invalid_email_format(self):
+        data = {
+            'code': 123456,
+            'email': 'invalid-email'
+        }
+        serializer = VerifyEmailSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('email', serializer.errors)
+
+    def test_serializer_invalid_code_type(self):
+        data = {
+            'code': 'abc123',
+            'email': 'user@example.com'
+        }
+        serializer = VerifyEmailSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('code', serializer.errors)
