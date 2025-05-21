@@ -149,3 +149,38 @@ class StudentDashboardCountSerializerTest(TestCase):
         serializer = StudentDashboardCountSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('total_issues', serializer.errors)
+
+
+class LecturerDashboardCountSerializerTest(TestCase):
+    
+    def test_valid_lecturer_dashboard_data(self):
+        data = {
+            "total_assigned": 8,
+            "in_progress_count": 5,
+            "resolved_count": 3
+        }
+        serializer = LecturerDashboardCountSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data['total_assigned'], 8)
+        self.assertEqual(serializer.validated_data['in_progress_count'], 5)
+        self.assertEqual(serializer.validated_data['resolved_count'], 3)
+
+    def test_missing_required_field(self):
+        data = {
+            "total_assigned": 10,
+            "resolved_count": 4  # Missing in_progress_count
+        }
+        serializer = LecturerDashboardCountSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('in_progress_count', serializer.errors)
+
+    def test_invalid_data_type(self):
+        data = {
+            "total_assigned": 10,
+            "in_progress_count": "five",  # invalid type
+            "resolved_count": 2
+        }
+        serializer = LecturerDashboardCountSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('in_progress_count', serializer.errors)
+
