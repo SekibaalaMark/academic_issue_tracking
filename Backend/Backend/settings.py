@@ -58,7 +58,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # 🔹 Allow React Frontend to Access Django Backend
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # ✅ Add your React app URL
+    "http://localhost:5173", 
+     "https://academic-issue-tracking-now.onrender.com", # ✅ Add your React app URL
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWS_CREDENTIALS = True

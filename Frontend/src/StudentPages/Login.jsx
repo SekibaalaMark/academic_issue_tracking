@@ -30,7 +30,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://aits2-backend.onrender.com/api/login/",
+        "https://academic-issue-tracking-now.onrender.com/api/login/",
         { username, password }
       );
 
