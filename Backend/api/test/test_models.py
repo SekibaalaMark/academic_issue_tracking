@@ -2,6 +2,10 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from api.models import *
+from django.test import TestCase, override_settings
+from django.utils import timezone
+from unittest.mock import patch
+from datetime import timedelta
 
 class CustomUserModelTest(TestCase):
 
@@ -124,3 +128,46 @@ class IssueModelTest(TestCase):
         self.assertIsNone(issue.lecturer)
         self.assertIsNone(issue.attachment.name)
         self.assertEqual(issue.status, "pending")
+
+
+
+
+
+class VerificationCodeModelTest(TestCase):
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123',
+            role='student',
+            staff_id_or_student_no=11111
+        )
+
+    def test_verification_code_creation(self):
+        code = VerificationCode.objects.create(user=self.user, code=12345)
+        self.assertEqual(code.user, self.user)
+        self.assertEqual(code.code, 12345)
+        self.assertFalse(code.is_code_verified)
+
+    def test_verification_code_expiry(self):
+        code = VerificationCode.objects.create(user=self.user, code=54321)
+        code.created_at = timezone.now() - timedelta(minutes=21)
+        code.save()
+        self.assertTrue(code.is_verification_code_expired())
+
+    def test_verification_code_not_expired(self):
+        code = VerificationCode.objects.create(user=self.user, code=12345)
+        self.assertFalse(code.is_verification_code_expired())
+
+    @patch('api.models.send_mail')
+    def test_resend_verification_code(self, mock_send_mail):
+        result = VerificationCode.resend_verification_code(self.user)
+        self.assertIn('Message', result)
+        self.assertEqual(result['Message'], 'Email verification code resent successfully...')
+        self.assertTrue(VerificationCode.objects.filter(user=self.user).exists())
+        self.assertTrue(mock_send_mail.called)
+
+    def test_str_method(self):
+        code = VerificationCode.objects.create(user=self.user, code=99999)
+        self.assertEqual(str(code), f'Verification for {self.user.username} --- {code.code}')
