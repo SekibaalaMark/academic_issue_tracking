@@ -608,3 +608,49 @@ class VerifyPasswordResetCodeSerializerTest(TestCase):
         serializer = VerifyPasswordResetCodeSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('code', serializer.errors)
+
+
+class SetNewPasswordSerializerTest(TestCase):
+
+    def test_valid_data(self):
+        data = {
+            'email': 'user@example.com',
+            'code': 123456,
+            'password': 'strongpass123',
+            'password_confirmation': 'strongpass123'
+        }
+        serializer = SetNewPasswordSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_passwords_do_not_match(self):
+        data = {
+            'email': 'user@example.com',
+            'code': 123456,
+            'password': 'password123',
+            'password_confirmation': 'differentpass'
+        }
+        serializer = SetNewPasswordSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('Passwords do not match', serializer.errors['non_field_errors'][0])
+
+    def test_password_too_short(self):
+        data = {
+            'email': 'user@example.com',
+            'code': 123456,
+            'password': 'short',
+            'password_confirmation': 'short'
+        }
+        serializer = SetNewPasswordSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('non_field_errors', serializer.errors)
+        self.assertIn('Password must be at least 8 characters long', serializer.errors['non_field_errors'][0])
+
+    def test_missing_fields(self):
+        data = {}
+        serializer = SetNewPasswordSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('email', serializer.errors)
+        self.assertIn('code', serializer.errors)
+        self.assertIn('password', serializer.errors)
+        self.assertIn('password_confirmation', serializer.errors)
