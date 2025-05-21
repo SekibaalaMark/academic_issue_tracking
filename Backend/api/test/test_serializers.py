@@ -382,6 +382,12 @@ class CreateIssueSerializerTest(TestCase):
             email='reg@example.com',
             password='pass1234'
         )
+        self.student = CustomUser.objects.create_user(
+            username='reg1',
+            role='student',
+            email='re@example.com',
+            password='pass1234'
+        )
         self.valid_data = {
             'department': 'computer_science',
             'registrar': self.registrar.username,
@@ -391,6 +397,7 @@ class CreateIssueSerializerTest(TestCase):
             'course_code': 'CS101',
             'course_name': 'Intro to CS',
             'programme': 'computer_science',
+            'student':self.student.username,
         }
 
     def test_valid_serializer_creates_issue(self):
@@ -423,3 +430,41 @@ class CreateIssueSerializerTest(TestCase):
         with self.assertRaises(ValidationError):
             serializer.is_valid(raise_exception=True)
 
+
+from django.test import TestCase
+from api.serializers import LoginSerializer
+
+class LoginSerializerTest(TestCase):
+
+    def test_serializer_valid_data(self):
+        data = {
+            'username': 'testuser',
+            'password': 'testpass123'
+        }
+        serializer = LoginSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_serializer_missing_username(self):
+        data = {
+            'password': 'testpass123'
+        }
+        serializer = LoginSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('username', serializer.errors)
+
+    def test_serializer_missing_password(self):
+        data = {
+            'username': 'testuser',
+        }
+        serializer = LoginSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('password', serializer.errors)
+
+    def test_password_write_only(self):
+        data = {
+            'username': 'testuser',
+            'password': 'secretpass'
+        }
+        serializer = LoginSerializer(data=data)
+        serializer.is_valid()
+        self.assertNotIn('password', serializer.data)
