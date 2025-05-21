@@ -141,6 +141,6 @@ class VerificationCode(models.Model):
         
         return {'Message':'Email verification code resent successfully...'}
     
-    def _str_(self):
+    def __str__(self):
         return f'Verification for {self.user.username} --- {self.code}'
 
