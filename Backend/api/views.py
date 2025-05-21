@@ -38,6 +38,17 @@ from .utils import *
 User = CustomUser
 
 
+# views.py
+from rest_framework import generics
+
+
+class LecturerUsernameListView(generics.ListAPIView):
+    queryset = CustomUser.objects.filter(role='lecturer')
+    serializer_class = LecturerUsernameSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
 #DEPARTMENT API VIEW
 
 class DepartmentViewSet(viewsets.ModelViewSet):

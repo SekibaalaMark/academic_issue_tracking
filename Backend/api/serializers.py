@@ -33,7 +33,10 @@ class UserSerializer(ModelSerializer):
     
 
 
-
+class LecturerUsernameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username']  # Only include the username field
 
 
 #Dashboard Count Serializers
