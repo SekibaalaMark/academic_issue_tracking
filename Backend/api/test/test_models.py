@@ -171,3 +171,12 @@ class VerificationCodeModelTest(TestCase):
     def test_str_method(self):
         code = VerificationCode.objects.create(user=self.user, code=99999)
         self.assertEqual(str(code), f'Verification for {self.user.username} --- {code.code}')
+
+
+class ProgrammeModelTest(TestCase):
+
+    def test_programme_creation(self):
+        programme = Programme.objects.create(programme_name='computer_science')
+        self.assertEqual(programme.programme_name, 'computer_science')
+        self.assertEqual(str(programme), 'computer_science')
+

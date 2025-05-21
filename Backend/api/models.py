@@ -15,7 +15,6 @@ class Programme(models.Model):
         ('BLIS','Bachelor of Library and Information Sciences')
     ]
     programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES)
-    #course_unit=models.ManyToManyField(Course_unit,related_name="course_units")
 
     def __str__(self):
         return self.programme_name
