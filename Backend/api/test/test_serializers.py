@@ -654,3 +654,66 @@ class SetNewPasswordSerializerTest(TestCase):
         self.assertIn('code', serializer.errors)
         self.assertIn('password', serializer.errors)
         self.assertIn('password_confirmation', serializer.errors)
+
+
+class UserRegistrationSerializerTest(TestCase):
+    def setUp(self):
+        self.valid_data = {
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'username': 'johndoe',
+            'email': 'johndoe@gmail.com',
+            'password': 'strongpass123',
+            'password_confirmation': 'strongpass123',
+            'role': 'student',
+            'staff_id_or_student_no': 30000,
+        }
+
+    def test_valid_student_registration(self):
+        serializer = UserRegistrationSerializer(data=self.valid_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        user = serializer.save()
+        self.assertEqual(user.username, 'johndoe')
+        self.assertTrue(user.check_password('strongpass123'))
+
+    def test_passwords_do_not_match(self):
+        data = self.valid_data.copy()
+        data['password_confirmation'] = 'wrongpass123'
+        serializer = UserRegistrationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Passwords do not match', str(serializer.errors))
+
+    def test_password_too_short(self):
+        data = self.valid_data.copy()
+        data['password'] = 'short'
+        data['password_confirmation'] = 'short'
+        serializer = UserRegistrationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Password must be at least 8 characters long', str(serializer.errors))
+
+    def test_username_already_exists(self):
+        CustomUser.objects.create_user(username='johndoe', email='other@gmail.com', password='somepass', role='student', staff_id_or_student_no=1002)
+        serializer = UserRegistrationSerializer(data=self.valid_data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Username already exists', str(serializer.errors))
+
+    def test_email_not_gmail(self):
+        data = self.valid_data.copy()
+        data['email'] = 'johndoe@yahoo.com'
+        serializer = UserRegistrationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Only Gmail accounts are allowed', str(serializer.errors))
+
+    def test_invalid_role(self):
+        data = self.valid_data.copy()
+        data['role'] = 'invalid_role'
+        serializer = UserRegistrationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Invalid role selected', str(serializer.errors))
+
+    def test_invalid_student_id_type(self):
+        data = self.valid_data.copy()
+        data['staff_id_or_student_no'] = 'notanumber'
+        serializer = UserRegistrationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('Invalid student number or staff id must be an integer', str(serializer.errors))
