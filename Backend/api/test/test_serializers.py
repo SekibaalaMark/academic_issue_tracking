@@ -361,12 +361,6 @@ class AssignIssueSerializerTest(TestCase):
         self.assertEqual(updated_issue.lecturer, self.lecturer)
         self.assertEqual(updated_issue.status, 'in_progress')
 
-    '''def test_assign_lecturer_invalid_role(self):
-        data = {'lecturer': self.non_lecturer.username}
-        serializer = AssignIssueSerializer(instance=self.issue, data=data, partial=True)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('lecturer', serializer.errors)
-        self.assertEqual(serializer.errors['lecturer'][0], "The assigned user must be a lecturer.")'''
 
     def test_assign_lecturer_missing(self):
         # lecturer is required, so empty or null should be invalid
