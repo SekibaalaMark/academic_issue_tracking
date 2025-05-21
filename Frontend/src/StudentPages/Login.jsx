@@ -6,7 +6,7 @@ import "./Login.css";
 import { AuthContext } from "../context/authContext";
 
 const Login = () => {
-  const { user, loading, login, error } = useContext(AuthContext);
+  const { user, loading, login, error: authError } = useContext(AuthContext);
 
   // Prevent rendering Login if user is authenticated
   if (!loading && user) {
@@ -23,10 +23,43 @@ const Login = () => {
     !!localStorage.getItem("rememberedUsername")
   );
 
+  // Function to get user-friendly error message
+  const getUserFriendlyError = (error) => {
+    if (!error) return null;
+
+    // Network or server errors
+    if (!error.response) {
+      return "Unable to connect to the server. Please check your internet connection and try again.";
+    }
+
+    // Handle specific status codes
+    switch (error.response.status) {
+      case 400:
+        return "Please check your username and password and try again.";
+      case 401:
+        return "Invalid username or password. Please try again.";
+      case 403:
+        return "Access denied. Please contact support if you think this is a mistake.";
+      case 404:
+        return "Login service is temporarily unavailable. Please try again later.";
+      case 500:
+        return "We're experiencing technical difficulties. Please try again later.";
+      default:
+        return "Unable to log in at the moment. Please try again later.";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
+
+    // Basic validation
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage("Please enter both username and password.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await axios.post(
@@ -35,30 +68,18 @@ const Login = () => {
       );
 
       const data = response.data;
-      console.log("Login response:", JSON.stringify(data, null, 2));
 
       const token = data.tokens?.access || data.token || data.access;
       const refresh = data.tokens?.refresh || data.refresh;
-
-      let userRole =
-        data.data?.user?.role ||
-        data.data?.role ||
-        data.user?.role ||
-        data.role;
+      let userRole = data.data?.user?.role || data.data?.role || data.user?.role || data.role;
 
       if (!token) {
-        throw new Error("Authentication failed: No token received");
-      }
-
-      if (!userRole) {
-        console.warn(
-          "User role not found in response, defaulting to 'student'"
-        );
-        userRole = "student";
+        setErrorMessage("Unable to complete login. Please try again.");
+        return;
       }
 
       // Normalize role
-      userRole = userRole.toLowerCase().replace(/[_ ]/g, "");
+      userRole = userRole?.toLowerCase().replace(/[_ ]/g, "") || "student";
       if (userRole === "academicregistrar" || userRole === "registrar") {
         userRole = "academicregistrar";
       }
@@ -81,111 +102,90 @@ const Login = () => {
         localStorage.removeItem("rememberedUsername");
       }
 
-      console.log("Login successful, role:", userRole);
     } catch (err) {
-      console.error("Login error:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
-
-      if (err.response) {
-        const errorData = err.response.data;
-        setErrorMessage(
-          errorData.detail ||
-            errorData.message ||
-            errorData.error ||
-            "Invalid credentials. Please try again."
-        );
-      } else if (err.response?.status === 401) {
-        setErrorMessage("Invalid credentials. Please try again.");
-      } else if (err.request) {
-        setErrorMessage(
-          "No response from server. Please check your internet connection."
-        );
-      } else {
-        setErrorMessage(err.message || "An unexpected error occurred.");
-      }
+      const friendlyError = getUserFriendlyError(err);
+      setErrorMessage(friendlyError);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container">
+    <div className="login-page">
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
-          <h1>Login</h1>
+          <h1>Welcome Back!</h1>
+          <p className="login-subtitle">Please enter your credentials to continue</p>
 
-          <div className="input-wrapper">
-            <label htmlFor="username" className="form-label">
-              Username
-            </label>
-            <div className="input-icon-container">
+          <div className="form-group">
+            <label className="form-label">Username</label>
+            <div className="input-wrapper">
+              <FaUserCircle className="input-icon" />
               <input
                 type="text"
-                id="username"
-                className="form-input with-icon"
-                placeholder="Username"
-                required
+                className="custom-input username-input"
+                placeholder="Enter your username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setErrorMessage("");
+                }}
+                required
               />
-              <FaUserCircle className="input-icon" />
             </div>
           </div>
 
-          <div className="input-wrapper">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
-            <div className="input-icon-container">
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div className="input-wrapper">
+              <FaLock className="input-icon" />
               <input
                 type="password"
-                id="password"
-                className="form-input with-icon"
-                placeholder="Password"
-                required
+                className="custom-input password-input"
+                placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMessage("");
+                }}
+                required
               />
-              <FaLock className="input-icon" />
             </div>
           </div>
 
-          <div className="remember-me">
-            <label className="remember-checkbox">
+          <div className="form-options">
+            <label className="checkbox-container">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={() => setRememberMe(!rememberMe)}
               />
-              <span className="checkbox-text">Remember me</span>
+              <span className="checkmark"></span>
+              <span className="checkbox-label">Remember me</span>
             </label>
-            <Link to="/forgot-password" className="forgot-password-link">
+            <Link to="/forgot-password" className="forgot-link">
               Forgot Password?
             </Link>
           </div>
 
-          {error && <p className="error-message">{error}</p>}
-          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          {errorMessage && (
+            <div className="error-message">{errorMessage}</div>
+          )}
 
-          <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                <span>Logging in...</span>
-              </>
-            ) : (
-              "Login"
-            )}
+          <button 
+            type="submit" 
+            className="sign-in-button"
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing in..." : "Sign In"}
           </button>
 
-          <div className="redirect-text">
-            <p>
-              Don't have an account? <Link to="/register">Register</Link>
-            </p>
-          </div>
+          <p className="register-prompt">
+            New to the platform? {" "}
+            <Link to="/register" className="register-link">
+              Create an account
+            </Link>
+          </p>
         </form>
       </div>
     </div>

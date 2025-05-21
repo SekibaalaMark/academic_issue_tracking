@@ -76,8 +76,40 @@
 
 .input-wrapper {
   position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6B7280;
+  font-size: 18px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 12px 45px 12px 15px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-input::placeholder {
+  color: #9CA3AF;
 }
 
 /* Responsive Design */
