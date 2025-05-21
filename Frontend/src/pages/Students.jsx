@@ -40,6 +40,19 @@ const CATEGORY_CHOICES = [
 
 const REGISTRARS = [{ value: "SekibaalaMark", label: "SekibaalaMark" }];
 
+const SuccessPopup = ({ message, onClose }) => (
+  <div className="success-popup-overlay">
+    <div className="success-popup">
+      <div className="success-popup-content">
+        <div className="success-icon">✓</div>
+        <h2>Success!</h2>
+        <p>{message}</p>
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>
+  </div>
+);
+
 const Students = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -56,7 +69,6 @@ const Students = () => {
     programme: "",
   });
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -103,16 +115,11 @@ const Students = () => {
     }
   }, [user, dataFetched]);
 
-  // Debugging in handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccessMsg("");
     setSubmitting(true);
 
-    console.log("Submitting form data:", formData); // Debugging log
-
-    // Validate form data
     if (
       !formData.course_name ||
       !formData.course_code ||
@@ -139,8 +146,13 @@ const Students = () => {
           Authorization: `Bearer ${user.token}`,
         },
       });
-      console.log("Issue submitted successfully:", response.data); // Debugging log
-      setSuccessMsg("Issue raised successfully.");
+      console.log("Issue submitted successfully:", response.data);
+      
+      // Show alert and redirect to home tab
+      alert("Issue raised successfully! You can track its status in the Home tab.");
+      setSelectedTab("home");
+      
+      // Reset form
       setFormData({
         course_name: "",
         course_code: "",
@@ -340,7 +352,6 @@ const Students = () => {
         <form onSubmit={handleSubmit} className="issue-form">
           <h2>Raise a New Issue</h2>
           {error && <p className="error">{error}</p>}
-          {successMsg && <p className="success">{successMsg}</p>}
           <div className="form-group">
             <label htmlFor="course_name">Course Name</label>
             <input

@@ -228,17 +228,9 @@ const Lecturer = () => {
         console.log("Updating issue status:", { issueId, status, feedback });
         await authAxios.patch(`${ENDPOINTS.lecturerIssues}${issueId}/`, {
           status,
-          feedback: feedback || "Status updated by lecturer.",
+          feedback: feedback || "Issue resolved by lecturer.",
         });
-        setSuccessMsg(
-          status === "resolved"
-            ? "Issue resolved. Emails sent to you, student, and registrar."
-            : status === "in_progress"
-              ? "Issue set to in progress. Emails sent to you and student."
-              : status === "pending"
-                ? "Issue set to pending. Emails sent to you and student."
-                : "Issue updated successfully."
-        );
+        setSuccessMsg("Issue resolved. Emails sent to you, student, and registrar.");
         await fetchLecturerData();
         if (selectedIssue && selectedIssue.id === issueId) {
           const updatedIssue = await authAxios.get(
@@ -249,7 +241,7 @@ const Lecturer = () => {
         setFeedback("");
       } catch (err) {
         console.error("Error updating issue:", err);
-        setError("Failed to update issue. Please try again.");
+        setError("Failed to resolve issue. Please try again.");
         if (err.response?.status === 401) {
           setError("Session expired. Please log in again.");
           handleLogout();
@@ -913,16 +905,13 @@ const Lecturer = () => {
                     {submitting ? "Sending..." : "Send Email to Registrar"}
                   </button>
                 </div>
-                <div
-                  className="status-update-section"
-                  style={{ marginTop: "20px" }}
-                >
-                  <h3 style={{ color: "#1A1A1A" }}>Update Status</h3>
+                <div className="status-update-section" style={{ marginTop: "20px" }}>
+                  <h3 style={{ color: "#1A1A1A" }}>Resolve Issue</h3>
                   <textarea
-                    placeholder="Enter feedback for this status update..."
+                    placeholder="Enter feedback for resolving this issue..."
                     value={feedback || ""}
                     onChange={(e) => setFeedback(e.target.value)}
-                    disabled={submitting}
+                    disabled={submitting || selectedIssue.status === "resolved"}
                     style={{
                       width: "100%",
                       padding: "10px",
@@ -933,45 +922,25 @@ const Lecturer = () => {
                       marginBottom: "10px",
                     }}
                   />
-                  <div
-                    className="status-buttons"
-                    style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
-                  >
-                    {["pending", "in_progress", "resolved"].map((status) => (
-                      <button
-                        key={status}
-                        className={`status-btn ${status} ${
-                          selectedIssue.status === status ? "active" : ""
-                        }`}
-                        onClick={() =>
-                          handleStatusUpdate &&
-                          handleStatusUpdate(selectedIssue.id, status)
-                        }
-                        disabled={selectedIssue.status === status || submitting}
-                        style={{
-                          backgroundColor:
-                            status === "resolved"
-                              ? "#008000"
-                              : status === "pending"
-                                ? "#ff9900"
-                                : status === "in_progress"
-                                  ? "#0066cc"
-                                  : "#ff0000",
-                          color: "#fff",
-                          padding: "10px 20px",
-                          borderRadius: "5px",
-                          border: "none",
-                          opacity:
-                            selectedIssue.status === status || submitting
-                              ? 0.6
-                              : 1,
-                        }}
-                      >
-                        {status === "in_progress"
-                          ? "In Progress"
-                          : status.charAt(0).toUpperCase() + status.slice(1)}
-                      </button>
-                    ))}
+                  <div className="status-buttons" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    <button
+                      className={`status-btn resolved ${selectedIssue.status === "resolved" ? "active" : ""}`}
+                      onClick={() => handleStatusUpdate(selectedIssue.id, "resolved")}
+                      disabled={selectedIssue.status === "resolved" || submitting}
+                      style={{
+                        backgroundColor: "#008000",
+                        color: "#fff",
+                        padding: "10px 20px",
+                        borderRadius: "5px",
+                        border: "none",
+                        opacity: selectedIssue.status === "resolved" || submitting ? 0.6 : 1,
+                        width: "100%",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {submitting ? "Resolving..." : selectedIssue.status === "resolved" ? "Issue Resolved" : "Resolve Issue"}
+                    </button>
                   </div>
                 </div>
                 {selectedIssue.feedback && (
