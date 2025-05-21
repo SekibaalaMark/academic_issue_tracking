@@ -512,3 +512,28 @@ class VerifyEmailSerializerTest(TestCase):
         serializer = VerifyEmailSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('code', serializer.errors)
+
+
+
+class ResendVerificationCodeSerializerTest(TestCase):
+
+    def test_valid_email(self):
+        data = {
+            'email': 'user@example.com'
+        }
+        serializer = ResendVerificationCodeSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+    def test_missing_email(self):
+        data = {}
+        serializer = ResendVerificationCodeSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('email', serializer.errors)
+
+    def test_invalid_email_format(self):
+        data = {
+            'email': 'invalid-email'
+        }
+        serializer = ResendVerificationCodeSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('email', serializer.errors)
