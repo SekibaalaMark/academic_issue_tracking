@@ -184,3 +184,50 @@ class LecturerDashboardCountSerializerTest(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn('in_progress_count', serializer.errors)
 
+from django.test import TestCase
+from api.serializers import RegistrarDashboardCountSerializer
+
+class RegistrarDashboardCountSerializerTest(TestCase):
+
+    def test_valid_registrar_dashboard_data(self):
+        data = {
+            "total_issues": 12,
+            "category_counts": {
+                "Network": 4,
+                "System": 5,
+                "Hardware": 3
+            },
+            "status_counts": {
+                "Pending": 6,
+                "In Progress": 3,
+                "Resolved": 3
+            }
+        }
+        serializer = RegistrarDashboardCountSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data['total_issues'], 12)
+        self.assertIn('category_counts', serializer.validated_data)
+        self.assertIn('status_counts', serializer.validated_data)
+
+    def test_missing_required_field(self):
+        data = {
+            "total_issues": 10,
+            "category_counts": {"Software": 4}
+            # Missing status_counts
+        }
+        serializer = RegistrarDashboardCountSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('status_counts', serializer.errors)
+
+    def test_invalid_data_type(self):
+        data = {
+            "total_issues": "ten",  # Should be int
+            "category_counts": ["Network", "Hardware"],  # Should be dict
+            "status_counts": {"Pending": 2}
+        }
+        serializer = RegistrarDashboardCountSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('total_issues', serializer.errors)
+        self.assertIn('category_counts', serializer.errors)
+
+
