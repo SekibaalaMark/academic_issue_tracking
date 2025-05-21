@@ -5,6 +5,7 @@ from api.serializers import *
 from django.core.files.uploadedfile import SimpleUploadedFile
 from datetime import datetime
 from io import BytesIO
+from rest_framework.exceptions import ValidationError
 
 
 
@@ -368,4 +369,57 @@ class AssignIssueSerializerTest(TestCase):
         serializer = AssignIssueSerializer(instance=self.issue, data=data, partial=True)
         self.assertFalse(serializer.is_valid())
         self.assertIn('lecturer', serializer.errors)
+
+
+
+
+
+class CreateIssueSerializerTest(TestCase):
+    def setUp(self):
+        self.registrar = CustomUser.objects.create_user(
+            username='registrar1',
+            role='registrar',
+            email='reg@example.com',
+            password='pass1234'
+        )
+        self.valid_data = {
+            'department': 'computer_science',
+            'registrar': self.registrar.username,
+            'description': 'Test issue description',
+            'category': 'Missing_Marks',
+            'year_of_study': 'year_2',
+            'course_code': 'CS101',
+            'course_name': 'Intro to CS',
+            'programme': 'computer_science',
+        }
+
+    def test_valid_serializer_creates_issue(self):
+        serializer = CreateIssueSerializer(data=self.valid_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        issue = serializer.save()
+        self.assertEqual(issue.registrar, self.registrar)
+        self.assertEqual(issue.department, self.valid_data['department'])
+        self.assertEqual(issue.status, 'pending')  # default status
+        self.assertIsNone(issue.student)  # student not set here
+
+    def test_invalid_registrar_username_raises_validation_error(self):
+        invalid_data = self.valid_data.copy()
+        invalid_data['registrar'] = 'nonexistent_user'
+        serializer = CreateIssueSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError):
+            serializer.is_valid(raise_exception=True)
+
+    def test_registrar_with_wrong_role_raises_validation_error(self):
+        # Create a user with role other than registrar
+        non_registrar = CustomUser.objects.create_user(
+            username='wrongrole',
+            role='student',
+            email='student@example.com',
+            password='pass1234'
+        )
+        invalid_data = self.valid_data.copy()
+        invalid_data['registrar'] = non_registrar.username
+        serializer = CreateIssueSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError):
+            serializer.is_valid(raise_exception=True)
 

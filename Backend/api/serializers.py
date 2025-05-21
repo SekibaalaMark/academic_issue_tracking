@@ -102,10 +102,7 @@ class AssignIssueSerializer(serializers.ModelSerializer):
 
 
 class CreateIssueSerializer(ModelSerializer):
-    #department = serializers.CharField(max_length=50)
     registrar = serializers.CharField(max_length=100)
-    #programme = serializers.CharField(max_length=110)
-    
     class Meta:
         model = Issue
         fields = [
@@ -114,12 +111,7 @@ class CreateIssueSerializer(ModelSerializer):
         ]
         read_only_fields = ['student', 'created_at', 'last_updated', 'status']
     
-    '''def validate_department(self, value):
-        try:
-            department = Department.objects.get(name=value)
-            return department
-        except Department.DoesNotExist:
-            raise serializers.ValidationError(f"Department '{value}' does not exist.")'''
+
     
     def validate_registrar(self, value):
         try:
@@ -128,12 +120,6 @@ class CreateIssueSerializer(ModelSerializer):
         except CustomUser.DoesNotExist:
             raise serializers.ValidationError(f"Registrar with username '{value}' does not exist.")
     
-    ''''def validate_programme(self, value):
-        try:
-            programme = Programme.objects.get(programme_name=value)
-            return programme
-        except Programme.DoesNotExist:
-            raise serializers.ValidationError(f"Programme '{value}' does not exist.")'''
     
     def create(self, validated_data):
         # Creating the issue
