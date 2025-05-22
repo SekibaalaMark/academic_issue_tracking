@@ -182,3 +182,4 @@ class IssueViewSetTest(TestCase):
         self.client.logout()
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
