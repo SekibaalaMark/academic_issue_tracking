@@ -41,15 +41,17 @@ const SummaryCard = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
+  border-left: 4px solid #2d5a3c;
 
   .label {
-    color: #7f8c8d;
+    color: #2d5a3c;
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
+    font-weight: 500;
   }
 
   .value {
-    color: #2c3e50;
+    color: #2d5a3c;
     font-size: 1.8rem;
     font-weight: bold;
   }
@@ -64,12 +66,14 @@ const FilterContainer = styled.div`
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #2d5a3c;
 
   label {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     font-weight: 500;
+    color: #2d5a3c;
   }
 
   select, input {
@@ -80,7 +84,7 @@ const FilterContainer = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #3498db;
+      border-color: #2d5a3c;
     }
   }
 `;
@@ -175,9 +179,9 @@ const StatusBadge = styled.span`
       case 'pending':
         return 'background-color: #fff3cd; color: #856404;';
       case 'in progress':
-        return 'background-color: #cce5ff; color: #004085;';
+        return 'background-color: #e8f5e9; color: #2d5a3c;';
       case 'resolved':
-        return 'background-color: #d4edda; color: #155724;';
+        return 'background-color: #d4edda; color: #2d5a3c;';
       default:
         return 'background-color: #f8f9fa; color: #383d41;';
     }
@@ -201,7 +205,7 @@ const LogoutButton = styled(ActionButton)`
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background-color: #e74c3c;
+  background-color: #dc3545;
   color: white;
   padding: 0.4rem 1rem;
   font-size: 0.875rem;
@@ -209,7 +213,7 @@ const LogoutButton = styled(ActionButton)`
   min-width: auto;
   
   &:hover {
-    background-color: #c0392b;
+    background-color: #c82333;
     transform: translateY(-1px);
     transition: all 0.2s ease;
   }
@@ -217,6 +221,53 @@ const LogoutButton = styled(ActionButton)`
   &:active {
     transform: translateY(0);
   }
+`;
+
+// Add new styled components for sidebar
+const PageLayout = styled.div`
+  display: flex;
+  min-height: 100vh;
+`;
+
+const Sidebar = styled.div`
+  width: 250px;
+  background-color: #2d5a3c;
+  padding: 2rem 1rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const SidebarButton = styled.button`
+  width: 100%;
+  padding: 1rem;
+  background-color: ${props => props.active ? '#1e3d28' : 'transparent'};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #1e3d28;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  background-color: #f5f5f5;
+  overflow-y: auto;
+  padding: 2rem;
 `;
 
 // API Endpoints
@@ -242,6 +293,7 @@ const AcademicRegistrar = () => {
   const [error, setError] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [currentView, setCurrentView] = useState('home');
 
   const createAuthAxios = () => {
     const token = localStorage.getItem("accessToken") || localStorage.getItem("authToken");
@@ -258,7 +310,41 @@ const AcademicRegistrar = () => {
     const authAxios = createAuthAxios();
     try {
       const issuesResponse = await authAxios.get(ENDPOINTS.issues);
-      const issuesData = Array.isArray(issuesResponse.data) ? issuesResponse.data : [];
+      let issuesData = Array.isArray(issuesResponse.data) ? issuesResponse.data : [];
+      
+      // Transform the data to ensure status is properly mapped
+      issuesData = issuesData.map(issue => ({
+        ...issue,
+        status: issue.status.toLowerCase(), // Normalize status to lowercase
+        assignedLecturer: issue.assigned_lecturer || issue.assignedLecturer // Handle both formats
+      }));
+
+      // Get cached issues to preserve any local changes
+      const cachedIssues = localStorage.getItem("cachedIssues");
+      const previousIssues = cachedIssues ? JSON.parse(cachedIssues) : [];
+      
+      // Merge new issues with cached statuses, prioritizing server status for resolved issues
+      issuesData = issuesData.map(issue => {
+        const cachedIssue = previousIssues.find(cached => cached.id === issue.id);
+        if (cachedIssue) {
+          // If the server shows it as resolved, keep it resolved
+          if (issue.status === "resolved") {
+            return {
+              ...issue,
+              status: "resolved",
+              assignedLecturer: issue.assignedLecturer || cachedIssue.assignedLecturer
+            };
+          }
+          // Otherwise use cached status
+          return {
+            ...issue,
+            status: cachedIssue.status,
+            assignedLecturer: cachedIssue.assignedLecturer
+          };
+        }
+        return issue;
+      });
+
       localStorage.setItem("cachedIssues", JSON.stringify(issuesData));
       setIssues(issuesData);
       return issuesData;
@@ -315,14 +401,15 @@ const AcademicRegistrar = () => {
         lecturer: lecturer.username,
       });
 
-      // Update local state
-      setIssues((prevIssues) =>
-        prevIssues.map((issue) =>
-          issue.id === issueId
-            ? { ...issue, assignedLecturer: lecturer.name, status: "in progress" }
-            : issue
-        )
+      // Update local state and cache
+      const updatedIssues = issues.map((issue) =>
+        issue.id === issueId
+          ? { ...issue, assignedLecturer: lecturer.name, status: "in progress" }
+          : issue
       );
+      
+      setIssues(updatedIssues);
+      localStorage.setItem("cachedIssues", JSON.stringify(updatedIssues));
 
       alert("Issue assigned successfully!");
     } catch (error) {
@@ -344,13 +431,22 @@ const AcademicRegistrar = () => {
         status: "resolved"
       });
 
-      setIssues((prevIssues) =>
-        prevIssues.map((issue) =>
-          issue.id === issueId
-            ? { ...issue, status: "resolved" }
-            : issue
-        )
+      // Update local state and cache
+      const updatedIssues = issues.map((issue) =>
+        issue.id === issueId
+          ? { 
+              ...issue, 
+              status: "resolved",
+              resolution_date: new Date().toISOString() // Add resolution date
+            }
+          : issue
       );
+      
+      setIssues(updatedIssues);
+      localStorage.setItem("cachedIssues", JSON.stringify(updatedIssues));
+
+      // Immediately fetch latest data from server to ensure sync
+      await fetchIssues();
 
       alert("Issue marked as resolved successfully!");
     } catch (error) {
@@ -420,15 +516,28 @@ const AcademicRegistrar = () => {
     fetchData();
   }, []);
 
+  // Add polling to regularly check for updates
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      if (!offlineMode) {
+        fetchIssues().catch(console.error);
+      }
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [offlineMode]);
+
   // Filter issues
-  const filteredIssues = issues.filter((issue) => {
-    const matchesType = !filterType || issue.issueCategory === filterType;
-    const matchesStatus = !filterStatus || issue.status === filterStatus;
-    const matchesLecturer = !filterLecturer || 
-      (issue.assignedLecturer && 
-       issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()));
-    return matchesType && matchesStatus && matchesLecturer;
-  });
+  const filteredIssues = issues
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .filter((issue) => {
+      const matchesType = !filterType || issue.issueCategory === filterType;
+      const matchesStatus = !filterStatus || issue.status.toLowerCase() === filterStatus.toLowerCase();
+      const matchesLecturer = !filterLecturer || 
+        (issue.assignedLecturer && 
+         issue.assignedLecturer.toLowerCase().includes(filterLecturer.toLowerCase()));
+      return matchesType && matchesStatus && matchesLecturer;
+    });
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -442,50 +551,13 @@ const AcademicRegistrar = () => {
   const inProgressIssues = issues.filter((issue) => issue.status === "in progress").length;
   const resolvedIssues = issues.filter((issue) => issue.status === "resolved").length;
 
-  if (loading) {
-    return (
-      <DashboardContainer>
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading Academic Registrar Dashboard...</p>
-        </div>
-      </DashboardContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <DashboardContainer>
-        <div className="error-container">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <ActionButton primary onClick={handleRetry}>Retry</ActionButton>
-        </div>
-      </DashboardContainer>
-    );
-  }
-
-  return (
-    <DashboardContainer>
-      {offlineMode && (
-        <div className="offline-banner">
-          <p>Working in offline mode. Some changes may not be saved to the server.</p>
-          <ActionButton primary onClick={handleRetry}>Try to reconnect</ActionButton>
-        </div>
-      )}
-
+  const renderHomeView = () => (
+    <>
       <HeaderSection>
         <PageTitle>Academic Registrar Dashboard</PageTitle>
-        <LogoutButton onClick={handleLogout}>
-          Logout
-        </LogoutButton>
       </HeaderSection>
 
       <SummaryGrid>
-        <SummaryCard>
-          <div className="label">Total Issues</div>
-          <div className="value">{totalIssues}</div>
-        </SummaryCard>
         <SummaryCard>
           <div className="label">Pending</div>
           <div className="value">{pendingIssues}</div>
@@ -499,6 +571,14 @@ const AcademicRegistrar = () => {
           <div className="value">{resolvedIssues}</div>
         </SummaryCard>
       </SummaryGrid>
+    </>
+  );
+
+  const renderAssignIssueView = () => (
+    <>
+      <HeaderSection>
+        <PageTitle>Assign Issues to Lecturers</PageTitle>
+      </HeaderSection>
 
       <FilterContainer>
         <label>
@@ -542,10 +622,8 @@ const AcademicRegistrar = () => {
           <Table>
             <thead>
               <Tr>
-                <Th>ID</Th>
                 <Th>Course Code</Th>
                 <Th>Issue Category</Th>
-                <Th>Description</Th>
                 <Th>Status</Th>
                 <Th>Assigned Lecturer</Th>
                 <Th>Actions</Th>
@@ -554,10 +632,8 @@ const AcademicRegistrar = () => {
             <tbody>
               {currentIssues.map((issue) => (
                 <Tr key={issue.id}>
-                  <Td>{issue.id}</Td>
-                  <Td>{issue.courseCode}</Td>
-                  <Td>{issue.issueCategory}</Td>
-                  <Td>{issue.description}</Td>
+                  <Td>{issue.course_code}</Td>
+                  <Td>{issue.category}</Td>
                   <Td>
                     <StatusBadge status={issue.status}>
                       {issue.status}
@@ -631,8 +707,75 @@ const AcademicRegistrar = () => {
           </Pagination>
         </>
       )}
-    </DashboardContainer>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <DashboardContainer>
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Loading Academic Registrar Dashboard...</p>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardContainer>
+        <div className="error-container">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <ActionButton primary onClick={handleRetry}>Retry</ActionButton>
+        </div>
+      </DashboardContainer>
+    );
+  }
+
+  return (
+    <PageLayout>
+      <Sidebar>
+        <SidebarButton 
+          active={currentView === 'home'} 
+          onClick={() => setCurrentView('home')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
+          </svg>
+          Home
+        </SidebarButton>
+        
+        <SidebarButton 
+          active={currentView === 'assignIssue'} 
+          onClick={() => setCurrentView('assignIssue')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z"/>
+          </svg>
+          Assign Issue
+        </SidebarButton>
+
+        <SidebarButton onClick={handleLogout}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+          </svg>
+          Logout
+        </SidebarButton>
+      </Sidebar>
+
+      <MainContent>
+        {offlineMode && (
+          <div className="offline-banner">
+            <p>Working in offline mode. Some changes may not be saved to the server.</p>
+            <ActionButton primary onClick={handleRetry}>Try to reconnect</ActionButton>
+          </div>
+        )}
+
+        {currentView === 'home' ? renderHomeView() : renderAssignIssueView()}
+      </MainContent>
+    </PageLayout>
   );
 };
 
-export default AcademicRegistrar;
+export default AcademicRegistrar; 
