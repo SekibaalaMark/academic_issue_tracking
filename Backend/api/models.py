@@ -13,6 +13,7 @@ class Programme(models.Model):
         ('software_engineering','Bachelor of Science in Software Engineering'),
         ('BIST','Bachelor Information Systems and Technology'),
         ('BLIS','Bachelor of Library and Information Sciences')
+        ('BCOM','Bachelor of Commerce')
     ]
     programme_name = models.CharField(max_length=110,choices=PROGRAMME_CHOICES)
 
