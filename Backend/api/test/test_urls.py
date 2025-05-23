@@ -185,3 +185,13 @@ class TestTokenURL(SimpleTestCase):
     def test_token_url_resolves(self):
         url = reverse('get_token')
         self.assertEqual(resolve(url).func.view_class, TokenObtainPairView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+from rest_framework_simplejwt.views import TokenRefreshView
+
+class TestTokenRefreshURL(SimpleTestCase):
+    def test_token_refresh_url_resolves(self):
+        url = reverse('refresh_token')
+        self.assertEqual(resolve(url).func.view_class, TokenRefreshView)
