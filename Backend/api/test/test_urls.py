@@ -48,3 +48,11 @@ class TestFilterIssuesURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, filter_issues)
 
 
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+
+class TestVerifyEmailURL(SimpleTestCase):
+    def test_verify_email_url_resolves(self):
+        url = reverse('email-verification')
+        self.assertEqual(resolve(url).func.view_class, VerifyEmailView)
