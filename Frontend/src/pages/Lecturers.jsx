@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Lecturers.css";
 import { AuthContext } from "@/context/authContext";
+import LoadingAnimation from "@/components/LoadingAnimation";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -60,6 +61,19 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+const PROGRAMME_CHOICES = [
+  {
+    value: "computer_science",
+    label: "Bachelor of Science in Computer Science",
+  },
+  {
+    value: "software_engineering",
+    label: "Bachelor of Science in Software Engineering",
+  },
+  { value: "BIST", label: "Bachelor Information Systems and Technology" },
+  { value: "BLIS", label: "Bachelor of Library and Information Sciences" },
+];
+
 const ENDPOINTS = {
   lecturerIssues:
     "https://academic-issue-tracking-now.onrender.com/api/lecturer-issue-management/",
@@ -103,22 +117,35 @@ const formatUser = (user) => {
 const Lecturer = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [issues, setIssues] = useState([]);
+  const [filterType, setFilterType] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [dashboardData, setDashboardData] = useState({
     total_assigned: 0,
     in_progress_count: 0,
     resolved_count: 0,
+    categories: {
+      Missing_Marks: 0,
+      Wrong_grading: 0,
+      wrong_marks: 0,
+      other: 0
+    },
+    statuses: {
+      in_progress: 0,
+      resolved: 0
+    }
   });
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [selectedTab, setSelectedTab] = useState("home");
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [feedback, setFeedback] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(true);
 
   // Format user data safely
   const formattedUser = formatUser(user);
@@ -136,6 +163,15 @@ const Lecturer = () => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  useEffect(() => {
+    // Hide animation after it completes
+    const timer = setTimeout(() => {
+      setShowAnimation(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const createAuthAxios = useCallback(() => {
     const token = user?.token || localStorage.getItem("accessToken");
@@ -163,15 +199,45 @@ const Lecturer = () => {
         console.warn("Issues response is not an array:", issuesRes.data);
         setIssues([]);
       } else {
-        setIssues(issuesRes.data);
+        // Sort issues by creation date (newest first)
+        const sortedIssues = issuesRes.data.sort((a, b) => 
+          new Date(b.created_at) - new Date(a.created_at)
+        );
+        setIssues(sortedIssues);
+
+        // Calculate category and status counts
+        const categoryCounts = {
+          Missing_Marks: 0,
+          Wrong_grading: 0,
+          wrong_marks: 0,
+          other: 0
+        };
+        const statusCounts = {
+          in_progress: 0,
+          resolved: 0
+        };
+
+        sortedIssues.forEach(issue => {
+          // Count categories
+          if (issue.category) {
+            categoryCounts[issue.category] = (categoryCounts[issue.category] || 0) + 1;
+          }
+          // Count non-pending statuses
+          if (issue.status && issue.status !== 'pending') {
+            statusCounts[issue.status] = (statusCounts[issue.status] || 0) + 1;
+          }
+        });
+
+        // Calculate total assigned (all issues assigned to the lecturer)
+        const totalAssigned = sortedIssues.length;
+
+        setDashboardData(prevData => ({
+          ...prevData,
+          total_assigned: totalAssigned,
+          categories: categoryCounts,
+          statuses: statusCounts
+        }));
       }
-      setDashboardData(
-        dashboardRes.data.dashboard || {
-          total_assigned: 0,
-          in_progress_count: 0,
-          resolved_count: 0,
-        }
-      );
     } catch (err) {
       console.error("Error fetching lecturer data:", {
         message: err.message,
@@ -287,805 +353,293 @@ const Lecturer = () => {
     [emailMessage, createAuthAxios]
   );
 
-  const filteredIssues = issues
-    .filter((issue) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        (issue.course_code || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (issue.course_name || "")
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        formatStudent(issue.student)
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        filterStatus === "" || (issue.status || "") === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if ((a.status || "") === "pending" && (b.status || "") !== "pending")
-        return -1;
-      if ((b.status || "") === "pending" && (a.status || "") !== "pending")
-        return 1;
-      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-    });
+  // Filter issues
+  const filteredIssues = issues.filter((issue) => {
+    const matchesType = !filterType || issue.category === filterType;
+    const matchesStatus = !filterStatus || issue.status === filterStatus;
+    const matchesSearch = !searchTerm || 
+      (issue.course_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       issue.course_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       issue.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesType && matchesStatus && matchesSearch;
+  });
+
+  // Navigation handlers
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleForward = () => {
+    navigate(1);
+  };
+
+  const handleRefresh = () => {
+    fetchLecturerData();
+  };
 
   if (loading) {
     return (
-      <div
-        className="loading"
-        style={{ color: "#1A1A1A", textAlign: "center" }}
-      >
+      <div className="loading">
         <div className="spinner"></div>
-        <p>Loading Lecturer Dashboard...</p>
+        <p>Loading...</p>
       </div>
     );
   }
+
   return (
     <ErrorBoundary>
+      {showAnimation && <LoadingAnimation />}
       <div className="lecturer-dashboard">
-        <aside className="sidebar" style={{ backgroundColor: "#f4f4f4" }}>
-          <h2 className="sidebar-title" style={{ color: "#1A1A1A" }}>
+        <aside className="sidebar">
+          <h2 className="sidebar-title">
             Lecturer Dashboard
           </h2>
           <ul className="sidebar-nav">
-            {["home", "issues", "profile", "logout"].map((tab) => (
-              <li
-                key={tab}
-                className={selectedTab === tab ? "active" : ""}
-                onClick={() =>
-                  tab === "logout" && typeof handleLogout === "function"
-                    ? handleLogout()
-                    : setSelectedTab(tab)
-                }
-                style={{
-                  color: selectedTab === tab ? "#008000" : "#1A1A1A",
-                  cursor: "pointer",
-                  padding: "10px",
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </li>
-            ))}
+            <li className="active">
+              Home
+            </li>
+            <li onClick={handleLogout}>
+              Logout
+            </li>
           </ul>
         </aside>
-        <main className="main-content" style={{ padding: "20px" }}>
-          {successMsg && (
-            <div
-              className="success-message"
-              style={{
-                backgroundColor: "#008000",
-                color: "#fff",
-                padding: "10px",
-              }}
+
+        <main className="main-content">
+          <div className="navigation-controls" style={{
+            display: 'flex',
+            gap: '10px',
+            padding: '10px',
+            backgroundColor: '#e8f5e9',
+            borderRadius: '8px',
+            marginBottom: '20px'
+          }}>
+            <button
+              onClick={handleBack}
+              className="action-button"
+              style={{ backgroundColor: '#2d5a3c' }}
             >
+              ← Back
+            </button>
+            <button
+              onClick={handleForward}
+              className="action-button"
+              style={{ backgroundColor: '#2d5a3c' }}
+            >
+              Forward →
+            </button>
+            <button
+              onClick={handleRefresh}
+              className="action-button"
+              style={{ backgroundColor: '#2d5a3c' }}
+            >
+              ↻ Refresh
+            </button>
+          </div>
+
+          {successMsg && (
+            <div className="success-message">
               <p>{successMsg}</p>
-              <button
-                className="close-btn"
-                onClick={() => setSuccessMsg("")}
-                style={{ color: "#fff" }}
-              >
+              <button className="close-btn" onClick={() => setSuccessMsg("")}>
                 ×
               </button>
             </div>
           )}
           {error && (
-            <div
-              className="error-message"
-              style={{
-                backgroundColor: "#ff0000",
-                color: "#fff",
-                padding: "10px",
-              }}
-            >
+            <div className="error-message">
               <p>{error}</p>
-              <button
-                className="close-btn"
-                onClick={() => setError("")}
-                style={{ color: "#fff" }}
-              >
+              <button className="close-btn" onClick={() => setError("")}>
                 ×
               </button>
             </div>
           )}
-          {selectedTab === "home" && (
-            <div className="dashboard-home">
-              <h1 className="page-title" style={{ color: "#1A1A1A" }}>
-                Lecturer Dashboard
-              </h1>
+
+          <div className="welcome-section">
+            <h2 className="welcome-title">
+              Welcome back, {user?.username || "Lecturer"}!
+            </h2>
+            <p className="welcome-message">
+              Your expertise is valuable in resolving student academic issues. Review and address the issues assigned to you,
+              ensuring each student receives the attention they deserve.
+            </p>
+          </div>
+
+          <div className="dashboard-summary">
+            {/* Status Counters */}
+            <div className="summary-item">
+              <span className="summary-label">Total Assigned</span>
+              <span className="summary-value">{dashboardData.total_assigned}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">In Progress</span>
+              <span className="summary-value">{dashboardData.statuses.in_progress}</span>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Resolved</span>
+              <span className="summary-value">{dashboardData.statuses.resolved}</span>
+            </div>
+          </div>
+
+          {/* Category Counters */}
+          <div className="category-summary">
+            <h3 className="section-title">Issues by Category</h3>
+            <div className="dashboard-summary">
+              <div className="summary-item">
+                <span className="summary-label">Missing Marks</span>
+                <span className="summary-value">{dashboardData.categories.Missing_Marks}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Wrong Grading</span>
+                <span className="summary-value">{dashboardData.categories.Wrong_grading}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Wrong Marks</span>
+                <span className="summary-value">{dashboardData.categories.wrong_marks}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">Other</span>
+                <span className="summary-value">{dashboardData.categories.other}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="filter-container">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '1rem',
+              alignItems: 'end'
+            }}>
+              <div>
+                <label>Issue Category</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  <option value="Missing_Marks">Missing Marks</option>
+                  <option value="Wrong_grading">Wrong Grading</option>
+                  <option value="wrong_marks">Wrong Marks</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Search</label>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by course or description..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="issues-list">
+            <h2>
+              <span>Issues ({filteredIssues.length})</span>
               <button
                 onClick={fetchLecturerData}
-                style={{
-                  backgroundColor: "#008000",
-                  color: "#fff",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  border: "none",
-                  marginBottom: "20px",
-                }}
+                className="action-button"
               >
                 Refresh Issues
               </button>
-              <div className="user-welcome">
-                <p style={{ color: "#1A1A1A" }}>
-                  Welcome,{" "}
-                  {formattedUser?.name ||
-                    localStorage.getItem("username") ||
-                    "Lecturer"}
-                </p>
+            </h2>
+
+            {filteredIssues.length === 0 ? (
+              <div className="no-issues">
+                <p>No issues match your filter criteria.</p>
               </div>
-              <div
-                className="dashboard-summary"
-                style={{ display: "flex", gap: "20px" }}
-              >
-                {[
-                  {
-                    label: "Total Assigned",
-                    value: dashboardData?.total_assigned || 0,
-                  },
-                  {
-                    label: "In Progress",
-                    value: dashboardData?.in_progress_count || 0,
-                  },
-                  {
-                    label: "Resolved",
-                    value: dashboardData?.resolved_count || 0,
-                  },
-                ].map(({ label, value }) => (
+            ) : (
+              <div className="issues-grid">
+                {filteredIssues.map((issue) => (
                   <div
-                    key={label}
-                    className="summary-item"
-                    style={{
-                      backgroundColor: "#fff",
-                      padding: "15px",
-                      borderRadius: "5px",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                    }}
+                    key={issue.id}
+                    className={`issue-card ${issue.status || ""}`}
                   >
-                    <span
-                      className="summary-label"
-                      style={{ color: "#1A1A1A" }}
-                    >
-                      {label}:
-                    </span>
-                    <span
-                      className="summary-value"
-                      style={{ color: "#008000", fontWeight: "bold" }}
-                    >
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="recent-issues">
-                <h2 className="section-title" style={{ color: "#1A1A1A" }}>
-                  Recent Issues
-                </h2>
-                {issues?.length === 0 ? (
-                  <p className="no-issues" style={{ color: "#1A1A1A" }}>
-                    No issues assigned to you yet.
-                  </p>
-                ) : (
-                  <div
-                    className="issues-grid"
-                    style={{ display: "grid", gap: "15px" }}
-                  >
-                    {issues.slice(0, 4).map((issue) => (
-                      <div
-                        key={issue.id}
-                        className={`issue-card ${issue.status || ""}`}
-                        style={{
-                          backgroundColor:
-                            issue.status === "pending" ? "#e6ffe6" : "#fff",
-                          padding: "15px",
-                          borderRadius: "5px",
-                          border: "1px solid #ddd",
-                        }}
-                      >
-                        <div
-                          className="issue-header"
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <h3 style={{ color: "#1A1A1A" }}>
-                            {issue.course_code || "N/A"}:{" "}
-                            {issue.course_name || "Unknown Course"}
-                          </h3>
-                          <span
-                            className={`status-badge ${issue.status || ""}`}
-                            style={{
-                              backgroundColor:
-                                issue.status === "resolved"
-                                  ? "#008000"
-                                  : issue.status === "pending"
-                                    ? "#ff9900"
-                                    : issue.status === "in_progress"
-                                      ? "#0066cc"
-                                      : "#ff0000",
-                              color: "#fff",
-                              padding: "5px 10px",
-                              borderRadius: "12px",
-                            }}
-                          >
-                            {(issue.status || "unknown").replace("_", " ")}
-                          </span>
-                        </div>
-                        <p
-                          className="issue-description"
-                          style={{ color: "#1A1A1A" }}
-                        >
-                          {(
-                            issue.description || "No description provided"
-                          ).substring(0, 100)}
-                          ...
-                        </p>
-                        <div
-                          className="issue-footer"
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            className="student-name"
-                            style={{ color: "#1A1A1A" }}
-                          >
-                            {formatStudent(issue.student) || "Unknown Student"}
-                          </span>
-                          <button
-                            className="view-btn"
-                            onClick={() =>
-                              typeof handleViewIssue === "function" &&
-                              handleViewIssue(issue.id)
-                            }
-                            style={{
-                              backgroundColor: "#008000",
-                              color: "#fff",
-                              padding: "8px 15px",
-                              borderRadius: "5px",
-                              border: "none",
-                            }}
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {issues?.length > 4 && (
-                  <button
-                    className="view-all-btn"
-                    onClick={() => setSelectedTab("issues")}
-                    style={{
-                      backgroundColor: "#008000",
-                      color: "#fff",
-                      padding: "10px 20px",
-                      borderRadius: "5px",
-                      border: "none",
-                      marginTop: "15px",
-                    }}
-                  >
-                    View All Issues
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-          {selectedTab === "issues" && (
-            <div className="issues-management">
-              <h1 className="page-title" style={{ color: "#1A1A1A" }}>
-                Manage Issues
-              </h1>
-              <p style={{ color: "#1A1A1A" }}>
-                Showing {filteredIssues?.length || 0} of {issues?.length || 0}{" "}
-                issues
-              </p>
-              <div
-                className="filter-container"
-                style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
-              >
-                <div className="search-box" style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    placeholder="Search by course or student..."
-                    value={searchTerm || ""}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      border: "1px solid #ddd",
-                      color: "#1A1A1A",
-                    }}
-                  />
-                </div>
-                <div className="status-filter">
-                  <select
-                    value={filterStatus || ""}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "5px",
-                      border: "1px solid #ddd",
-                      color: "#1A1A1A",
-                    }}
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                  </select>
-                </div>
-              </div>
-              {filteredIssues?.length === 0 ? (
-                <p className="no-issues" style={{ color: "#1A1A1A" }}>
-                  No issues match your search criteria.
-                </p>
-              ) : (
-                <div className="issues-table-container">
-                  <table
-                    className="issues-table"
-                    style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                      color: "#1A1A1A",
-                    }}
-                  >
-                    <thead>
-                      <tr style={{ backgroundColor: "#f4f4f4" }}>
-                        {[
-                          "ID",
-                          "Course",
-                          "Student",
-                          "Date Submitted",
-                          "Status",
-                          "Actions",
-                        ].map((header) => (
-                          <th
-                            key={header}
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredIssues.map((issue) => (
-                        <tr
-                          key={issue.id}
-                          className={issue.status || ""}
-                          style={{
-                            backgroundColor:
-                              issue.status === "pending" ? "#e6ffe6" : "#fff",
-                          }}
-                        >
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            {issue.id || "N/A"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            {issue.course_code || "N/A"}:{" "}
-                            {issue.course_name || "Unknown Course"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            {formatStudent(issue.student) || "Unknown Student"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            {issue.created_at
-                              ? new Date(issue.created_at).toLocaleDateString()
-                              : "N/A"}
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <span
-                              className={`status-badge ${issue.status || ""}`}
-                              style={{
-                                backgroundColor:
-                                  issue.status === "resolved"
-                                    ? "#008000"
-                                    : issue.status === "pending"
-                                      ? "#ff9900"
-                                      : issue.status === "in_progress"
-                                        ? "#0066cc"
-                                        : "#ff0000",
-                                color: "#fff",
-                                padding: "5px 10px",
-                                borderRadius: "12px",
-                              }}
-                            >
-                              {(issue.status || "unknown").replace("_", " ")}
-                            </span>
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              border: "1px solid #ddd",
-                            }}
-                          >
-                            <button
-                              className="view-btn"
-                              onClick={() =>
-                                typeof handleViewIssue === "function" &&
-                                handleViewIssue(issue.id)
-                              }
-                              style={{
-                                backgroundColor: "#008000",
-                                color: "#fff",
-                                padding: "8px 15px",
-                                borderRadius: "5px",
-                                border: "none",
-                              }}
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-          {selectedTab === "issueDetail" && selectedIssue && (
-            <div className="issue-detail">
-              <div
-                className="detail-header"
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <button
-                  className="back-btn"
-                  onClick={() => setSelectedTab("issues")}
-                  style={{
-                    backgroundColor: "#008000",
-                    color: "#fff",
-                    padding: "8px 15px",
-                    borderRadius: "5px",
-                    border: "none",
-                  }}
-                >
-                  ← Back to Issues
-                </button>
-                <h1 className="page-title" style={{ color: "#1A1A1A" }}>
-                  Issue Details
-                </h1>
-              </div>
-              <div className="issue-info">
-                <div
-                  className="info-section"
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: "15px",
-                    borderRadius: "5px",
-                  }}
-                >
-                  <h2 style={{ color: "#1A1A1A" }}>
-                    {selectedIssue.course_code || "N/A"}:{" "}
-                    {selectedIssue.course_name || "Unknown Course"}
-                  </h2>
-                  {[
-                    {
-                      label: "Status",
-                      value: (
-                        <span
-                          className={`status-badge ${selectedIssue.status || ""}`}
-                          style={{
-                            backgroundColor:
-                              selectedIssue.status === "resolved"
-                                ? "#008000"
-                                : selectedIssue.status === "pending"
-                                  ? "#ff9900"
-                                  : selectedIssue.status === "in_progress"
-                                    ? "#0066cc"
-                                    : "#ff0000",
-                            color: "#fff",
-                            padding: "5px 10px",
-                            borderRadius: "12px",
-                          }}
-                        >
-                          {(selectedIssue.status || "unknown").replace(
-                            "_",
-                            " "
-                          )}
+                    <div className="issue-header">
+                      <h3>{issue.course_code || "N/A"}: {issue.course_name || "Unknown Course"}</h3>
+                      <span className={`status-badge ${issue.status || ""}`}>
+                        {(issue.status || "unknown").replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="issue-meta">
+                      <div className="meta-item">
+                        <span className="meta-label">Programme</span>
+                        <span className="meta-value">
+                          {PROGRAMME_CHOICES.find(prog => prog.value === issue.programme)?.label || issue.programme || "Not specified"}
                         </span>
-                      ),
-                    },
-                    {
-                      label: "Student",
-                      value:
-                        formatStudent(selectedIssue.student) ||
-                        "Unknown Student",
-                    },
-                    {
-                      label: "Date Submitted",
-                      value: selectedIssue.created_at
-                        ? new Date(selectedIssue.created_at).toLocaleString()
-                        : "N/A",
-                    },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="info-row"
-                      style={{ margin: "10px 0" }}
-                    >
-                      <span
-                        className="info-label"
-                        style={{ color: "#1A1A1A", fontWeight: "bold" }}
-                      >
-                        {label}:
-                      </span>
-                      <span style={{ color: "#1A1A1A" }}>{value}</span>
+                      </div>
+                      <div className="meta-item">
+                        <span className="meta-label">Category</span>
+                        <span className="meta-value">
+                          {issue.category?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div
-                  className="description-section"
-                  style={{ marginTop: "20px" }}
-                >
-                  <h3 style={{ color: "#1A1A1A" }}>Issue Description</h3>
-                  <p
-                    style={{
-                      color: "#1A1A1A",
-                      backgroundColor: "#fff",
-                      padding: "10px",
-                      borderRadius: "5px",
-                    }}
-                  >
-                    {selectedIssue.description || "No description provided."}
-                  </p>
-                </div>
-                <div
-                  className="registrar-communication"
-                  style={{ marginTop: "20px" }}
-                >
-                  <h3 style={{ color: "#1A1A1A" }}>Contact Registrar</h3>
-                  <textarea
-                    placeholder="Enter your message to the academic registrar (e.g., need clarification)..."
-                    value={emailMessage || ""}
-                    onChange={(e) => setEmailMessage(e.target.value)}
-                    disabled={submitting}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      border: "1px solid #ddd",
-                      color: "#1A1A1A",
-                      minHeight: "100px",
-                    }}
-                  />
-                  <button
-                    className="send-email-btn"
-                    onClick={() =>
-                      handleSendRegistrarEmail &&
-                      handleSendRegistrarEmail(selectedIssue.id)
-                    }
-                    disabled={!emailMessage?.trim() || submitting}
-                    style={{
-                      backgroundColor: "#008000",
-                      color: "#fff",
-                      padding: "10px 20px",
-                      borderRadius: "5px",
-                      border: "none",
-                      marginTop: "10px",
-                      opacity: !emailMessage?.trim() || submitting ? 0.6 : 1,
-                    }}
-                  >
-                    {submitting ? "Sending..." : "Send Email to Registrar"}
-                  </button>
-                </div>
-                <div className="status-update-section" style={{ marginTop: "20px" }}>
-                  <h3 style={{ color: "#1A1A1A" }}>Resolve Issue</h3>
-                  <textarea
-                    placeholder="Enter feedback for resolving this issue..."
-                    value={feedback || ""}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    disabled={submitting || selectedIssue.status === "resolved"}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      border: "1px solid #ddd",
-                      color: "#1A1A1A",
-                      minHeight: "80px",
-                      marginBottom: "10px",
-                    }}
-                  />
-                  <div className="status-buttons" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                    <button
-                      className={`status-btn resolved ${selectedIssue.status === "resolved" ? "active" : ""}`}
-                      onClick={() => handleStatusUpdate(selectedIssue.id, "resolved")}
-                      disabled={selectedIssue.status === "resolved" || submitting}
-                      style={{
-                        backgroundColor: "#008000",
-                        color: "#fff",
-                        padding: "10px 20px",
-                        borderRadius: "5px",
-                        border: "none",
-                        opacity: selectedIssue.status === "resolved" || submitting ? 0.6 : 1,
-                        width: "100%",
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {submitting ? "Resolving..." : selectedIssue.status === "resolved" ? "Issue Resolved" : "Resolve Issue"}
-                    </button>
-                  </div>
-                </div>
-                {selectedIssue.feedback && (
-                  <div
-                    className="feedback-section"
-                    style={{ marginTop: "20px" }}
-                  >
-                    <h3 style={{ color: "#1A1A1A" }}>Previous Feedback</h3>
-                    <p
-                      style={{
-                        color: "#1A1A1A",
-                        backgroundColor: "#fff",
-                        padding: "10px",
-                        borderRadius: "5px",
-                      }}
-                    >
-                      {selectedIssue.feedback}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {selectedTab === "profile" && (
-            <div className="profile-section">
-              <h1 className="page-title" style={{ color: "#1A1A1A" }}>
-                Lecturer Profile
-              </h1>
-              <div
-                className="profile-card"
-                style={{
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "5px",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                }}
-              >
-                <h2>
-                  {formattedUser?.name ||
-                    localStorage.getItem("username") ||
-                    "Lecturer"}
-                </h2>
-                <div className="profile-info">
-                  {[
-                    { label: "Email", value: formattedUser?.email || "N/A" },
-                    { label: "Role", value: formattedUser?.role || "Lecturer" },
-                    {
-                      label: "Username",
-                      value:
-                        formattedUser?.username ||
-                        localStorage.getItem("username") ||
-                        "N/A",
-                    },
-                    {
-                      label: "Staff ID",
-                      value: formattedUser?.staffId || "N/A",
-                    },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="info-row"
-                      style={{ margin: "10px 0" }}
-                    >
-                      <span
-                        className="info-label"
-                        style={{ color: "#1A1A1A", fontWeight: "bold" }}
-                      >
-                        {label}:
-                      </span>
-                      <span style={{ color: "#1A1A1A" }}>{value}</span>
+
+                    <div className="issue-description">
+                      {issue.description || "No description provided"}
                     </div>
-                  ))}
-                </div>
-                <div
-                  className="profile-actions"
-                  style={{ marginTop: "20px", display: "flex", gap: "10px" }}
-                >
-                  <button
-                    className="logout-btn"
-                    onClick={() =>
-                      typeof handleLogout === "function" && handleLogout()
-                    }
-                    style={{
-                      backgroundColor: "#ff0000",
-                      color: "#fff",
-                      padding: "10px 20px",
-                      borderRadius: "5px",
-                      border: "none",
-                    }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-              <div
-                className="dashboard-summary"
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  marginTop: "20px",
-                  flexWrap: "wrap",
-                }}
-              >
-                {[
-                  {
-                    label: "Total Assigned",
-                    value: dashboardData?.total_assigned || 0,
-                  },
-                  {
-                    label: "In Progress",
-                    value: dashboardData?.in_progress_count || 0,
-                  },
-                  {
-                    label: "Resolved",
-                    value: dashboardData?.resolved_count || 0,
-                  },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="summary-item"
-                    style={{
-                      backgroundColor: "#fff",
-                      padding: "15px",
-                      borderRadius: "5px",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      flex: "1 1 30%",
-                    }}
-                  >
-                    <span
-                      className="summary-label"
-                      style={{ color: "#1A1A1A" }}
-                    >
-                      {label}:
-                    </span>
-                    <span
-                      className="summary-value"
-                      style={{ color: "#008000", fontWeight: "bold" }}
-                    >
-                      {value}
-                    </span>
+
+                    <div className="issue-meta">
+                      <div className="meta-item">
+                        <span className="meta-label">Student</span>
+                        <span className="meta-value">
+                          {formatStudent(issue.student) || "Unknown Student"}
+                        </span>
+                      </div>
+                      <div className="meta-item">
+                        <span className="meta-label">Submitted</span>
+                        <span className="meta-value">
+                          {issue.created_at ? new Date(issue.created_at).toLocaleString() : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {issue.attachment && (
+                      <div className="attachment-section">
+                        <a 
+                          href={issue.attachment}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="attachment-link"
+                        >
+                          📎 View Attachment
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="issue-footer">
+                      {issue.status !== "resolved" && (
+                        <button
+                          onClick={() => handleStatusUpdate(issue.id, "resolved")}
+                          className="action-button resolve"
+                          disabled={submitting}
+                        >
+                          {submitting ? "Resolving..." : "Resolve Issue"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </main>
       </div>
     </ErrorBoundary>
