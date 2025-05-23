@@ -56,3 +56,12 @@ class TestVerifyEmailURL(SimpleTestCase):
     def test_verify_email_url_resolves(self):
         url = reverse('email-verification')
         self.assertEqual(resolve(url).func.view_class, VerifyEmailView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestResendVerificationCodeURL(SimpleTestCase):
+    def test_resend_verification_code_url_resolves(self):
+        url = reverse('student-resend-code')
+        self.assertEqual(resolve(url).func, resend_verification_code)
