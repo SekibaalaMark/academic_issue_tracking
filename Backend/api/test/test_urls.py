@@ -85,3 +85,12 @@ class TestVerifyPasswordResetCodeURL(SimpleTestCase):
     def test_verify_password_reset_code_url_resolves(self):
         url = reverse('verify-password-reset-code')
         self.assertEqual(resolve(url).func, verify_password_reset_code)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestSetNewPasswordURL(SimpleTestCase):
+    def test_set_new_password_url_resolves(self):
+        url = reverse('set-new-password')
+        self.assertEqual(resolve(url).func, set_new_password)
