@@ -24,3 +24,17 @@ class TestLoginURL(SimpleTestCase):
     def test_login_url_resolves(self):
         url = reverse('login')
         self.assertEqual(resolve(url).func, login)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+from django.contrib.auth.views import LogoutView  # Adjust if it's a custom logout view
+
+# If it's a custom function view, import it instead:
+# from users.views import logout
+
+class TestLogoutURL(SimpleTestCase):
+    def test_logout_url_resolves(self):
+        url = reverse('logout')
+        self.assertEqual(resolve(url).func, logout)
+
