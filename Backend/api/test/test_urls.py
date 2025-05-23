@@ -94,3 +94,12 @@ class TestSetNewPasswordURL(SimpleTestCase):
     def test_set_new_password_url_resolves(self):
         url = reverse('set-new-password')
         self.assertEqual(resolve(url).func, set_new_password)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestRegistrarIssuesDashboardURL(SimpleTestCase):
+    def test_registrar_issues_dashboard_url_resolves(self):
+        url = reverse('registrar-issues-dashboard')
+        self.assertEqual(resolve(url).func.view_class, RegistrarDashboardCountView)
