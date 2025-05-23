@@ -13,12 +13,7 @@ class TestUserRegistrationURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, UserRegistrationView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
-from django.contrib.auth.views import LoginView  # or adjust if you're using a custom login view
 
-# If `login` is your custom view, import it instead:
-# from users.views import login
 
 class TestLoginURL(SimpleTestCase):
     def test_login_url_resolves(self):
@@ -26,21 +21,13 @@ class TestLoginURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, login)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
-from django.contrib.auth.views import LogoutView  # Adjust if it's a custom logout view
-
-# If it's a custom function view, import it instead:
-# from users.views import logout
-
 class TestLogoutURL(SimpleTestCase):
     def test_logout_url_resolves(self):
         url = reverse('logout')
         self.assertEqual(resolve(url).func, logout)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestFilterIssuesURL(SimpleTestCase):
     def test_filter_issues_url_resolves(self):
@@ -48,8 +35,7 @@ class TestFilterIssuesURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, filter_issues)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 
 class TestVerifyEmailURL(SimpleTestCase):
@@ -58,17 +44,13 @@ class TestVerifyEmailURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, VerifyEmailView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestResendVerificationCodeURL(SimpleTestCase):
     def test_resend_verification_code_url_resolves(self):
         url = reverse('student-resend-code')
         self.assertEqual(resolve(url).func, resend_verification_code)
 
-
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
 
 
 class TestRequestPasswordResetURL(SimpleTestCase):
@@ -77,8 +59,6 @@ class TestRequestPasswordResetURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, request_password_reset)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
 
 
 class TestVerifyPasswordResetCodeURL(SimpleTestCase):
@@ -87,8 +67,7 @@ class TestVerifyPasswordResetCodeURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, verify_password_reset_code)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestSetNewPasswordURL(SimpleTestCase):
     def test_set_new_password_url_resolves(self):
@@ -96,8 +75,7 @@ class TestSetNewPasswordURL(SimpleTestCase):
         self.assertEqual(resolve(url).func, set_new_password)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestRegistrarIssuesDashboardURL(SimpleTestCase):
     def test_registrar_issues_dashboard_url_resolves(self):
@@ -105,8 +83,7 @@ class TestRegistrarIssuesDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, RegistrarDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestStudentIssuesDashboardURL(SimpleTestCase):
     def test_student_issues_dashboard_url_resolves(self):
@@ -114,8 +91,7 @@ class TestStudentIssuesDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, StudentDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestLecturerIssuesDashboardURL(SimpleTestCase):
     def test_lecturer_issues_dashboard_url_resolves(self):
@@ -123,8 +99,7 @@ class TestLecturerIssuesDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, LecturerDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestStudentProfileURL(SimpleTestCase):
     def test_student_profile_url_resolves(self):
@@ -132,8 +107,7 @@ class TestStudentProfileURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, StudentProfileView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestLecturerProfileURL(SimpleTestCase):
     def test_lecturer_profile_url_resolves(self):
@@ -141,16 +115,12 @@ class TestLecturerProfileURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, LecturerProfileView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
 
 class TestRegistrarProfileURL(SimpleTestCase):
     def test_registrar_profile_url_resolves(self):
         url = reverse('registrar-profile')
         self.assertEqual(resolve(url).func.view_class, RegistrarProfileView)
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
 
 
 class TestRegistrarDashboardURL(SimpleTestCase):
@@ -159,8 +129,7 @@ class TestRegistrarDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, RegistrarDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestStudentDashboardURL(SimpleTestCase):
     def test_student_dashboard_url_resolves(self):
@@ -168,8 +137,7 @@ class TestStudentDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, StudentDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 
 class TestLecturerDashboardURL(SimpleTestCase):
     def test_lecturer_dashboard_url_resolves(self):
@@ -177,8 +145,7 @@ class TestLecturerDashboardURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, LecturerDashboardCountView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 class TestTokenURL(SimpleTestCase):
@@ -187,8 +154,7 @@ class TestTokenURL(SimpleTestCase):
         self.assertEqual(resolve(url).func.view_class, TokenObtainPairView)
 
 
-from django.test import SimpleTestCase
-from django.urls import reverse, resolve
+
 from rest_framework_simplejwt.views import TokenRefreshView
 
 class TestTokenRefreshURL(SimpleTestCase):
