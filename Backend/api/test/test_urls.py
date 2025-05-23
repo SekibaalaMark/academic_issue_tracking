@@ -195,3 +195,16 @@ class TestTokenRefreshURL(SimpleTestCase):
     def test_token_refresh_url_resolves(self):
         url = reverse('refresh_token')
         self.assertEqual(resolve(url).func.view_class, TokenRefreshView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse
+
+class TestDRFAuthURLs(SimpleTestCase):
+    def test_login_url_reverse(self):
+        url = reverse('login')  # 'login' is provided by rest_framework.urls
+        self.assertEqual(url, '/auth/login/')
+
+    def test_logout_url_reverse(self):
+        url = reverse('logout')  # 'logout' is provided by rest_framework.urls
+        self.assertEqual(url, '/auth/logout/')
