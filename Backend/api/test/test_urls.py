@@ -38,3 +38,13 @@ class TestLogoutURL(SimpleTestCase):
         url = reverse('logout')
         self.assertEqual(resolve(url).func, logout)
 
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestFilterIssuesURL(SimpleTestCase):
+    def test_filter_issues_url_resolves(self):
+        url = reverse('filter_issues')
+        self.assertEqual(resolve(url).func, filter_issues)
+
+
