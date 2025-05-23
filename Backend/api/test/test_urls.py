@@ -112,3 +112,12 @@ class TestStudentIssuesDashboardURL(SimpleTestCase):
     def test_student_issues_dashboard_url_resolves(self):
         url = reverse('student-issues-dashboard')
         self.assertEqual(resolve(url).func.view_class, StudentDashboardCountView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestLecturerIssuesDashboardURL(SimpleTestCase):
+    def test_lecturer_issues_dashboard_url_resolves(self):
+        url = reverse('lecturer-issues-dashboard')
+        self.assertEqual(resolve(url).func.view_class, LecturerDashboardCountView)
