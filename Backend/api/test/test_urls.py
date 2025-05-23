@@ -130,3 +130,12 @@ class TestStudentProfileURL(SimpleTestCase):
     def test_student_profile_url_resolves(self):
         url = reverse('student-profile')
         self.assertEqual(resolve(url).func.view_class, StudentProfileView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+
+class TestLecturerProfileURL(SimpleTestCase):
+    def test_lecturer_profile_url_resolves(self):
+        url = reverse('lecturer-profile')
+        self.assertEqual(resolve(url).func.view_class, LecturerProfileView)
