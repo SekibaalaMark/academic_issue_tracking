@@ -175,3 +175,13 @@ class TestLecturerDashboardURL(SimpleTestCase):
     def test_lecturer_dashboard_url_resolves(self):
         url = reverse('lecturer-dashboard')
         self.assertEqual(resolve(url).func.view_class, LecturerDashboardCountView)
+
+
+from django.test import SimpleTestCase
+from django.urls import reverse, resolve
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class TestTokenURL(SimpleTestCase):
+    def test_token_url_resolves(self):
+        url = reverse('get_token')
+        self.assertEqual(resolve(url).func.view_class, TokenObtainPairView)
