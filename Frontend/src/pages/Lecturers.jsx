@@ -419,8 +419,10 @@ const Lecturer = () => {
           <div className="navigation-controls" style={{
             display: 'flex',
             gap: '10px',
-            padding: '10px',
-            backgroundColor: '#e8f5e9',
+            padding: '0.75rem 1.5rem',
+            backgroundColor: selectedTab === "home" ? '#e8f5e9' : 'transparent',
+            color: '#2d5a3c',
+            alignItems: 'center',
             borderRadius: '8px',
             marginBottom: '20px'
           }}>
