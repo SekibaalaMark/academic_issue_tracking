@@ -146,6 +146,8 @@ const Lecturer = () => {
   const [emailMessage, setEmailMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showAnimation, setShowAnimation] = useState(true);
+  const [currentView, setCurrentView] = useState('home');
+
 
   // Format user data safely
   const formattedUser = formatUser(user);
@@ -391,18 +393,25 @@ const Lecturer = () => {
       {showAnimation && <LoadingAnimation />}
       <div className="lecturer-dashboard">
         <aside className="sidebar">
-          <h2 className="sidebar-title">
-            Lecturer Dashboard
-          </h2>
-          <ul className="sidebar-nav">
-            <li className="active">
-              Home
-            </li>
-            <li onClick={handleLogout}>
-              Logout
-            </li>
-          </ul>
-        </aside>
+  <h2 className="sidebar-title">Lecturer Dashboard</h2>
+  <ul className="sidebar-nav">
+    <li 
+      className={currentView === 'home' ? 'active' : ''} 
+      onClick={() => setCurrentView('home')}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+        <path d="M12 2L2 12h3v8h6v-6h2v6h6v-8h3L12 2z"/>
+      </svg>
+      Home
+    </li>
+    <li onClick={handleLogout}>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+      </svg>
+      Logout
+    </li>
+  </ul>
+</aside>
 
         <main className="main-content">
           <div className="navigation-controls" style={{
@@ -420,13 +429,7 @@ const Lecturer = () => {
             >
               ← Back
             </button>
-            <button
-              onClick={handleForward}
-              className="action-button"
-              style={{ backgroundColor: '#2d5a3c' }}
-            >
-              Forward →
-            </button>
+            
             <button
               onClick={handleRefresh}
               className="action-button"
