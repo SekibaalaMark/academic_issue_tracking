@@ -256,7 +256,7 @@ const Lecturer = () => {
 
   useEffect(() => {
     fetchLecturerData();
-    const interval = setInterval(fetchLecturerData, 30000);
+    const interval = setInterval(fetchLecturerData, 300000);
     return () => clearInterval(interval);
   }, [fetchLecturerData]);
 
