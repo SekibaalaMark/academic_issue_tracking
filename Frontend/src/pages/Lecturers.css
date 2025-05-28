@@ -1,9 +1,15 @@
 /* Main Layout */
 .lecturer-dashboard {
   display: flex;
-  min-height: 100vh;
-  background-color: #f0f7f0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 200vh;
+  min-width: 100%;
+  background-color: #f9f9f9;
+  font-family: "Poppins", sans-serif;
+  font-size: 16px; /* Base font size for scaling */
+  color: #1a1a1a; /* Black text */
+  box-sizing: border-box;
+  flex-direction: row; /* Default row layout */
+  overflow-x: hidden; /* Prevent horizontal scroll issues */
 }
 
 /* Sidebar Styles */
