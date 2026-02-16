@@ -26,7 +26,7 @@ A web based platform for students to log, track, and have their academic issues 
    - Notifications: React Toastify
 3. Hosting and Deployment:
    - Cloud Platform: Heroku $ Render
-   - Version Control: Git/HitHub
+   - Version Control: Git/GitHub
 4. Testing:
    - Backend: Pytest
    - Frontend: Jest and React Testing Library
